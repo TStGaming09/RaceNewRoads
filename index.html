@@ -140,8 +140,8 @@
   .switch { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: var(--ink); font-size: 1rem; }
   input[type=checkbox] { width: 22px; height: 22px; flex: none; }
   .fuelpin { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid #e8590c; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); box-sizing: border-box; }
-  .tl { width: 12px; height: 22px; border-radius: 4px; border: 1px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
-        background: radial-gradient(circle at 50% 20%, #e11 2.6px, transparent 3px), radial-gradient(circle at 50% 50%, #fb0 2.6px, transparent 3px), radial-gradient(circle at 50% 80%, #2c4 2.6px, transparent 3px), #222; }
+  .tl { width: 18px; height: 34px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .7)); }
+  .tl svg { display: block; }
   .fuelpop { min-width: 190px; font-size: .9rem; line-height: 1.4; color: #14213d; }
   .fuelpop div { margin-top: 2px; }
   .fuelpop button { margin-top: 8px; padding: 8px; background: #14213d; color: #fff; }
@@ -150,6 +150,10 @@
   body.picking .legend { display: none; }
   .list li.wrap { flex-wrap: wrap; }
   .list li .sub { flex-basis: 100%; font-size: .8rem; color: var(--muted); }
+  .campin { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid #d11111; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); box-sizing: border-box; }
+  .camchip { position: absolute; z-index: 1000; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); max-width: calc(100% - 150px); display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 99px; background: var(--paper); color: var(--ink); font-size: .8rem; font-weight: 600; white-space: nowrap; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+  .camchip a { color: var(--me); text-decoration: none; font-weight: 700; }
+  body.picking .camchip { display: none; }
   .hidden { display: none; }
 </style>
 </head>
@@ -174,6 +178,10 @@
 <div id="limitBox" class="limitbox hidden" aria-label="Tempolimit und aktuelles Tempo">
   <div id="limitSign" class="limitsign unknown"><span id="limitVal">–</span></div>
   <div id="limitSpeed" class="limitspeed"><span id="curSpeed">0</span><small>km/h</small></div>
+</div>
+<div id="camChip" class="camchip hidden">
+  <span>Im Stand: feste Blitzer</span>
+  <a href="https://www.verkehrslage.de/blitzer-mobil" target="_blank" rel="noopener noreferrer">Mobile ↗</a>
 </div>
 <div id="condLegend" class="legend hidden" aria-label="Legende Straßenzustand">
   <span><i style="background:#22a55b"></i>gut</span>
@@ -308,6 +316,7 @@
         <button id="nvFuelRoute" class="ghost wide" type="button">Tankstelle entlang der Route suchen</button>
         <button id="nvStop" type="button">Navigation beenden</button>
       </div>
+      <p id="nvFuelMsg" class="hint hidden"></p>
       <ul id="nvFuel" class="list hidden" style="margin-top:10px"></ul>
       <p class="hint">Routen kommen von den freien OpenStreetMap-Diensten (OSRM, Nominatim). Während eines laufenden Rennens ist die Navigation gesperrt.</p>
     </div>
@@ -389,7 +398,10 @@
       <label class="switch" for="sFuel"><input type="checkbox" id="sFuel"><span>Tankstellen anzeigen</span></label>
       <label class="switch" for="sSignals"><input type="checkbox" id="sSignals"><span>Ampeln anzeigen</span></label>
       <label class="switch" for="sSurface"><input type="checkbox" id="sSurface"><span>Straßenzustand anzeigen</span></label>
-      <p class="hint">Die Daten kommen aus OpenStreetMap und werden für den sichtbaren Kartenausschnitt geladen. Tankstellen erscheinen ab Zoomstufe 11, der Straßenzustand ab 14 und Ampeln ab 15. Zoome näher heran, wenn nichts zu sehen ist. Der Straßenzustand zeigt nur, was in OpenStreetMap zu Belag und Qualität eingetragen ist. Aktuelle Schäden oder Schlaglöcher kennt die App nicht. Preise zeigt die App nicht.</p>
+      <label class="switch" for="sCams"><input type="checkbox" id="sCams"><span>Blitzerkarte im Stand</span></label>
+      <p class="hint">Die Blitzerkarte zeigt feste Blitzer aus OpenStreetMap und erscheint nur, wenn dein Standort läuft und du seit etwa 20 Sekunden stehst. Sobald du schneller als 3 km/h bist, oder wenn die App dein Tempo nicht sicher kennt, verschwindet sie wieder. Die Daten sind unvollständig. Mobile Blitzer gibt es in der App nicht, nur den Link zu verkehrslage.de im Stand. Am Steuer darf ein Fahrer keine Blitzer anzeigen oder nutzen (§ 23 Abs. 1c StVO, 75 Euro und 1 Punkt). Nutze die Karte nur zum Vorab-Informieren, nicht während der Fahrt. Die App ersetzt keine Rechtsberatung.</p>
+      <p class="hint">Die Daten kommen aus OpenStreetMap und werden für den sichtbaren Kartenausschnitt geladen. Tankstellen erscheinen ab Zoomstufe 11, der Straßenzustand und die Ampeln ab 15. Zoome näher heran, wenn nichts zu sehen ist. Der Straßenzustand zeigt nur, was in OpenStreetMap zu Belag und Qualität eingetragen ist. Aktuelle Schäden oder Schlaglöcher kennt die App nicht. Preise zeigt die App nicht.</p>
+      <p class="hint" id="ovStatus" style="white-space:pre-line"></p>
     </div>
   </div>
 </section>
@@ -488,7 +500,13 @@
   var friendships = [], serverOffset = 0, pendingCode = null;
   var profCache = {};   // user_id -> Profilzeile
 
-  function setStatus(text, kind) {
+  var statusLock = 0;
+  // Meldungen bleiben einige Sekunden stehen. Nur die GPS-Anzeige (fromGps) darf sie nicht überschreiben.
+  function setStatus(text, kind, fromGps) {
+    var now = Date.now();
+    if (fromGps) { if (now < statusLock) return; }
+    else if (kind === 'err' || kind === 'warn') statusLock = now + 8000;
+    else if (kind === 'ok') statusLock = now + 4000;
     statusEl.textContent = text;
     dot.className = 'dot' + (kind ? ' ' + kind : '');
   }
@@ -938,10 +956,11 @@
     if (follow) map.panTo(ll);
     speedEl.textContent = (c.speed != null && !isNaN(c.speed)) ? (c.speed * 3.6).toFixed(1) : '–';
     accEl.textContent = Math.round(c.accuracy);
-    if (c.accuracy <= 20) setStatus('Live als „' + myName + '“', 'ok');
-    else setStatus('GPS ungenau – am besten draußen testen', 'warn');
+    if (c.accuracy <= 20) setStatus('Live als „' + myName + '“', 'ok', true);
+    else setStatus('GPS ungenau – am besten draußen testen', 'warn', true);
     trackRide(c, tDev);
     limitOnPosition(c, tDev);
+    camTick(c);
     sendPosition(c);
     raceOnPosition(c, tDev);
     navOnPosition(c);
@@ -1687,6 +1706,7 @@
   function resetLimit() {
     lim = { cache: null, inflight: false, lastReq: 0, blockedUntil: 0, prev: null, wasOver: false, lastFound: null, lastKmh: 0 };
     $('limitBox').classList.add('hidden');
+    cam.since = 0; updateCamVisibility();
   }
 
   // Wert aus den OpenStreetMap-Tags lesen: Zahl (km/h), 'none' (kein Limit) oder null (unbekannt)
@@ -1722,8 +1742,7 @@
     var q = '[out:json][timeout:8];way(around:150,' + lat.toFixed(6) + ',' + lng.toFixed(6) +
       ')[highway~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|road)$"];out tags geom;';
     var mine = lim;
-    fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q))
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    overpass(q, { prio: 2 })
       .then(function (j) {
         if (lim !== mine) return;
         lim.cache = {
@@ -1783,12 +1802,59 @@
   // =====================================================
   //  KARTENEBENEN: TANKSTELLEN, AMPELN, STRASSENZUSTAND
   // =====================================================
-  var OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
-  function overpass(q) {
-    return fetch(OVERPASS_URL + '?data=' + encodeURIComponent(q)).then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
+  var OVERPASS_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+  var opQueue = [], opBusy = false, opEp = 0, opLastDone = 0;
+
+  function friendlyErr(err) {
+    if (!err) return 'unbekannt';
+    if (err.name === 'AbortError') return 'Zeitüberschreitung';
+    if (err.name === 'TypeError') return 'keine Verbindung zum Kartendienst';
+    return err.message || 'unbekannt';
+  }
+
+  // Alle Overpass-Anfragen laufen nacheinander, denn die öffentlichen Server drosseln parallele Anfragen.
+  // Bei Fehlern wird der Ausweichserver probiert.
+  function overpass(q, opt) {
+    var prio = (opt && opt.prio) || 0;
+    return new Promise(function (resolve, reject) {
+      opQueue.push({ q: q, prio: prio, resolve: resolve, reject: reject });
+      opQueue.sort(function (a, b) { return b.prio - a.prio; });
+      opNext();
     });
+  }
+  function opNext() {
+    if (opBusy || !opQueue.length) return;
+    opBusy = true;
+    var job = opQueue.shift();
+    setTimeout(function () { opRun(job, 0); }, Math.max(0, 1200 - (Date.now() - opLastDone)));
+  }
+  function opRun(job, attempt) {
+    var idx = (opEp + attempt) % OVERPASS_ENDPOINTS.length;
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 28000);
+    fetch(OVERPASS_ENDPOINTS[idx] + '?data=' + encodeURIComponent(job.q), ctl ? { signal: ctl.signal } : undefined)
+      .then(function (r) {
+        if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+        return r.json();
+      })
+      .then(function (j) {
+        if (j && j.remark && !(j.elements && j.elements.length) && /timed out|out of memory|runtime error/i.test(j.remark)) {
+          throw new Error('Server überlastet');
+        }
+        clearTimeout(timer); opEp = idx; opDone(job, null, j);
+      })
+      .catch(function (err) {
+        clearTimeout(timer);
+        if (attempt + 1 < OVERPASS_ENDPOINTS.length * 2) {
+          setTimeout(function () { opRun(job, attempt + 1); }, err && err.status === 429 ? 4000 : 800);
+        } else opDone(job, err);
+      });
+  }
+  function opDone(job, err, data) {
+    opBusy = false; opLastDone = Date.now();
+    if (err) { var e2 = new Error(friendlyErr(err)); e2.status = err.status; job.reject(e2); }
+    else job.resolve(data);
+    opNext();
   }
   function elLatLng(e) { return e.center ? { lat: e.center.lat, lng: e.center.lon } : { lat: e.lat, lng: e.lon }; }
   function bbox(s, w, n, e) { return '(' + [s, w, n, e].map(function (x) { return x.toFixed(5); }).join(',') + ')'; }
@@ -1857,10 +1923,15 @@
         .bindPopup(fuelPopup(tags, p.lat, p.lng)).addTo(layer);
     });
   }
+  var TL_SVG = '<svg viewBox="0 0 18 34" width="18" height="34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    '<rect x="1" y="1" width="16" height="32" rx="5" fill="#1a1a1a" stroke="#ffffff" stroke-width="2"/>' +
+    '<circle cx="9" cy="8.5" r="4" fill="#ff2d2d"/><circle cx="9" cy="17" r="4" fill="#ffc400"/><circle cx="9" cy="25.5" r="4" fill="#22c55e"/></svg>';
   function renderSignals(elements, layer) {
     elements.forEach(function (e) {
       if (e.lat == null || e.lon == null) return;
-      var icon = L.divIcon({ html: el('div', 'tl'), className: '', iconSize: [12, 22], iconAnchor: [6, 11] });
+      var box = el('div', 'tl');
+      box.innerHTML = TL_SVG;   // feste Zeichenkette, keine Daten von außen
+      var icon = L.divIcon({ html: box, className: '', iconSize: [18, 34], iconAnchor: [9, 17] });
       L.marker([e.lat, e.lon], { icon: icon, interactive: false, keyboard: false, zIndexOffset: -600 }).addTo(layer);
     });
   }
@@ -1874,24 +1945,50 @@
     });
   }
 
+  var ovInfo = {};
+  function updateOvStatus() {
+    var lines = [];
+    [['fuel', 'Tankstellen'], ['signals', 'Ampeln'], ['surface', 'Straßenzustand']].forEach(function (pair) {
+      if (overlaysActive && ovPrefs[pair[0]] && ovInfo[pair[0]]) lines.push(pair[1] + ': ' + ovInfo[pair[0]]);
+    });
+    $('ovStatus').textContent = lines.join('\n');
+  }
+
   // Eine Ebene lädt nur den sichtbaren Ausschnitt (plus Rand) und nur ab einer Mindest-Zoomstufe
   function makeOverlay(opt) {
     var o = { layer: L.layerGroup(), on: false, got: null, inflight: false, blockedUntil: 0 };
+    function info(s) { ovInfo[opt.key] = s; updateOvStatus(); }
     o.refresh = function () {
       if (!o.on) return;
-      if (map.getZoom() < opt.minZoom) { o.layer.clearLayers(); o.got = null; return; }
+      if (map.getZoom() < opt.minZoom) {
+        o.layer.clearLayers(); o.got = null;
+        info('zoome näher heran (ab Zoomstufe ' + opt.minZoom + ')');
+        return;
+      }
       var b = map.getBounds();
       if (o.got && o.got.contains(b)) return;
       if (o.inflight || Date.now() < o.blockedUntil) return;
       var pb = b.pad(0.3);
-      o.inflight = true;
-      overpass(opt.query(bbox(pb.getSouth(), pb.getWest(), pb.getNorth(), pb.getEast()))).then(function (j) {
+      o.inflight = true; info('lädt …');
+      overpass(opt.query(bbox(pb.getSouth(), pb.getWest(), pb.getNorth(), pb.getEast())), { prio: 0 }).then(function (j) {
         if (!o.on) return;
-        o.layer.clearLayers(); opt.render(j.elements || [], o.layer); o.got = pb;
-      }).catch(function () {
+        var els = j.elements || [];
+        o.layer.clearLayers(); opt.render(els, o.layer); o.got = pb;
+        info(els.length + ' geladen' + (els.length >= opt.limit ? ' (Höchstzahl erreicht, zoome näher heran)' : ''));
+      }).catch(function (err) {
         o.blockedUntil = Date.now() + 20000;
-        setStatus('Kartenebene „' + opt.label + '“ konnte nicht geladen werden. Neuer Versuch in 20 Sekunden.', 'warn');
-      }).then(function () { o.inflight = false; setTimeout(refreshOverlays, 400); });
+        var msg = friendlyErr(err);
+        info('Fehler: ' + msg + ' (neuer Versuch in 20 Sekunden)');
+        setStatus('Kartenebene „' + opt.label + '“ konnte nicht geladen werden: ' + msg, 'warn');
+      }).then(function () {
+        o.inflight = false;
+        setTimeout(refreshOverlays, o.blockedUntil > Date.now() ? o.blockedUntil - Date.now() + 200 : 400);
+      });
+    };
+    o.setVisible = function (v) {
+      if (v === o.on) return;
+      o.on = v;
+      if (v) { o.layer.addTo(map); o.refresh(); } else { map.removeLayer(o.layer); }
     };
     o.set = function (on) {
       o.on = on;
@@ -1901,26 +1998,30 @@
     return o;
   }
 
+  var ROAD_CLASSES = '[highway~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|track|cycleway|path|road)$"]';
   var ov = {
-    fuel: makeOverlay({ label: 'Tankstellen', minZoom: 11, render: renderFuel, query: function (bb) {
-      return '[out:json][timeout:15];(node[amenity=fuel]' + bb + ';way[amenity=fuel]' + bb + ';);out center tags 300;'; } }),
-    signals: makeOverlay({ label: 'Ampeln', minZoom: 15, render: renderSignals, query: function (bb) {
-      return '[out:json][timeout:15];(node[highway=traffic_signals]' + bb + ';node[crossing=traffic_signals]' + bb + ';);out 500;'; } }),
-    surface: makeOverlay({ label: 'Straßenzustand', minZoom: 14, render: renderSurface, query: function (bb) {
-      return '[out:json][timeout:20];way[highway~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|track|cycleway|path|road)$"][~"^(surface|smoothness)$"~"."]' +
-        bb + ';out tags geom 600;'; } })
+    fuel: makeOverlay({ key: 'fuel', label: 'Tankstellen', minZoom: 11, limit: 300, render: renderFuel, query: function (bb) {
+      return '[out:json][timeout:25];(node[amenity=fuel]' + bb + ';way[amenity=fuel]' + bb + ';);out center tags 300;'; } }),
+    signals: makeOverlay({ key: 'signals', label: 'Ampeln', minZoom: 15, limit: 500, render: renderSignals, query: function (bb) {
+      return '[out:json][timeout:25];(node[highway=traffic_signals]' + bb + ';node[crossing=traffic_signals]' + bb + ';);out 500;'; } }),
+    surface: makeOverlay({ key: 'surface', label: 'Straßenzustand', minZoom: 15, limit: 1500, render: renderSurface, query: function (bb) {
+      return '[out:json][timeout:30];(way' + ROAD_CLASSES + '[surface]' + bb + ';way' + ROAD_CLASSES + '[smoothness]' + bb + ';);out tags geom 1500;'; } }),
+    cams: makeOverlay({ key: 'cams', label: 'Blitzerkarte', minZoom: 12, limit: 500, render: renderCams, query: function (bb) {
+      return '[out:json][timeout:25];node[highway=speed_camera]' + bb + ';out 500;'; } })
   };
 
   var ovPrefs = { fuel: true, signals: true, surface: false }, overlaysActive = false, ovTimer = null;
   try { var savedOv = JSON.parse(localStorage.getItem('rennen-overlays') || 'null'); if (savedOv) ovPrefs = Object.assign(ovPrefs, savedOv); } catch (e) {}
   $('sFuel').checked = ovPrefs.fuel; $('sSignals').checked = ovPrefs.signals; $('sSurface').checked = ovPrefs.surface;
 
-  function refreshOverlays() { if (overlaysActive) { ov.fuel.refresh(); ov.signals.refresh(); ov.surface.refresh(); } }
+  function refreshOverlays() { if (overlaysActive) { ov.fuel.refresh(); ov.signals.refresh(); ov.surface.refresh(); ov.cams.refresh(); } }
   function applyOverlays() {
     ov.fuel.set(overlaysActive && ovPrefs.fuel);
     ov.signals.set(overlaysActive && ovPrefs.signals);
     ov.surface.set(overlaysActive && ovPrefs.surface);
     $('condLegend').classList.toggle('hidden', !(overlaysActive && ovPrefs.surface));
+    updateCamVisibility();
+    updateOvStatus();
   }
   function startOverlays() { overlaysActive = true; applyOverlays(); }
   function stopOverlays() { overlaysActive = false; applyOverlays(); }
@@ -1933,7 +2034,60 @@
   });
   map.on('moveend', function () { clearTimeout(ovTimer); ovTimer = setTimeout(refreshOverlays, 700); });
 
+  // ----- Blitzerkarte im Stand -----
+  var camPref = false;
+  try { camPref = localStorage.getItem('rennen-cams') === '1'; } catch (e) {}
+  $('sCams').checked = camPref;
+  $('sCams').addEventListener('change', function () {
+    camPref = $('sCams').checked;
+    try { localStorage.setItem('rennen-cams', camPref ? '1' : '0'); } catch (e) {}
+    updateCamVisibility();
+  });
+
+  var cam = { since: 0, lastFix: 0 };
+  var STILL_MS = 20000, STALE_FIX_MS = 30000;
+
+  // Bei jeder Position prüfen, ob du gerade stehst. Im Zweifel bleibt die Karte aus.
+  function camTick(c) {
+    var kmh = lim.lastKmh;
+    cam.lastFix = Date.now();
+    if (c.accuracy > 50 || kmh > 3) cam.since = 0;
+    else if (kmh < 1.5 && !cam.since) cam.since = Date.now();
+    updateCamVisibility();
+  }
+  function camAllowed() {
+    return camPref && overlaysActive && watchId !== null && cam.since > 0 &&
+      Date.now() - cam.since >= STILL_MS && Date.now() - cam.lastFix < STALE_FIX_MS;
+  }
+  function updateCamVisibility() {
+    var show = camAllowed();
+    ov.cams.setVisible(show);
+    $('camChip').classList.toggle('hidden', !show);
+  }
+  setInterval(updateCamVisibility, 1000);
+
+  function renderCams(elements, layer) {
+    elements.forEach(function (e) {
+      if (e.lat == null || e.lon == null) return;
+      var tags = e.tags || {};
+      var icon = L.divIcon({ html: el('div', 'campin', '📷'), className: '', iconSize: [28, 28], iconAnchor: [14, 14] });
+      var box = el('div', 'fuelpop');
+      var kind = tags.enforcement === 'traffic_signals' ? 'Rotlicht-Blitzer'
+        : (tags.enforcement === 'average_speed' ? 'Abschnittskontrolle' : 'Fester Blitzer');
+      box.appendChild(el('strong', '', kind));
+      if (tags.maxspeed) box.appendChild(el('div', '', 'Tempolimit: ' + tags.maxspeed + ' km/h'));
+      box.appendChild(el('div', '', 'Quelle: OpenStreetMap, unvollständig und evtl. veraltet.'));
+      L.marker([e.lat, e.lon], { icon: icon, keyboard: false, zIndexOffset: -400 }).bindPopup(box).addTo(layer);
+    });
+  }
+
   // ----- Tankstellen suchen (im Navi) -----
+  function fuelMsg(text, isErr) {
+    var p = $('nvFuelMsg');
+    p.textContent = text || '';
+    p.classList.toggle('hidden', !text);
+    p.style.color = isErr ? 'var(--err)' : '';
+  }
   var fuelBusy = false;
   function fuelSearch(mode) {
     if (fuelBusy) return;
@@ -1951,17 +2105,18 @@
     } else {
       q = '[out:json][timeout:20];nwr[amenity=fuel](around:6000,' + here.lat.toFixed(5) + ',' + here.lng.toFixed(5) + ');out center tags 80;';
     }
-    fuelBusy = true; setStatus('Suche Tankstellen …', 'warn');
-    overpass(q).then(function (j) {
+    var where = (mode === 'route' && nav && nav.coords) ? 'entlang der Route' : (myPos ? 'um deinen Standort (6 km)' : 'um die Kartenmitte (6 km), dein Standort ist noch nicht bekannt');
+    fuelBusy = true; $('nvFuel').classList.add('hidden'); fuelMsg('Suche Tankstellen ' + where + ' …');
+    overpass(q, { prio: 2 }).then(function (j) {
       var list = (j.elements || []).map(function (e) {
         var p = elLatLng(e), tg = e.tags || {};
         return { lat: p.lat, lng: p.lng, tags: tg, name: tg.name || tg.brand || tg.operator || 'Tankstelle', d: dist(here.lat, here.lng, p.lat, p.lng) };
       }).filter(function (s) { return s.lat != null && s.lng != null && !isNaN(s.d); })
         .sort(function (a, b) { return a.d - b.d; }).slice(0, 10);
-      renderFuelList(list, mode);
-      setStatus(list.length ? list.length + ' Tankstellen gefunden.' : 'Keine Tankstelle gefunden.', list.length ? 'ok' : 'warn');
-    }).catch(function () {
-      setStatus('Tankstellensuche fehlgeschlagen. Bitte später nochmal versuchen.', 'err');
+      if (list.length) { renderFuelList(list, mode); fuelMsg(list.length + ' Tankstellen gefunden ' + where + '. Tippe eine an:'); }
+      else fuelMsg('Keine Tankstelle gefunden ' + where + '.', true);
+    }).catch(function (err) {
+      fuelMsg('Tankstellensuche fehlgeschlagen: ' + friendlyErr(err) + '. Bitte gleich nochmal versuchen.', true);
     }).then(function () { fuelBusy = false; });
   }
 
