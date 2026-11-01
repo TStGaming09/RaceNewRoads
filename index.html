@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rennen – Meilenstein 6: Rennmodus und Navigation</title>
+<title>Rennen-App</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
@@ -76,7 +76,7 @@
   .menu .badge { position: static; }
   .menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
   .locbtn { position: absolute; z-index: 1000; left: 10px; top: calc(84px + env(safe-area-inset-top, 0px)); width: 34px; height: 34px; margin: 0; padding: 0; border-radius: 4px; background: #fff; color: #14213d; font-size: 18px; box-shadow: 0 1px 5px rgba(0, 0, 0, .65); }
-  body.picking .menubtn, body.picking .menu, body.picking .locbtn { display: none; }
+  body.picking .menubtn, body.picking .menu, body.picking .locbtn, body.picking .bellbtn { display: none; }
   .panel.collapsed #mainView, .panel.collapsed #authView { display: none; }
 
   .avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; overflow: hidden; color: #fff; font-weight: 700; }
@@ -151,7 +151,7 @@
   .list li.wrap { flex-wrap: wrap; }
   .list li .sub { flex-basis: 100%; font-size: .8rem; color: var(--muted); }
   .campin { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid #d11111; display: flex; align-items: center; justify-content: center; font-size: 13px; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); box-sizing: border-box; }
-  .camchip { position: absolute; z-index: 1000; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); max-width: calc(100% - 150px); display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 99px; background: var(--paper); color: var(--ink); font-size: .8rem; font-weight: 600; white-space: nowrap; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+  .camchip { position: absolute; z-index: 1000; top: calc(68px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); max-width: calc(100% - 150px); display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 99px; background: var(--paper); color: var(--ink); font-size: .8rem; font-weight: 600; white-space: nowrap; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
   .camchip a { color: var(--me); text-decoration: none; font-weight: 700; }
   body.picking .camchip { display: none; }
   input[type=number], textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; color: var(--ink); background: var(--field); }
@@ -166,6 +166,11 @@
   .vbtns { display: flex; flex-direction: column; gap: 6px; }
   .pill.on { background: var(--ok); color: #fff; margin-left: 6px; }
   .rank { font-weight: 700; width: 26px; text-align: center; flex: none; font-variant-numeric: tabular-nums; }
+  .bellbtn { position: absolute; z-index: 1200; top: calc(12px + env(safe-area-inset-top, 0px)); right: 70px; width: 48px; height: 48px; margin: 0; padding: 0; border-radius: 50%; border: 3px solid #fff; background: var(--paper); color: var(--ink); font-size: 1.25rem; box-shadow: 0 2px 10px rgba(0, 0, 0, .35); display: flex; align-items: center; justify-content: center; }
+  .bellbtn .badge { top: -7px; right: -7px; }
+  .udot { width: 9px; height: 9px; border-radius: 50%; background: var(--me); flex: none; }
+  .list li .acts { flex-basis: 100%; display: flex; gap: 8px; margin-top: 6px; }
+  .list li .acts button { flex: 1; padding: 8px 12px; }
   .hidden { display: none; }
 </style>
 </head>
@@ -174,6 +179,7 @@
 
 <div id="pickBar"><span id="pickMsg"></span><button id="pickCancel" class="ghost" type="button">Abbrechen</button></div>
 
+<button id="bellBtn" class="bellbtn hidden" type="button" aria-label="Benachrichtigungen">🔔<span id="bellBadge" class="badge hidden"></span></button>
 <button id="menuBtn" class="menubtn hidden" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menü">
   <span id="whoAvatar"></span><span id="menuDot" class="dotbadge hidden"></span>
 </button>
@@ -379,6 +385,15 @@
       <button id="pPassSave" type="button">Passwort ändern</button>
     </div>
 
+    <!-- Benachrichtigungen -->
+    <div id="tabNotifications" class="hidden">
+      <div class="row between">
+        <button id="ntReadAll" class="ghost" type="button">Alle als gelesen</button>
+        <button id="ntClear" class="ghost" type="button">Alle löschen</button>
+      </div>
+      <ul id="ntList" class="list" style="margin-top:10px"></ul>
+    </div>
+
     <!-- Garage -->
     <div id="tabGarage" class="hidden">
       <div id="garListBox">
@@ -494,6 +509,10 @@
       <p class="hint">Die Blitzerkarte zeigt feste Blitzer aus OpenStreetMap und erscheint nur, wenn dein Standort läuft und du seit etwa 20 Sekunden stehst. Sobald du schneller als 3 km/h bist, oder wenn die App dein Tempo nicht sicher kennt, verschwindet sie wieder. Die Daten sind unvollständig. Mobile Blitzer gibt es in der App nicht, nur den Link zu verkehrslage.de im Stand. Am Steuer darf ein Fahrer keine Blitzer anzeigen oder nutzen (§ 23 Abs. 1c StVO, 75 Euro und 1 Punkt). Nutze die Karte nur zum Vorab-Informieren, nicht während der Fahrt. Die App ersetzt keine Rechtsberatung.</p>
       <p class="hint">Die Daten kommen aus OpenStreetMap und werden für den sichtbaren Kartenausschnitt geladen. Tankstellen erscheinen ab Zoomstufe 11, der Straßenzustand und die Ampeln ab 15. Zoome näher heran, wenn nichts zu sehen ist. Der Straßenzustand zeigt nur, was in OpenStreetMap zu Belag und Qualität eingetragen ist. Aktuelle Schäden oder Schlaglöcher kennt die App nicht. Preise zeigt die App nicht.</p>
       <p class="hint" id="ovStatus" style="white-space:pre-line"></p>
+
+      <h3>Benachrichtigungen</h3>
+      <label class="switch" for="sNotif"><input type="checkbox" id="sNotif"><span>Hinweise auch im Hintergrund-Tab</span></label>
+      <p class="hint">Neue Benachrichtigungen erscheinen immer in der Glocke oben. Mit diesem Schalter zeigt dein Browser sie zusätzlich als Hinweis an, wenn die Seite zwar offen, aber nicht im Vordergrund ist. Bei geschlossener App kommen keine Hinweise an, dafür bräuchte es echte Push-Nachrichten, die sind nicht eingebaut. Auf dem iPhone geht es meist nur, wenn die Seite zum Home-Bildschirm hinzugefügt wurde.</p>
     </div>
   </div>
 </section>
@@ -702,7 +721,7 @@
   function showAuth() {
     mainView.classList.add('hidden');
     authView.classList.remove('hidden');
-    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden'); stopOverlays();
+    $('menuBtn').classList.add('hidden'); $('bellBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden'); stopOverlays();
     passIn.value = '';
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     setMode(mode);
@@ -725,14 +744,14 @@
       $('nvMode').value = NAV_MODE_FOR[myVehicle] || 'bike';
       authView.classList.add('hidden');
       mainView.classList.remove('hidden');
-      $('menuBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
+      $('menuBtn').classList.remove('hidden'); $('bellBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
       showScreen('Home');
       startOverlays();
       setStatus('Bereit');
       syncClock();
-      loadFriends(); loadMyRaces(false); loadMyGarage();
+      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs();
       if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); }, POLL_MS);
+      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); loadNotifications(false); }, POLL_MS);
       if (pendingCode) { var c = pendingCode; pendingCode = null; joinCode(c); }
     });
   }
@@ -740,6 +759,7 @@
   $('logout').addEventListener('click', function () {
     if (watchId !== null) stop();
     unfollowRace(); stopNavigation(true);
+    unsubscribeNotifs(); notifs = []; unreadCount = 0; notifsLoaded = false; updateNotifBadge();
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
@@ -926,6 +946,7 @@
       return friendRow(f, [{ label: 'Zurückziehen', ghost: true, run: function () { removeFriendship(f.id); } }]);
     }), 'Keine gesendeten Anfragen.');
     if (raceCur) renderInviteList(true);
+    if (currentScreen === 'Notifications') renderNotifs();
   }
   function answerRequest(id) {
     db.from('friendships').update({ status: 'accepted' }).eq('id', id).then(function (res) {
@@ -1144,6 +1165,7 @@
           .sort(function (a, b) { return new Date(b.races.created_at) - new Date(a.races.created_at); });
         var inv = myRaces.filter(function (x) { return x.status === 'invited' && x.races.status === 'lobby'; }).length;
         inviteCount = inv; updateBadges(); renderHome();
+        if (currentScreen === 'Notifications') renderNotifs();
         if (render) renderRaceList();
       });
   }
@@ -1665,8 +1687,8 @@
   // =====================================================
   var currentScreen = 'Home', raceView = 'List';
   var incomingCount = 0, inviteCount = 0, raceDist = 0;
-  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'Garage', 'Stats', 'Boards', 'History', 'Settings'];
-  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', Garage: 'Garage', Stats: 'Statistiken', Boards: 'Ranglisten', History: 'Rennhistorie', Settings: 'Einstellungen' };
+  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'Garage', 'Stats', 'Boards', 'History', 'Notifications', 'Settings'];
+  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', Garage: 'Garage', Stats: 'Statistiken', Boards: 'Ranglisten', History: 'Rennhistorie', Notifications: 'Benachrichtigungen', Settings: 'Einstellungen' };
 
   function showScreen(t) {
     currentScreen = t;
@@ -1685,6 +1707,7 @@
     if (t === 'Garage') openGarage(myId);
     if (t === 'Boards') boardsOpen();
     if (t === 'History') histOpen();
+    if (t === 'Notifications') loadNotifications(true);
   }
 
   $('backBtn').addEventListener('click', function () {
@@ -2721,6 +2744,165 @@
           : 'Für dieses Rennen ist keine gefahrene Linie gespeichert. Das gibt es erst für Rennen, die mit dieser Version gefahren wurden.';
       });
     });
+  }
+
+  // =====================================================
+  //  BENACHRICHTIGUNGEN
+  // =====================================================
+  var notifs = [], unreadCount = 0, notifChannel = null, notifsLoaded = false, notifPref = false;
+  var baseTitle = document.title;
+  var NOTIF_ICON = { friend_request: '👤', friend_accepted: '🤝', race_invite: '✉️', race_finished: '🏁' };
+
+  try { notifPref = localStorage.getItem('rennen-notif') === '1'; } catch (e) {}
+  $('sNotif').checked = notifPref && ('Notification' in window) && Notification.permission === 'granted';
+  notifPref = $('sNotif').checked;
+  $('sNotif').addEventListener('change', function () {
+    function save(v) { try { localStorage.setItem('rennen-notif', v ? '1' : '0'); } catch (e) {} }
+    if (!$('sNotif').checked) { notifPref = false; save(false); return; }
+    if (!('Notification' in window)) { $('sNotif').checked = false; setStatus('Dieser Browser unterstützt keine Benachrichtigungen.', 'warn'); return; }
+    Notification.requestPermission().then(function (perm) {
+      var ok = perm === 'granted';
+      $('sNotif').checked = ok; notifPref = ok; save(ok);
+      if (!ok) setStatus('Benachrichtigungen wurden nicht erlaubt. Das lässt sich in den Browser-Einstellungen ändern.', 'warn');
+    });
+  });
+
+  function relTime(iso) {
+    var s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+    if (s < 60) return 'gerade eben';
+    if (s < 3600) return 'vor ' + Math.floor(s / 60) + ' min';
+    if (s < 86400) return 'vor ' + Math.floor(s / 3600) + ' h';
+    return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+  }
+  function updateNotifBadge() {
+    var b = $('bellBadge');
+    b.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    b.classList.toggle('hidden', !unreadCount);
+    document.title = (unreadCount ? '(' + unreadCount + ') ' : '') + baseTitle;
+  }
+  function countUnread() { unreadCount = notifs.filter(function (n) { return !n.read_at; }).length; updateNotifBadge(); }
+
+  function loadNotifications(render) {
+    if (!myId) return Promise.resolve();
+    return db.from('notifications').select('*').eq('user_id', myId).order('created_at', { ascending: false }).limit(50).then(function (res) {
+      if (res.error) {
+        if (render) fillList($('ntList'), [], 'Benachrichtigungen konnten nicht geladen werden (SQL-Schritt ausgeführt?): ' + res.error.message);
+        return;
+      }
+      var data = res.data || [], known = {};
+      notifs.forEach(function (n) { known[n.id] = true; });
+      var fresh = notifsLoaded ? data.filter(function (n) { return !known[n.id] && !n.read_at; }) : [];
+      notifs = data; countUnread();
+      notifsLoaded = true;
+      if (fresh.length) toastNotif(fresh[0]);
+      if (currentScreen === 'Notifications') renderNotifs();
+    });
+  }
+
+  function toastNotif(n) {
+    setStatus((NOTIF_ICON[n.kind] || '🔔') + ' ' + n.title + (n.body ? ': ' + n.body : ''), 'ok');
+    if (n.kind === 'friend_request' || n.kind === 'friend_accepted') loadFriends();
+    if (n.kind === 'race_invite' || n.kind === 'race_finished') loadMyRaces(false);
+    if (navigator.vibrate) navigator.vibrate(120);
+    if (notifPref && document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+      try { new Notification(n.title, { body: n.body || '' }); } catch (e) {}
+    }
+  }
+  function onNewNotif(n) {
+    if (!n || notifs.some(function (x) { return x.id === n.id; })) return;
+    notifs.unshift(n); countUnread();
+    if (currentScreen === 'Notifications') renderNotifs();
+    toastNotif(n);
+  }
+  function subscribeNotifs() {
+    unsubscribeNotifs();
+    notifChannel = db.channel('notifs-' + myId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'user_id=eq.' + myId },
+        function (payload) { onNewNotif(payload.new); })
+      .subscribe();
+  }
+  function unsubscribeNotifs() { if (notifChannel) { db.removeChannel(notifChannel); notifChannel = null; } }
+
+  function markRead(ids) {
+    var unread = notifs.filter(function (n) { return ids.indexOf(n.id) !== -1 && !n.read_at; });
+    if (!unread.length) return;
+    var now = new Date().toISOString();
+    unread.forEach(function (n) { n.read_at = now; });
+    countUnread();
+    db.from('notifications').update({ read_at: now }).in('id', unread.map(function (n) { return n.id; })).then(function (res) {
+      if (res.error) setStatus('Als gelesen markieren fehlgeschlagen: ' + res.error.message, 'warn');
+    });
+  }
+  $('ntReadAll').addEventListener('click', function () {
+    var now = new Date().toISOString();
+    notifs.forEach(function (n) { if (!n.read_at) n.read_at = now; });
+    countUnread(); renderNotifs();
+    db.from('notifications').update({ read_at: now }).eq('user_id', myId).is('read_at', null).then(function (res) {
+      if (res.error) setStatus('Fehler: ' + res.error.message, 'warn');
+    });
+  });
+  $('ntClear').addEventListener('click', function () {
+    if (!notifs.length || !confirm('Alle Benachrichtigungen löschen?')) return;
+    db.from('notifications').delete().eq('user_id', myId).then(function (res) {
+      if (res.error) { setStatus('Löschen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      notifs = []; countUnread(); renderNotifs();
+    });
+  });
+  $('bellBtn').addEventListener('click', function (e) { e.stopPropagation(); closeMenu(); showScreen('Notifications'); });
+
+  function notifActions(n) {
+    var d = n.data || {}, box = null;
+    function btn(label, ghost, fn) {
+      var b = el('button', ghost ? 'ghost' : '', label); b.type = 'button';
+      b.addEventListener('click', function (e) { e.stopPropagation(); fn(); });
+      box.appendChild(b);
+    }
+    if (n.kind === 'friend_request') {
+      var f = friendships.filter(function (x) { return x.id === d.friendship_id && x.status === 'pending' && x.addressee_id === myId; })[0];
+      if (f) {
+        box = el('div', 'acts');
+        btn('Annehmen', false, function () { markRead([n.id]); answerRequest(f.id); });
+        btn('Ablehnen', true, function () { markRead([n.id]); removeFriendship(f.id); });
+      }
+    } else if (n.kind === 'race_invite') {
+      var inv = myRaces.filter(function (r) { return r.races.id === d.race_id && r.status === 'invited' && r.races.status === 'lobby'; })[0];
+      if (inv) {
+        box = el('div', 'acts');
+        btn('Annehmen', false, function () {
+          markRead([n.id]);
+          db.rpc('respond_invite', { p_race: d.race_id, p_accept: true }).then(function () { followRace(d.race_id); });
+        });
+        btn('Ablehnen', true, function () {
+          markRead([n.id]);
+          db.rpc('respond_invite', { p_race: d.race_id, p_accept: false }).then(function () { loadMyRaces(true); });
+        });
+      }
+    }
+    return box;
+  }
+
+  function openNotif(n) {
+    markRead([n.id]);
+    var d = n.data || {};
+    if (n.kind === 'friend_request' || n.kind === 'friend_accepted') showScreen('Friends');
+    else if ((n.kind === 'race_invite' || n.kind === 'race_finished') && d.race_id) followRace(d.race_id);
+    else renderNotifs();
+  }
+
+  function renderNotifs() {
+    fillList($('ntList'), notifs.map(function (n) {
+      var li = el('li', 'click wrap');
+      if (!n.read_at) li.appendChild(el('span', 'udot'));
+      var name = el('span', 'nm', (NOTIF_ICON[n.kind] || '🔔') + ' ' + n.title);
+      if (!n.read_at) name.style.fontWeight = '800'; else name.style.fontWeight = '500';
+      li.appendChild(name);
+      li.appendChild(el('span', 'ago', relTime(n.created_at)));
+      if (n.body) li.appendChild(el('div', 'sub', n.body));
+      var acts = notifActions(n);
+      if (acts) li.appendChild(acts);
+      li.addEventListener('click', function () { openNotif(n); });
+      return li;
+    }), 'Keine Benachrichtigungen.');
   }
 
   // =====================================================
