@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rennen – Meilenstein 3: Konten</title>
+<title>Rennen – Meilenstein 4: Profil und Freunde</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
@@ -29,7 +29,7 @@
     border-radius: 14px;
     box-shadow: 0 6px 24px rgba(20, 33, 61, .22);
     padding: 14px 16px;
-    max-height: 70%; overflow-y: auto;
+    max-height: 75%; overflow-y: auto;
   }
   .status { display: flex; align-items: center; gap: 8px; font-weight: 600; }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
@@ -38,29 +38,38 @@
   .dot.err { background: var(--err); }
 
   label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
-  input[type=text], input[type=email], input[type=password] {
+  input[type=text], input[type=email], input[type=password], select {
     width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px;
-    font: inherit; color: var(--ink);
+    font: inherit; color: var(--ink); background: #fff;
   }
-  input:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
+  input[type=color] { width: 100%; height: 44px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  input:focus-visible, select:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
+  input[disabled] { background: #f3f5f8; color: var(--muted); }
 
   .tabs { display: flex; gap: 6px; margin-top: 12px; }
-  .tabs button { margin: 0; background: #eef1f6; color: var(--ink); }
+  .tabs button { margin: 0; padding: 10px 6px; background: #eef1f6; color: var(--ink); }
   .tabs button[aria-selected=true] { background: var(--ink); color: #fff; }
 
   .who { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
   .who strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  h3 { margin: 18px 0 6px; font-size: 1rem; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row input { flex: 1; min-width: 0; }
+  .row button { width: auto; margin: 0; padding: 11px 14px; }
+
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 0; }
   .stats .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .stats .l { font-size: .8rem; color: var(--muted); }
 
-  .players { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--line); }
-  .players li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-  .players .sw { width: 12px; height: 12px; border-radius: 50%; flex: none; }
-  .players .nm { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .players .ago { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .players .empty { color: var(--muted); font-size: .9rem; }
+  .list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .list li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .list .sw { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .list .nm { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .list .ago { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .list .empty { color: var(--muted); font-size: .9rem; }
+  .list li button { width: auto; margin: 0; padding: 6px 12px; font-weight: 500; }
+  .list li button.ghost { background: #eef1f6; color: var(--ink); }
 
   button {
     width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 10px;
@@ -107,14 +116,62 @@
       <span>Angemeldet als <strong id="who"></strong></span>
       <button id="logout" class="ghost" type="button">Abmelden</button>
     </div>
-    <div id="statsBox" class="stats hidden">
-      <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
-      <div><div class="v" id="acc">–</div><div class="l">Genauigkeit in m</div></div>
-      <div><div class="v" id="sent">0</div><div class="l">gesendet</div></div>
+
+    <div class="tabs" role="tablist" id="nav">
+      <button role="tab" type="button" data-tab="Map" aria-selected="true">Karte</button>
+      <button role="tab" type="button" data-tab="Friends" aria-selected="false" id="navFriends">Freunde</button>
+      <button role="tab" type="button" data-tab="Profile" aria-selected="false">Profil</button>
     </div>
-    <button id="start" type="button">Starten</button>
-    <ul id="players" class="players hidden"></ul>
-    <p class="hint" id="hint">Tippe auf „Starten“. Lass den Bildschirm an, solange du testest.</p>
+
+    <!-- Tab Karte -->
+    <div id="tabMap">
+      <div id="statsBox" class="stats hidden">
+        <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
+        <div><div class="v" id="acc">–</div><div class="l">Genauigkeit in m</div></div>
+        <div><div class="v" id="sent">0</div><div class="l">gesendet</div></div>
+      </div>
+      <button id="start" type="button">Starten</button>
+      <ul id="players" class="list hidden" style="margin-top:10px"></ul>
+      <p class="hint" id="hint">Tippe auf „Starten“. Du siehst nur Freunde, die ebenfalls gestartet haben.</p>
+    </div>
+
+    <!-- Tab Freunde -->
+    <div id="tabFriends" class="hidden">
+      <label for="friendName">Freund per Spielername hinzufügen</label>
+      <div class="row">
+        <input id="friendName" type="text" maxlength="20" autocomplete="off">
+        <button id="friendAdd" type="button">Anfrage</button>
+      </div>
+      <h3>Anfragen an dich</h3>
+      <ul id="listIncoming" class="list"></ul>
+      <h3>Deine Freunde</h3>
+      <ul id="listFriends" class="list"></ul>
+      <h3>Gesendete Anfragen</h3>
+      <ul id="listOutgoing" class="list"></ul>
+    </div>
+
+    <!-- Tab Profil -->
+    <div id="tabProfile" class="hidden">
+      <label for="pEmail">E-Mail</label>
+      <input id="pEmail" type="email" disabled>
+      <label for="pName">Spielername</label>
+      <input id="pName" type="text" maxlength="20">
+      <label for="pColor">Deine Farbe auf der Karte</label>
+      <input id="pColor" type="color" value="#1d4ed8">
+      <label for="pVehicle">Womit fährst du hauptsächlich?</label>
+      <select id="pVehicle">
+        <option value="fahrrad">Fahrrad</option>
+        <option value="roller">Roller / E-Scooter</option>
+        <option value="laufen">Zu Fuß / Laufen</option>
+        <option value="sonstiges">Sonstiges</option>
+      </select>
+      <button id="pSave" type="button">Profil speichern</button>
+
+      <h3>Passwort ändern</h3>
+      <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
+      <input id="pNewPass" type="password" autocomplete="new-password">
+      <button id="pPassSave" type="button">Passwort ändern</button>
+    </div>
   </div>
 </section>
 
@@ -128,8 +185,15 @@
   var SEND_EVERY_MS = 2000;
   var STALE_AFTER_MS = 30000;
   var GONE_AFTER_MS = 300000;
+  var FRIEND_POLL_MS = 30000;
 
   function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
   var dot = $('dot'), statusEl = $('status');
   var authView = $('authView'), mainView = $('mainView');
   var tabLogin = $('tabLogin'), tabSignup = $('tabSignup'), usernameRow = $('usernameRow');
@@ -148,20 +212,22 @@
   }).addTo(map);
   map.on('dragstart', function () { follow = false; });
 
-  var myId = null, myName = '';
+  var myId = null, myName = '', myColor = '#1d4ed8', myEmail = '';
   var me = null, accuracy = null;
   var trail = L.polyline([], { color: '#1d4ed8', weight: 4, opacity: 0.7 }).addTo(map);
   var watchId = null, follow = true, sentCount = 0, lastSent = 0;
   var others = {};   // user_id -> { name, color, marker, updated }
-  var channel = null, tick = null;
+  var channel = null, tick = null, friendTimer = null;
   var mode = 'login';
+  var friendships = [];      // Zeilen aus der Tabelle friendships
+  var friendNames = {};      // user_id -> Spielername
 
   function setStatus(text, kind) {
     statusEl.textContent = text;
     dot.className = 'dot' + (kind ? ' ' + kind : '');
   }
 
-  // ---- Anmeldung ----
+  // =================== Anmeldung ===================
   function setMode(m) {
     mode = m;
     var signup = m === 'signup';
@@ -205,7 +271,6 @@
           if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
           if (res.data.session) { afterLogin(res.data.session.user); }
           else {
-            setStatus('Fast geschafft: Bestätigungsmail gesendet. Klicke den Link und melde dich dann an.', 'ok');
             setMode('login');
             setStatus('Bestätigungsmail gesendet. Klicke den Link, dann hier anmelden.', 'ok');
           }
@@ -225,21 +290,36 @@
     mainView.classList.add('hidden');
     authView.classList.remove('hidden');
     passIn.value = '';
+    if (friendTimer) { clearInterval(friendTimer); friendTimer = null; }
     setMode(mode);
+  }
+
+  function applyProfile(p) {
+    myName = p.username;
+    myColor = p.color || '#1d4ed8';
+    whoEl.textContent = myName;
+    trail.setStyle({ color: myColor });
+    if (me) me.setStyle({ fillColor: myColor });
+    if (accuracy) accuracy.setStyle({ color: myColor });
   }
 
   function afterLogin(user) {
     myId = user.id;
-    db.from('profiles').select('username').eq('id', myId).single().then(function (res) {
+    myEmail = user.email || '';
+    db.from('profiles').select('username,color,vehicle').eq('id', myId).single().then(function (res) {
       if (res.error || !res.data) {
         setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err');
         return;
       }
-      myName = res.data.username;
-      whoEl.textContent = myName;
+      applyProfile(res.data);
+      $('pVehicle').value = res.data.vehicle || 'fahrrad';
       authView.classList.add('hidden');
       mainView.classList.remove('hidden');
+      showTab('Map');
       setStatus('Bereit');
+      loadFriends();
+      if (friendTimer) clearInterval(friendTimer);
+      friendTimer = setInterval(loadFriends, FRIEND_POLL_MS);
     });
   }
 
@@ -248,7 +328,158 @@
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
-  // ---- Farben, Zeitangaben ----
+  // =================== Tabs ===================
+  var TABS = ['Map', 'Friends', 'Profile'];
+  function showTab(t) {
+    TABS.forEach(function (n) { $('tab' + n).classList.toggle('hidden', n !== t); });
+    var btns = $('nav').querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute('aria-selected', String(btns[i].getAttribute('data-tab') === t));
+    }
+    if (t === 'Friends') loadFriends();
+    if (t === 'Profile') fillProfile();
+  }
+  $('nav').addEventListener('click', function (e) {
+    var t = e.target.getAttribute && e.target.getAttribute('data-tab');
+    if (t) showTab(t);
+  });
+
+  // =================== Profil ===================
+  function fillProfile() {
+    $('pEmail').value = myEmail;
+    $('pName').value = myName;
+    $('pColor').value = myColor;
+  }
+
+  $('pSave').addEventListener('click', function () {
+    var name = $('pName').value.trim();
+    if (name.length < 2 || name.length > 20) { setStatus('Der Spielername braucht 2 bis 20 Zeichen.', 'warn'); return; }
+    var row = { username: name, color: $('pColor').value, vehicle: $('pVehicle').value };
+    db.from('profiles').update(row).eq('id', myId).then(function (res) {
+      if (res.error) {
+        setStatus(res.error.code === '23505' ? 'Dieser Spielername ist schon vergeben.' : 'Speichern fehlgeschlagen: ' + res.error.message, 'err');
+        return;
+      }
+      applyProfile(row);
+      setStatus('Profil gespeichert.', 'ok');
+    });
+  });
+
+  $('pPassSave').addEventListener('click', function () {
+    var pw = $('pNewPass').value;
+    if (pw.length < 8) { setStatus('Das neue Passwort braucht mindestens 8 Zeichen.', 'warn'); return; }
+    db.auth.updateUser({ password: pw }).then(function (res) {
+      if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
+      $('pNewPass').value = '';
+      setStatus('Passwort geändert.', 'ok');
+    });
+  });
+
+  // =================== Freunde ===================
+  function otherId(f) { return f.requester_id === myId ? f.addressee_id : f.requester_id; }
+
+  function loadFriends() {
+    if (!myId) return;
+    db.from('friendships').select('*').then(function (res) {
+      if (res.error) { setStatus('Freunde laden fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      friendships = res.data || [];
+      var ids = friendships.map(otherId);
+      if (!ids.length) { friendNames = {}; renderFriends(); return; }
+      db.from('profiles').select('id,username').in('id', ids).then(function (r2) {
+        friendNames = {};
+        (r2.data || []).forEach(function (p) { friendNames[p.id] = p.username; });
+        renderFriends();
+      });
+    });
+  }
+
+  function fillList(ul, items, emptyText) {
+    ul.textContent = '';
+    if (!items.length) {
+      var li = el('li'); li.appendChild(el('span', 'empty', emptyText)); ul.appendChild(li);
+      return;
+    }
+    items.forEach(function (it) { ul.appendChild(it); });
+  }
+
+  function friendRow(f, buttons) {
+    var li = el('li');
+    var name = friendNames[otherId(f)] || '…';
+    li.appendChild(el('span', 'nm', name));
+    buttons.forEach(function (b) {
+      var btn = el('button', b.ghost ? 'ghost' : '', b.label);
+      btn.type = 'button';
+      btn.addEventListener('click', b.run);
+      li.appendChild(btn);
+    });
+    return li;
+  }
+
+  function renderFriends() {
+    var incoming = friendships.filter(function (f) { return f.status === 'pending' && f.addressee_id === myId; });
+    var outgoing = friendships.filter(function (f) { return f.status === 'pending' && f.requester_id === myId; });
+    var accepted = friendships.filter(function (f) { return f.status === 'accepted'; });
+
+    $('navFriends').textContent = incoming.length ? 'Freunde (' + incoming.length + ')' : 'Freunde';
+
+    fillList($('listIncoming'), incoming.map(function (f) {
+      return friendRow(f, [
+        { label: 'Annehmen', run: function () { answerRequest(f.id, true); } },
+        { label: 'Ablehnen', ghost: true, run: function () { removeFriendship(f.id); } }
+      ]);
+    }), 'Keine offenen Anfragen.');
+
+    fillList($('listFriends'), accepted.map(function (f) {
+      return friendRow(f, [{ label: 'Entfernen', ghost: true, run: function () {
+        if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id);
+      } }]);
+    }), 'Noch keine Freunde. Such oben nach dem Spielernamen.');
+
+    fillList($('listOutgoing'), outgoing.map(function (f) {
+      return friendRow(f, [{ label: 'Zurückziehen', ghost: true, run: function () { removeFriendship(f.id); } }]);
+    }), 'Keine gesendeten Anfragen.');
+  }
+
+  function answerRequest(id, accept) {
+    db.from('friendships').update({ status: 'accepted' }).eq('id', id).then(function (res) {
+      if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
+      setStatus('Ihr seid jetzt Freunde.', 'ok');
+      loadFriends();
+    });
+  }
+
+  function removeFriendship(id) {
+    db.from('friendships').delete().eq('id', id).then(function (res) {
+      if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
+      loadFriends();
+    });
+  }
+
+  $('friendAdd').addEventListener('click', function () {
+    var name = $('friendName').value.trim();
+    if (!name) { setStatus('Bitte einen Spielernamen eingeben.', 'warn'); return; }
+    // Platzhalter-Zeichen für ilike entschärfen: Suche soll den Namen genau treffen
+    var pattern = name.replace(/[\\%_]/g, '\\$&');
+    db.from('profiles').select('id,username').ilike('username', pattern).limit(1).then(function (res) {
+      if (res.error) { setStatus('Suche fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      var p = res.data && res.data[0];
+      if (!p) { setStatus('Niemanden mit diesem Namen gefunden.', 'warn'); return; }
+      if (p.id === myId) { setStatus('Das bist du selbst.', 'warn'); return; }
+      var exists = friendships.some(function (f) { return otherId(f) === p.id; });
+      if (exists) { setStatus('Mit ' + p.username + ' gibt es schon eine Verbindung oder Anfrage.', 'warn'); return; }
+      db.from('friendships').insert({ requester_id: myId, addressee_id: p.id }).then(function (r2) {
+        if (r2.error) {
+          setStatus(r2.error.code === '23505' ? 'Es gibt schon eine Anfrage mit dieser Person.' : 'Anfrage fehlgeschlagen: ' + r2.error.message, 'err');
+          return;
+        }
+        $('friendName').value = '';
+        setStatus('Anfrage an ' + p.username + ' gesendet.', 'ok');
+        loadFriends();
+      });
+    });
+  });
+
+  // =================== Karte: Zeit und Farbe ===================
   function colorFor(name) {
     var h = 0;
     for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
@@ -259,16 +490,15 @@
     return s < 60 ? 'vor ' + s + ' s' : 'vor ' + Math.round(s / 60) + ' min';
   }
 
-  // ---- Andere Spieler ----
+  // =================== Karte: andere Spieler ===================
   function upsertOther(row) {
     if (!row || !row.user_id || row.user_id === myId) return;
     var ll = [row.lat, row.lng];
     var o = others[row.user_id];
     if (!o) {
-      var color = colorFor(row.username);
+      var color = row.color || colorFor(row.username);
       var marker = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map);
-      var tip = document.createElement('span');
-      tip.textContent = row.username;
+      var tip = el('span', '', row.username);
       marker.bindTooltip(tip, { permanent: true, direction: 'top', offset: [0, -10], className: 'name-tip' });
       o = others[row.user_id] = { name: row.username, marker: marker, color: color };
     } else {
@@ -288,27 +518,18 @@
   function renderPlayers() {
     var now = Date.now();
     var ids = Object.keys(others).sort(function (a, b) { return others[a].name.localeCompare(others[b].name); });
-    playersEl.textContent = '';
-    if (!ids.length) {
-      var li = document.createElement('li');
-      var span = document.createElement('span');
-      span.className = 'empty';
-      span.textContent = 'Noch niemand sonst online.';
-      li.appendChild(span);
-      playersEl.appendChild(li);
-      return;
-    }
-    ids.forEach(function (id) {
+    var items = ids.map(function (id) {
       var o = others[id];
       var age = now - o.updated;
       o.marker.setStyle({ fillOpacity: age > STALE_AFTER_MS ? 0.35 : 1 });
-      var li = document.createElement('li');
-      var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = o.color;
-      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = o.name;
-      var ag = document.createElement('span'); ag.className = 'ago'; ag.textContent = ago(age);
-      li.appendChild(sw); li.appendChild(nm); li.appendChild(ag);
-      playersEl.appendChild(li);
+      var li = el('li');
+      var sw = el('span', 'sw'); sw.style.background = o.color;
+      li.appendChild(sw);
+      li.appendChild(el('span', 'nm', o.name));
+      li.appendChild(el('span', 'ago', ago(age)));
+      return li;
     });
+    fillList(playersEl, items, 'Noch kein Freund online.');
   }
 
   function sweep() {
@@ -344,13 +565,13 @@
       });
   }
 
-  // ---- Eigene Position ----
+  // =================== Eigene Position ===================
   function sendPosition(c) {
     var now = Date.now();
     if (now - lastSent < SEND_EVERY_MS) return;
     lastSent = now;
     db.from('positions').upsert({
-      user_id: myId, username: myName,
+      user_id: myId, username: myName, color: myColor,
       lat: c.latitude, lng: c.longitude, accuracy: c.accuracy,
       updated_at: new Date().toISOString()
     }).then(function (res) {
@@ -364,8 +585,8 @@
     var c = pos.coords;
     var ll = [c.latitude, c.longitude];
     if (!me) {
-      me = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: '#1d4ed8', fillOpacity: 1 }).addTo(map);
-      accuracy = L.circle(ll, { radius: c.accuracy, color: '#1d4ed8', weight: 1, fillOpacity: 0.12 }).addTo(map);
+      me = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: myColor, fillOpacity: 1 }).addTo(map);
+      accuracy = L.circle(ll, { radius: c.accuracy, color: myColor, weight: 1, fillOpacity: 0.12 }).addTo(map);
       map.setView(ll, 17);
     } else {
       me.setLatLng(ll);
@@ -418,7 +639,7 @@
     statsBox.classList.add('hidden');
     playersEl.classList.add('hidden');
     startBtn.textContent = 'Starten';
-    hint.textContent = 'Tippe auf „Starten“. Lass den Bildschirm an, solange du testest.';
+    hint.textContent = 'Tippe auf „Starten“. Du siehst nur Freunde, die ebenfalls gestartet haben.';
     setStatus('Gestoppt');
   }
 
@@ -426,7 +647,7 @@
     if (watchId === null) start(); else stop();
   });
 
-  // ---- Start: gespeicherte Anmeldung wiederherstellen ----
+  // =================== Start: gespeicherte Anmeldung wiederherstellen ===================
   db.auth.getSession().then(function (res) {
     if (res.data && res.data.session) afterLogin(res.data.session.user);
     else showAuth();
