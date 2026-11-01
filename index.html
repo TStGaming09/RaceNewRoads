@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rennen – Meilenstein 2: Freunde live auf der Karte</title>
+<title>Rennen – Meilenstein 3: Konten</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
@@ -29,7 +29,7 @@
     border-radius: 14px;
     box-shadow: 0 6px 24px rgba(20, 33, 61, .22);
     padding: 14px 16px;
-    max-height: 60%; overflow-y: auto;
+    max-height: 70%; overflow-y: auto;
   }
   .status { display: flex; align-items: center; gap: 8px; font-weight: 600; }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
@@ -38,13 +38,20 @@
   .dot.err { background: var(--err); }
 
   label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
-  input[type=text] {
+  input[type=text], input[type=email], input[type=password] {
     width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px;
     font: inherit; color: var(--ink);
   }
-  input[type=text]:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
+  input:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
 
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+  .tabs { display: flex; gap: 6px; margin-top: 12px; }
+  .tabs button { margin: 0; background: #eef1f6; color: var(--ink); }
+  .tabs button[aria-selected=true] { background: var(--ink); color: #fff; }
+
+  .who { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+  .who strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 0; }
   .stats .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .stats .l { font-size: .8rem; color: var(--muted); }
 
@@ -53,13 +60,15 @@
   .players .sw { width: 12px; height: 12px; border-radius: 50%; flex: none; }
   .players .nm { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .players .ago { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .players .empty { color: var(--muted); font-size: .9rem; display: block; }
+  .players .empty { color: var(--muted); font-size: .9rem; }
 
   button {
     width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 10px;
     background: var(--ink); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
   }
   button:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
+  button[disabled] { opacity: .5; cursor: default; }
+  button.ghost { width: auto; margin: 0; padding: 6px 12px; background: #eef1f6; color: var(--ink); font-weight: 500; }
   .hint { margin: 10px 0 0; font-size: .85rem; color: var(--muted); line-height: 1.4; }
   .name-tip {
     background: var(--paper); color: var(--ink); border: 0; border-radius: 6px;
@@ -73,104 +82,195 @@
 <div id="map" role="application" aria-label="Karte"></div>
 
 <section class="panel" aria-live="polite">
-  <div class="status"><span id="dot" class="dot"></span><span id="status">Bereit</span></div>
+  <div class="status"><span id="dot" class="dot"></span><span id="status">Lade …</span></div>
 
-  <div id="nameBox">
-    <label for="name">Dein Spielername (jeder braucht einen eigenen)</label>
-    <input id="name" type="text" maxlength="20" autocomplete="off" placeholder="z. B. Luis">
+  <!-- Anmeldung -->
+  <div id="authView" class="hidden">
+    <div class="tabs" role="tablist">
+      <button id="tabLogin" role="tab" aria-selected="true" type="button">Anmelden</button>
+      <button id="tabSignup" role="tab" aria-selected="false" type="button">Registrieren</button>
+    </div>
+    <div id="usernameRow" class="hidden">
+      <label for="username">Spielername (2–20 Zeichen, nur du hast ihn)</label>
+      <input id="username" type="text" maxlength="20" autocomplete="nickname">
+    </div>
+    <label for="email">E-Mail</label>
+    <input id="email" type="email" autocomplete="email">
+    <label for="password">Passwort (mindestens 8 Zeichen)</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <button id="submit" type="button">Anmelden</button>
   </div>
 
-  <div id="statsBox" class="stats hidden">
-    <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
-    <div><div class="v" id="acc">–</div><div class="l">Genauigkeit in m</div></div>
-    <div><div class="v" id="sent">0</div><div class="l">gesendet</div></div>
+  <!-- Hauptansicht -->
+  <div id="mainView" class="hidden">
+    <div class="who">
+      <span>Angemeldet als <strong id="who"></strong></span>
+      <button id="logout" class="ghost" type="button">Abmelden</button>
+    </div>
+    <div id="statsBox" class="stats hidden">
+      <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
+      <div><div class="v" id="acc">–</div><div class="l">Genauigkeit in m</div></div>
+      <div><div class="v" id="sent">0</div><div class="l">gesendet</div></div>
+    </div>
+    <button id="start" type="button">Starten</button>
+    <ul id="players" class="players hidden"></ul>
+    <p class="hint" id="hint">Tippe auf „Starten“. Lass den Bildschirm an, solange du testest.</p>
   </div>
-
-  <button id="start">Starten</button>
-  <ul id="players" class="players hidden"></ul>
-  <p class="hint" id="hint">Gib deinen Namen ein und tippe auf „Starten“. Lass den Bildschirm an, solange du testest.</p>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function () {
-  // Zugangsdaten. Der Publishable Key ist für den Einsatz im Browser gedacht.
   var SUPABASE_URL = 'https://tolcoxgoifwtdpdhsfvq.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_LT1lr75iVAl6QWfe8GNzBQ_kWiQ9Psu';
 
-  var SEND_EVERY_MS = 2000;     // höchstens alle 2 Sekunden senden
-  var STALE_AFTER_MS = 30000;   // nach 30 s ohne Update: ausgegraut
-  var GONE_AFTER_MS = 300000;   // nach 5 min ohne Update: von der Karte entfernt
+  var SEND_EVERY_MS = 2000;
+  var STALE_AFTER_MS = 30000;
+  var GONE_AFTER_MS = 300000;
 
-  var dot = document.getElementById('dot');
-  var statusEl = document.getElementById('status');
-  var nameBox = document.getElementById('nameBox');
-  var nameInput = document.getElementById('name');
-  var statsBox = document.getElementById('statsBox');
-  var speedEl = document.getElementById('speed');
-  var accEl = document.getElementById('acc');
-  var sentEl = document.getElementById('sent');
-  var startBtn = document.getElementById('start');
-  var playersEl = document.getElementById('players');
-  var hint = document.getElementById('hint');
+  function $(id) { return document.getElementById(id); }
+  var dot = $('dot'), statusEl = $('status');
+  var authView = $('authView'), mainView = $('mainView');
+  var tabLogin = $('tabLogin'), tabSignup = $('tabSignup'), usernameRow = $('usernameRow');
+  var usernameIn = $('username'), emailIn = $('email'), passIn = $('password'), submitBtn = $('submit');
+  var whoEl = $('who'), logoutBtn = $('logout');
+  var statsBox = $('statsBox'), speedEl = $('speed'), accEl = $('acc'), sentEl = $('sent');
+  var startBtn = $('start'), playersEl = $('players'), hint = $('hint');
 
   var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Gemerkter Name (Speicher kann leer oder gesperrt sein)
-  try { nameInput.value = localStorage.getItem('rennen-name') || ''; } catch (e) {}
-
-  // Karte
+  // ---- Karte ----
   var map = L.map('map', { zoomControl: false }).setView([51.1657, 10.4515], 6);
   L.control.zoom({ position: 'topright' }).addTo(map);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap-Mitwirkende'
+    maxZoom: 19, attribution: '&copy; OpenStreetMap-Mitwirkende'
   }).addTo(map);
+  map.on('dragstart', function () { follow = false; });
 
-  var myName = '';
+  var myId = null, myName = '';
   var me = null, accuracy = null;
   var trail = L.polyline([], { color: '#1d4ed8', weight: 4, opacity: 0.7 }).addTo(map);
-  var watchId = null;
-  var follow = true;
-  var sentCount = 0;
-  var lastSent = 0;
-  var others = {};   // name -> { lat, lng, updated, marker }
-  var channel = null;
-  var tick = null;
-
-  map.on('dragstart', function () { follow = false; });
+  var watchId = null, follow = true, sentCount = 0, lastSent = 0;
+  var others = {};   // user_id -> { name, color, marker, updated }
+  var channel = null, tick = null;
+  var mode = 'login';
 
   function setStatus(text, kind) {
     statusEl.textContent = text;
     dot.className = 'dot' + (kind ? ' ' + kind : '');
   }
 
-  // Jede Person bekommt aus ihrem Namen eine feste Farbe
+  // ---- Anmeldung ----
+  function setMode(m) {
+    mode = m;
+    var signup = m === 'signup';
+    tabLogin.setAttribute('aria-selected', String(!signup));
+    tabSignup.setAttribute('aria-selected', String(signup));
+    usernameRow.classList.toggle('hidden', !signup);
+    submitBtn.textContent = signup ? 'Konto erstellen' : 'Anmelden';
+    passIn.setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
+    setStatus(signup ? 'Neues Konto erstellen' : 'Bitte anmelden');
+  }
+  tabLogin.addEventListener('click', function () { setMode('login'); });
+  tabSignup.addEventListener('click', function () { setMode('signup'); });
+
+  function germanAuthError(msg) {
+    var m = (msg || '').toLowerCase();
+    if (m.indexOf('invalid login') !== -1) return 'E-Mail oder Passwort falsch.';
+    if (m.indexOf('not confirmed') !== -1) return 'Bitte bestätige zuerst deine E-Mail (Link im Postfach).';
+    if (m.indexOf('already registered') !== -1) return 'Diese E-Mail ist schon registriert. Bitte anmelden.';
+    if (m.indexOf('database error') !== -1) return 'Spielername ist schon vergeben oder ungültig.';
+    if (m.indexOf('password') !== -1) return 'Passwort zu schwach oder zu kurz.';
+    if (m.indexOf('rate limit') !== -1) return 'Zu viele Versuche. Warte kurz und probiere es erneut.';
+    return 'Fehler: ' + msg;
+  }
+
+  function submit() {
+    var email = emailIn.value.trim();
+    var pass = passIn.value;
+    if (!email || !pass) { setStatus('Bitte E-Mail und Passwort eingeben.', 'warn'); return; }
+    if (pass.length < 8) { setStatus('Das Passwort braucht mindestens 8 Zeichen.', 'warn'); return; }
+    submitBtn.disabled = true;
+
+    if (mode === 'signup') {
+      var name = usernameIn.value.trim();
+      if (name.length < 2 || name.length > 20) {
+        setStatus('Der Spielername braucht 2 bis 20 Zeichen.', 'warn');
+        submitBtn.disabled = false; return;
+      }
+      db.auth.signUp({ email: email, password: pass, options: { data: { username: name } } })
+        .then(function (res) {
+          submitBtn.disabled = false;
+          if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
+          if (res.data.session) { afterLogin(res.data.session.user); }
+          else {
+            setStatus('Fast geschafft: Bestätigungsmail gesendet. Klicke den Link und melde dich dann an.', 'ok');
+            setMode('login');
+            setStatus('Bestätigungsmail gesendet. Klicke den Link, dann hier anmelden.', 'ok');
+          }
+        });
+    } else {
+      db.auth.signInWithPassword({ email: email, password: pass }).then(function (res) {
+        submitBtn.disabled = false;
+        if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
+        afterLogin(res.data.user);
+      });
+    }
+  }
+  submitBtn.addEventListener('click', submit);
+  passIn.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+
+  function showAuth() {
+    mainView.classList.add('hidden');
+    authView.classList.remove('hidden');
+    passIn.value = '';
+    setMode(mode);
+  }
+
+  function afterLogin(user) {
+    myId = user.id;
+    db.from('profiles').select('username').eq('id', myId).single().then(function (res) {
+      if (res.error || !res.data) {
+        setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err');
+        return;
+      }
+      myName = res.data.username;
+      whoEl.textContent = myName;
+      authView.classList.add('hidden');
+      mainView.classList.remove('hidden');
+      setStatus('Bereit');
+    });
+  }
+
+  logoutBtn.addEventListener('click', function () {
+    if (watchId !== null) stop();
+    db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
+  });
+
+  // ---- Farben, Zeitangaben ----
   function colorFor(name) {
     var h = 0;
     for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
     return 'hsl(' + h + ', 70%, 42%)';
   }
-
   function ago(ms) {
     var s = Math.max(0, Math.round(ms / 1000));
-    if (s < 60) return 'vor ' + s + ' s';
-    return 'vor ' + Math.round(s / 60) + ' min';
+    return s < 60 ? 'vor ' + s + ' s' : 'vor ' + Math.round(s / 60) + ' min';
   }
 
   // ---- Andere Spieler ----
   function upsertOther(row) {
-    if (!row || row.player === myName) return;
+    if (!row || !row.user_id || row.user_id === myId) return;
     var ll = [row.lat, row.lng];
-    var o = others[row.player];
+    var o = others[row.user_id];
     if (!o) {
-      var color = colorFor(row.player);
+      var color = colorFor(row.username);
       var marker = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map);
       var tip = document.createElement('span');
-      tip.textContent = row.player;
+      tip.textContent = row.username;
       marker.bindTooltip(tip, { permanent: true, direction: 'top', offset: [0, -10], className: 'name-tip' });
-      o = others[row.player] = { marker: marker, color: color };
+      o = others[row.user_id] = { name: row.username, marker: marker, color: color };
     } else {
       o.marker.setLatLng(ll);
     }
@@ -178,18 +278,18 @@
     renderPlayers();
   }
 
-  function removeOther(name) {
-    var o = others[name];
+  function removeOther(id) {
+    var o = others[id];
     if (!o) return;
     map.removeLayer(o.marker);
-    delete others[name];
+    delete others[id];
   }
 
   function renderPlayers() {
     var now = Date.now();
-    var names = Object.keys(others).sort();
+    var ids = Object.keys(others).sort(function (a, b) { return others[a].name.localeCompare(others[b].name); });
     playersEl.textContent = '';
-    if (!names.length) {
+    if (!ids.length) {
       var li = document.createElement('li');
       var span = document.createElement('span');
       span.className = 'empty';
@@ -198,13 +298,13 @@
       playersEl.appendChild(li);
       return;
     }
-    names.forEach(function (n) {
-      var o = others[n];
+    ids.forEach(function (id) {
+      var o = others[id];
       var age = now - o.updated;
       o.marker.setStyle({ fillOpacity: age > STALE_AFTER_MS ? 0.35 : 1 });
       var li = document.createElement('li');
       var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = o.color;
-      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = n;
+      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = o.name;
       var ag = document.createElement('span'); ag.className = 'ago'; ag.textContent = ago(age);
       li.appendChild(sw); li.appendChild(nm); li.appendChild(ag);
       playersEl.appendChild(li);
@@ -213,8 +313,8 @@
 
   function sweep() {
     var now = Date.now();
-    Object.keys(others).forEach(function (n) {
-      if (now - others[n].updated > GONE_AFTER_MS) removeOther(n);
+    Object.keys(others).forEach(function (id) {
+      if (now - others[id].updated > GONE_AFTER_MS) removeOther(id);
     });
     renderPlayers();
   }
@@ -231,7 +331,7 @@
     channel = db.channel('positions-live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'positions' }, function (payload) {
         if (payload.eventType === 'DELETE') {
-          if (payload.old && payload.old.player) removeOther(payload.old.player);
+          if (payload.old && payload.old.user_id) removeOther(payload.old.user_id);
           renderPlayers();
         } else {
           upsertOther(payload.new);
@@ -250,10 +350,8 @@
     if (now - lastSent < SEND_EVERY_MS) return;
     lastSent = now;
     db.from('positions').upsert({
-      player: myName,
-      lat: c.latitude,
-      lng: c.longitude,
-      accuracy: c.accuracy,
+      user_id: myId, username: myName,
+      lat: c.latitude, lng: c.longitude, accuracy: c.accuracy,
       updated_at: new Date().toISOString()
     }).then(function (res) {
       if (res.error) { setStatus('Senden fehlgeschlagen: ' + res.error.message, 'err'); return; }
@@ -280,7 +378,6 @@
     accEl.textContent = Math.round(c.accuracy);
     if (c.accuracy <= 20) setStatus('Live als „' + myName + '“', 'ok');
     else setStatus('GPS ungenau – am besten draußen testen', 'warn');
-
     sendPosition(c);
   }
 
@@ -295,21 +392,14 @@
   }
 
   function start() {
-    var name = nameInput.value.trim();
-    if (!name) { setStatus('Bitte gib zuerst einen Namen ein.', 'warn'); nameInput.focus(); return; }
     if (!('geolocation' in navigator)) { setStatus('Dieser Browser unterstützt keinen Standort.', 'err'); return; }
     if (!window.isSecureContext) { setStatus('Standort geht nur über https oder localhost.', 'err'); return; }
-
-    myName = name;
-    try { localStorage.setItem('rennen-name', myName); } catch (e) {}
-    nameBox.classList.add('hidden');
     statsBox.classList.remove('hidden');
     playersEl.classList.remove('hidden');
     startBtn.textContent = 'Stoppen';
-    hint.textContent = 'Läuft. Sobald ein Freund mit anderem Namen startet, erscheint sein Punkt auf der Karte.';
+    hint.textContent = 'Läuft. Sobald ein Freund startet, erscheint sein Punkt auf der Karte.';
     setStatus('Suche Position …', 'warn');
     follow = true;
-
     loadAll().then(subscribe);
     tick = setInterval(sweep, 5000);
     watchId = navigator.geolocation.watchPosition(onPosition, onError, {
@@ -323,18 +413,23 @@
     if (tick) clearInterval(tick);
     tick = null;
     if (channel) { db.removeChannel(channel); channel = null; }
-    // Eigenen Eintrag entfernen, damit man nicht als Geist auf der Karte bleibt
-    if (myName) db.from('positions').delete().eq('player', myName).then(function () {});
+    if (myId) db.from('positions').delete().eq('user_id', myId).then(function () {});
     Object.keys(others).forEach(removeOther);
-    nameBox.classList.remove('hidden');
     statsBox.classList.add('hidden');
     playersEl.classList.add('hidden');
     startBtn.textContent = 'Starten';
+    hint.textContent = 'Tippe auf „Starten“. Lass den Bildschirm an, solange du testest.';
     setStatus('Gestoppt');
   }
 
   startBtn.addEventListener('click', function () {
     if (watchId === null) start(); else stop();
+  });
+
+  // ---- Start: gespeicherte Anmeldung wiederherstellen ----
+  db.auth.getSession().then(function (res) {
+    if (res.data && res.data.session) afterLogin(res.data.session.user);
+    else showAuth();
   });
 })();
 </script>
