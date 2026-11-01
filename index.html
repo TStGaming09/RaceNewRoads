@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rennen – Meilenstein 1: Live-Position</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root {
+    --ink: #14213d;
+    --paper: #ffffff;
+    --muted: #5c677d;
+    --me: #1d4ed8;
+    --ok: #15803d;
+    --warn: #b45309;
+    --err: #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); }
+  #map { position: absolute; inset: 0; }
+
+  .panel {
+    position: absolute; z-index: 1000;
+    left: 12px; right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    max-width: 440px; margin: 0 auto;
+    background: var(--paper);
+    border-radius: 14px;
+    box-shadow: 0 6px 24px rgba(20, 33, 61, .22);
+    padding: 14px 16px;
+  }
+  .status { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.ok { background: var(--ok); }
+  .dot.warn { background: var(--warn); }
+  .dot.err { background: var(--err); }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+  .stats div { min-width: 0; }
+  .stats .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stats .l { font-size: .8rem; color: var(--muted); }
+
+  button {
+    width: 100%; padding: 12px; border: 0; border-radius: 10px;
+    background: var(--ink); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  button:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
+  button[disabled] { opacity: .5; cursor: default; }
+  .hint { margin: 10px 0 0; font-size: .85rem; color: var(--muted); line-height: 1.4; }
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="Karte"></div>
+
+<section class="panel" aria-live="polite">
+  <div class="status"><span id="dot" class="dot"></span><span id="status">Bereit</span></div>
+  <div class="stats">
+    <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
+    <div><div class="v" id="acc">–</div><div class="l">Genauigkeit in m</div></div>
+    <div><div class="v" id="count">0</div><div class="l">Positionen</div></div>
+  </div>
+  <button id="start">Standort starten</button>
+  <p class="hint" id="hint">Tippe auf „Standort starten“ und erlaube den Standortzugriff. Lass den Bildschirm an, solange du testest.</p>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  var startBtn = document.getElementById('start');
+  var dot = document.getElementById('dot');
+  var statusEl = document.getElementById('status');
+  var hint = document.getElementById('hint');
+  var speedEl = document.getElementById('speed');
+  var accEl = document.getElementById('acc');
+  var countEl = document.getElementById('count');
+
+  // Karte: Startansicht Deutschland, bis die erste Position da ist
+  var map = L.map('map', { zoomControl: false }).setView([51.1657, 10.4515], 6);
+  L.control.zoom({ position: 'topright' }).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap-Mitwirkende'
+  }).addTo(map);
+
+  var me = null;          // Punkt mit deiner Position
+  var accuracy = null;    // Kreis für die Genauigkeit
+  var trail = L.polyline([], { color: '#1d4ed8', weight: 4, opacity: 0.7 }).addTo(map);
+  var watchId = null;
+  var count = 0;
+  var follow = true;      // Karte folgt dir, bis du sie selbst verschiebst
+
+  map.on('dragstart', function () { follow = false; startBtn.textContent = 'Mich zentrieren'; });
+
+  function setStatus(text, kind) {
+    statusEl.textContent = text;
+    dot.className = 'dot' + (kind ? ' ' + kind : '');
+  }
+
+  function onPosition(pos) {
+    var c = pos.coords;
+    var ll = [c.latitude, c.longitude];
+    count += 1;
+
+    if (!me) {
+      me = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: '#1d4ed8', fillOpacity: 1 }).addTo(map);
+      accuracy = L.circle(ll, { radius: c.accuracy, color: '#1d4ed8', weight: 1, fillOpacity: 0.12 }).addTo(map);
+      map.setView(ll, 17);
+    } else {
+      me.setLatLng(ll);
+      accuracy.setLatLng(ll).setRadius(c.accuracy);
+    }
+    trail.addLatLng(ll);
+    if (follow) map.panTo(ll);
+
+    // Geschwindigkeit kommt in m/s und kann fehlen (null)
+    speedEl.textContent = (c.speed != null && !isNaN(c.speed)) ? (c.speed * 3.6).toFixed(1) : '–';
+    accEl.textContent = Math.round(c.accuracy);
+    countEl.textContent = count;
+
+    if (c.accuracy <= 20) setStatus('GPS gut', 'ok');
+    else setStatus('GPS ungenau – am besten draußen testen', 'warn');
+  }
+
+  function onError(err) {
+    var msg = {
+      1: 'Standortzugriff verweigert. Erlaube ihn in den Browser- oder Handy-Einstellungen.',
+      2: 'Position nicht verfügbar. Prüfe GPS und Empfang.',
+      3: 'Zeitüberschreitung beim Abrufen der Position.'
+    }[err.code] || 'Unbekannter Standortfehler.';
+    setStatus(msg, 'err');
+    if (err.code === 1) stop();
+  }
+
+  function start() {
+    if (!('geolocation' in navigator)) {
+      setStatus('Dieser Browser unterstützt keinen Standort.', 'err');
+      return;
+    }
+    if (!window.isSecureContext) {
+      setStatus('Standort geht nur über https oder localhost.', 'err');
+      return;
+    }
+    setStatus('Suche Position …', 'warn');
+    hint.textContent = 'Läuft. Geh ein paar Meter und schau, ob der Punkt mitwandert.';
+    startBtn.textContent = 'Stoppen';
+    follow = true;
+    watchId = navigator.geolocation.watchPosition(onPosition, onError, {
+      enableHighAccuracy: true,  // echtes GPS statt Funkzellen-Schätzung
+      maximumAge: 0,
+      timeout: 15000
+    });
+  }
+
+  function stop() {
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    startBtn.textContent = 'Standort starten';
+    setStatus('Gestoppt');
+  }
+
+  startBtn.addEventListener('click', function () {
+    if (watchId === null) { start(); return; }
+    if (!follow && me) {            // Karte war verschoben: erst wieder zentrieren
+      follow = true;
+      startBtn.textContent = 'Stoppen';
+      map.panTo(me.getLatLng());
+      return;
+    }
+    stop();
+  });
+})();
+</script>
+</body>
+</html>
