@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rennen-App</title>
+<title>RaceNewRoads</title>
+<meta name="application-name" content="RaceNewRoads">
+<meta name="apple-mobile-web-app-title" content="RaceNewRoads">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
@@ -171,6 +173,7 @@
   .udot { width: 9px; height: 9px; border-radius: 50%; background: var(--me); flex: none; }
   .list li .acts { flex-basis: 100%; display: flex; gap: 8px; margin-top: 6px; }
   .list li .acts button { flex: 1; padding: 8px 12px; }
+  .brand { margin: 12px 0 0; font-size: 1.5rem; }
   .hidden { display: none; }
 </style>
 </head>
@@ -216,6 +219,7 @@
 
   <!-- Anmeldung -->
   <div id="authView" class="hidden">
+    <h2 class="brand">RaceNewRoads</h2>
     <div class="tabs" role="tablist">
       <button id="tabLogin" role="tab" aria-selected="true" type="button">Anmelden</button>
       <button id="tabSignup" role="tab" aria-selected="false" type="button">Registrieren</button>
@@ -1429,7 +1433,7 @@
   $('rdShare').addEventListener('click', function () {
     if (!raceCur) return;
     var url = location.origin + location.pathname + '?race=' + raceCur.code;
-    var text = 'Rennen „' + raceCur.name + '“ – Start und Ziel sind im Link. Code: ' + raceCur.code;
+    var text = 'RaceNewRoads: Rennen „' + raceCur.name + '“ – Start und Ziel sind im Link. Code: ' + raceCur.code;
     if (navigator.share) navigator.share({ title: raceCur.name, text: text, url: url }).catch(function () {});
     else if (navigator.clipboard) navigator.clipboard.writeText(text + ' ' + url).then(function () { setStatus('Link kopiert.', 'ok'); });
     else setStatus(url, 'ok');
