@@ -139,6 +139,17 @@
   body.picking .limitbox { display: none; }
   .switch { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: var(--ink); font-size: 1rem; }
   input[type=checkbox] { width: 22px; height: 22px; flex: none; }
+  .fuelpin { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid #e8590c; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); box-sizing: border-box; }
+  .tl { width: 12px; height: 22px; border-radius: 4px; border: 1px solid #fff; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+        background: radial-gradient(circle at 50% 20%, #e11 2.6px, transparent 3px), radial-gradient(circle at 50% 50%, #fb0 2.6px, transparent 3px), radial-gradient(circle at 50% 80%, #2c4 2.6px, transparent 3px), #222; }
+  .fuelpop { min-width: 190px; font-size: .9rem; line-height: 1.4; color: #14213d; }
+  .fuelpop div { margin-top: 2px; }
+  .fuelpop button { margin-top: 8px; padding: 8px; background: #14213d; color: #fff; }
+  .legend { position: absolute; z-index: 1000; right: 12px; top: calc(68px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; gap: 3px; padding: 6px 10px; border-radius: 8px; background: var(--paper); color: var(--ink); font-size: .75rem; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+  .legend i { display: inline-block; width: 16px; height: 4px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  body.picking .legend { display: none; }
+  .list li.wrap { flex-wrap: wrap; }
+  .list li .sub { flex-basis: 100%; font-size: .8rem; color: var(--muted); }
   .hidden { display: none; }
 </style>
 </head>
@@ -163,6 +174,12 @@
 <div id="limitBox" class="limitbox hidden" aria-label="Tempolimit und aktuelles Tempo">
   <div id="limitSign" class="limitsign unknown"><span id="limitVal">–</span></div>
   <div id="limitSpeed" class="limitspeed"><span id="curSpeed">0</span><small>km/h</small></div>
+</div>
+<div id="condLegend" class="legend hidden" aria-label="Legende Straßenzustand">
+  <span><i style="background:#22a55b"></i>gut</span>
+  <span><i style="background:#e6b800"></i>mittel</span>
+  <span><i style="background:#f07c1e"></i>schlecht</span>
+  <span><i style="background:#d11"></i>sehr schlecht</span>
 </div>
 
 <section class="panel" id="panel" aria-live="polite">
@@ -277,6 +294,7 @@
         </div>
         <ul id="nvResults" class="list hidden" style="margin-top:8px"></ul>
         <button id="nvPick" class="ghost wide" type="button">Ziel auf der Karte wählen</button>
+        <button id="nvFuelNear" class="ghost wide" type="button">Tankstellen in der Nähe suchen</button>
         <button id="nvRaceStart" class="ghost wide hidden" type="button">Zum Start des Rennens</button>
         <p id="nvDest" class="hint">Noch kein Ziel gewählt.</p>
         <button id="nvGo" class="hidden" type="button">Navigation starten</button>
@@ -287,8 +305,10 @@
           <div><div class="v" id="nvRemain">–</div><div class="l">Rest</div></div>
           <div><div class="v" id="nvEta">–</div><div class="l">Ankunft in</div></div>
         </div>
+        <button id="nvFuelRoute" class="ghost wide" type="button">Tankstelle entlang der Route suchen</button>
         <button id="nvStop" type="button">Navigation beenden</button>
       </div>
+      <ul id="nvFuel" class="list hidden" style="margin-top:10px"></ul>
       <p class="hint">Routen kommen von den freien OpenStreetMap-Diensten (OSRM, Nominatim). Während eines laufenden Rennens ist die Navigation gesperrt.</p>
     </div>
 
@@ -364,6 +384,12 @@
       <h3>Tempolimit</h3>
       <label class="switch" for="sWarn"><input type="checkbox" id="sWarn"><span>Überschreitungs-Warnung</span></label>
       <p class="hint">Das Tempolimit-Schild ist immer sichtbar, solange dein Standort läuft. Bei eingeschalteter Warnung blinkt es rot, sobald du mehr als 3 km/h zu schnell bist, dazu gibt es einen Ton und, wo das Gerät es kann, Vibration. Die Limits stammen aus OpenStreetMap und können fehlen oder falsch sein. Es gelten immer die Schilder am Straßenrand.</p>
+
+      <h3>Karte</h3>
+      <label class="switch" for="sFuel"><input type="checkbox" id="sFuel"><span>Tankstellen anzeigen</span></label>
+      <label class="switch" for="sSignals"><input type="checkbox" id="sSignals"><span>Ampeln anzeigen</span></label>
+      <label class="switch" for="sSurface"><input type="checkbox" id="sSurface"><span>Straßenzustand anzeigen</span></label>
+      <p class="hint">Die Daten kommen aus OpenStreetMap und werden für den sichtbaren Kartenausschnitt geladen. Tankstellen erscheinen ab Zoomstufe 11, der Straßenzustand ab 14 und Ampeln ab 15. Zoome näher heran, wenn nichts zu sehen ist. Der Straßenzustand zeigt nur, was in OpenStreetMap zu Belag und Qualität eingetragen ist. Aktuelle Schäden oder Schlaglöcher kennt die App nicht. Preise zeigt die App nicht.</p>
     </div>
   </div>
 </section>
@@ -566,7 +592,7 @@
   function showAuth() {
     mainView.classList.add('hidden');
     authView.classList.remove('hidden');
-    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden');
+    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden'); stopOverlays();
     passIn.value = '';
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     setMode(mode);
@@ -591,6 +617,7 @@
       mainView.classList.remove('hidden');
       $('menuBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
       showScreen('Home');
+      startOverlays();
       setStatus('Bereit');
       syncClock();
       loadFriends(); loadMyRaces(false);
@@ -1472,7 +1499,7 @@
   function stopNavigation(silent) {
     nav = null; navDest = null;
     navLayer.clearLayers();
-    $('navActive').classList.add('hidden'); $('navSetup').classList.remove('hidden');
+    $('navActive').classList.add('hidden'); $('navSetup').classList.remove('hidden'); $('nvFuel').classList.add('hidden');
     updateDestUI();
     if (!silent) setStatus('Navigation beendet.');
   }
@@ -1752,6 +1779,215 @@
         (!lim.cache || dist(lim.cache.lat, lim.cache.lng, lat, lng) > 60)) loadLimits(lat, lng);
     showLimit(lim.cache ? nearestLimit(lat, lng) : null, kmh);
   }
+
+  // =====================================================
+  //  KARTENEBENEN: TANKSTELLEN, AMPELN, STRASSENZUSTAND
+  // =====================================================
+  var OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+  function overpass(q) {
+    return fetch(OVERPASS_URL + '?data=' + encodeURIComponent(q)).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+  function elLatLng(e) { return e.center ? { lat: e.center.lat, lng: e.center.lon } : { lat: e.lat, lng: e.lon }; }
+  function bbox(s, w, n, e) { return '(' + [s, w, n, e].map(function (x) { return x.toFixed(5); }).join(',') + ')'; }
+
+  var FUEL_TYPES = [['fuel:diesel', 'Diesel'], ['fuel:e10', 'E10'], ['fuel:octane_95', 'Super 95'], ['fuel:octane_98', 'Super 98'],
+                    ['fuel:lpg', 'LPG'], ['fuel:cng', 'CNG'], ['fuel:HGV_diesel', 'LKW-Diesel']];
+  function hoursText(h) { return h === '24/7' ? 'rund um die Uhr' : h; }
+
+  var SURF_LEVEL = {
+    asphalt: 0, concrete: 0, paved: 0, chipseal: 0,
+    'concrete:plates': 1, 'concrete:lanes': 1, paving_stones: 1, metal: 1, wood: 1, compacted: 1, fine_gravel: 1,
+    sett: 2, cobblestone: 2, unhewn_cobblestone: 2, gravel: 2, pebblestone: 2, unpaved: 2, ground: 2, dirt: 2,
+    earth: 3, grass: 3, mud: 3, sand: 3, snow: 3, ice: 3
+  };
+  var SMOOTH_LEVEL = { excellent: 0, good: 0, intermediate: 1, bad: 2, very_bad: 3, horrible: 3, very_horrible: 3, impassable: 3 };
+  var COND_COLORS = ['#22a55b', '#e6b800', '#f07c1e', '#d11111'];
+  var SURF_DE = { asphalt: 'Asphalt', concrete: 'Beton', paved: 'befestigt', paving_stones: 'Pflastersteine', sett: 'Kopfsteinpflaster',
+    cobblestone: 'Kopfsteinpflaster', unhewn_cobblestone: 'grobes Pflaster', gravel: 'Schotter', fine_gravel: 'Feinsplitt',
+    compacted: 'verdichtet', unpaved: 'unbefestigt', dirt: 'Erde', ground: 'Boden', earth: 'Erde', sand: 'Sand', grass: 'Gras',
+    mud: 'Matsch', pebblestone: 'Kies', wood: 'Holz', metal: 'Metall', snow: 'Schnee', ice: 'Eis' };
+  var SMOOTH_DE = { excellent: 'ausgezeichnet', good: 'gut', intermediate: 'mittel', bad: 'schlecht', very_bad: 'sehr schlecht',
+    horrible: 'furchtbar', very_horrible: 'extrem schlecht', impassable: 'unpassierbar' };
+
+  function conditionLevel(tags) {
+    if (tags.smoothness && SMOOTH_LEVEL[tags.smoothness] != null) return SMOOTH_LEVEL[tags.smoothness];
+    if (tags.surface && SURF_LEVEL[tags.surface] != null) return SURF_LEVEL[tags.surface];
+    return null;
+  }
+
+  function openNavTo(lat, lng, label) {
+    map.closePopup();
+    setDest({ lat: lat, lng: lng, label: label });
+    showScreen('Navi');
+  }
+
+  function fuelPopup(tags, lat, lng) {
+    var box = el('div', 'fuelpop');
+    var name = tags.name || tags.brand || tags.operator || 'Tankstelle';
+    box.appendChild(el('strong', '', name));
+    if (tags.brand && tags.brand !== name) box.appendChild(el('div', '', tags.brand));
+    var fuels = FUEL_TYPES.filter(function (f) { return tags[f[0]] === 'yes'; }).map(function (f) { return f[1]; });
+    if (fuels.length) box.appendChild(el('div', '', 'Kraftstoffe: ' + fuels.join(', ')));
+    if (tags.opening_hours) box.appendChild(el('div', '', 'Öffnungszeiten: ' + hoursText(tags.opening_hours)));
+    var b = el('button', '', 'Hierher navigieren'); b.type = 'button';
+    b.addEventListener('click', function () { openNavTo(lat, lng, name); });
+    box.appendChild(b);
+    return box;
+  }
+
+  function condPopup(tags) {
+    var box = el('div', 'fuelpop');
+    var lvl = conditionLevel(tags);
+    box.appendChild(el('strong', '', tags.name || 'Straße'));
+    if (tags.surface) box.appendChild(el('div', '', 'Belag: ' + (SURF_DE[tags.surface] || tags.surface)));
+    if (tags.smoothness) box.appendChild(el('div', '', 'Qualität: ' + (SMOOTH_DE[tags.smoothness] || tags.smoothness)));
+    box.appendChild(el('div', '', 'Quelle: OpenStreetMap, kann veraltet sein.'));
+    return box;
+  }
+
+  function renderFuel(elements, layer) {
+    elements.forEach(function (e) {
+      var p = elLatLng(e), tags = e.tags || {};
+      if (p.lat == null || p.lng == null) return;
+      var icon = L.divIcon({ html: el('div', 'fuelpin', '⛽'), className: '', iconSize: [28, 28], iconAnchor: [14, 14] });
+      L.marker([p.lat, p.lng], { icon: icon, keyboard: false, zIndexOffset: -500 })
+        .bindPopup(fuelPopup(tags, p.lat, p.lng)).addTo(layer);
+    });
+  }
+  function renderSignals(elements, layer) {
+    elements.forEach(function (e) {
+      if (e.lat == null || e.lon == null) return;
+      var icon = L.divIcon({ html: el('div', 'tl'), className: '', iconSize: [12, 22], iconAnchor: [6, 11] });
+      L.marker([e.lat, e.lon], { icon: icon, interactive: false, keyboard: false, zIndexOffset: -600 }).addTo(layer);
+    });
+  }
+  function renderSurface(elements, layer) {
+    elements.forEach(function (e) {
+      if (!e.geometry || e.geometry.length < 2) return;
+      var tags = e.tags || {}, lvl = conditionLevel(tags);
+      if (lvl == null) return;
+      L.polyline(e.geometry.map(function (g) { return [g.lat, g.lon]; }), { color: COND_COLORS[lvl], weight: 5, opacity: 0.8 })
+        .bindPopup(function () { return condPopup(tags); }).addTo(layer);
+    });
+  }
+
+  // Eine Ebene lädt nur den sichtbaren Ausschnitt (plus Rand) und nur ab einer Mindest-Zoomstufe
+  function makeOverlay(opt) {
+    var o = { layer: L.layerGroup(), on: false, got: null, inflight: false, blockedUntil: 0 };
+    o.refresh = function () {
+      if (!o.on) return;
+      if (map.getZoom() < opt.minZoom) { o.layer.clearLayers(); o.got = null; return; }
+      var b = map.getBounds();
+      if (o.got && o.got.contains(b)) return;
+      if (o.inflight || Date.now() < o.blockedUntil) return;
+      var pb = b.pad(0.3);
+      o.inflight = true;
+      overpass(opt.query(bbox(pb.getSouth(), pb.getWest(), pb.getNorth(), pb.getEast()))).then(function (j) {
+        if (!o.on) return;
+        o.layer.clearLayers(); opt.render(j.elements || [], o.layer); o.got = pb;
+      }).catch(function () {
+        o.blockedUntil = Date.now() + 20000;
+        setStatus('Kartenebene „' + opt.label + '“ konnte nicht geladen werden. Neuer Versuch in 20 Sekunden.', 'warn');
+      }).then(function () { o.inflight = false; setTimeout(refreshOverlays, 400); });
+    };
+    o.set = function (on) {
+      o.on = on;
+      if (on) { o.layer.addTo(map); o.refresh(); }
+      else { map.removeLayer(o.layer); o.layer.clearLayers(); o.got = null; }
+    };
+    return o;
+  }
+
+  var ov = {
+    fuel: makeOverlay({ label: 'Tankstellen', minZoom: 11, render: renderFuel, query: function (bb) {
+      return '[out:json][timeout:15];(node[amenity=fuel]' + bb + ';way[amenity=fuel]' + bb + ';);out center tags 300;'; } }),
+    signals: makeOverlay({ label: 'Ampeln', minZoom: 15, render: renderSignals, query: function (bb) {
+      return '[out:json][timeout:15];(node[highway=traffic_signals]' + bb + ';node[crossing=traffic_signals]' + bb + ';);out 500;'; } }),
+    surface: makeOverlay({ label: 'Straßenzustand', minZoom: 14, render: renderSurface, query: function (bb) {
+      return '[out:json][timeout:20];way[highway~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|track|cycleway|path|road)$"][~"^(surface|smoothness)$"~"."]' +
+        bb + ';out tags geom 600;'; } })
+  };
+
+  var ovPrefs = { fuel: true, signals: true, surface: false }, overlaysActive = false, ovTimer = null;
+  try { var savedOv = JSON.parse(localStorage.getItem('rennen-overlays') || 'null'); if (savedOv) ovPrefs = Object.assign(ovPrefs, savedOv); } catch (e) {}
+  $('sFuel').checked = ovPrefs.fuel; $('sSignals').checked = ovPrefs.signals; $('sSurface').checked = ovPrefs.surface;
+
+  function refreshOverlays() { if (overlaysActive) { ov.fuel.refresh(); ov.signals.refresh(); ov.surface.refresh(); } }
+  function applyOverlays() {
+    ov.fuel.set(overlaysActive && ovPrefs.fuel);
+    ov.signals.set(overlaysActive && ovPrefs.signals);
+    ov.surface.set(overlaysActive && ovPrefs.surface);
+    $('condLegend').classList.toggle('hidden', !(overlaysActive && ovPrefs.surface));
+  }
+  function startOverlays() { overlaysActive = true; applyOverlays(); }
+  function stopOverlays() { overlaysActive = false; applyOverlays(); }
+  [['sFuel', 'fuel'], ['sSignals', 'signals'], ['sSurface', 'surface']].forEach(function (pair) {
+    $(pair[0]).addEventListener('change', function () {
+      ovPrefs[pair[1]] = $(pair[0]).checked;
+      try { localStorage.setItem('rennen-overlays', JSON.stringify(ovPrefs)); } catch (e) {}
+      applyOverlays();
+    });
+  });
+  map.on('moveend', function () { clearTimeout(ovTimer); ovTimer = setTimeout(refreshOverlays, 700); });
+
+  // ----- Tankstellen suchen (im Navi) -----
+  var fuelBusy = false;
+  function fuelSearch(mode) {
+    if (fuelBusy) return;
+    var c = map.getCenter();
+    var here = myPos ? { lat: myPos.lat, lng: myPos.lng } : { lat: c.lat, lng: c.lng };
+    var q;
+    if (mode === 'route' && nav && nav.coords) {
+      var i0 = 0, best = Infinity;
+      nav.coords.forEach(function (pt, i) { var d = dist(here.lat, here.lng, pt[0], pt[1]); if (d < best) { best = d; i0 = i; } });
+      var rest = nav.coords.slice(i0), step = Math.max(1, Math.ceil(rest.length / 60)), pts = [];
+      for (var i = 0; i < rest.length; i += step) pts.push(rest[i][0].toFixed(4) + ',' + rest[i][1].toFixed(4));
+      var lastPt = rest[rest.length - 1];
+      pts.push(lastPt[0].toFixed(4) + ',' + lastPt[1].toFixed(4));
+      q = '[out:json][timeout:20];nwr[amenity=fuel](around:700,' + pts.join(',') + ');out center tags 80;';
+    } else {
+      q = '[out:json][timeout:20];nwr[amenity=fuel](around:6000,' + here.lat.toFixed(5) + ',' + here.lng.toFixed(5) + ');out center tags 80;';
+    }
+    fuelBusy = true; setStatus('Suche Tankstellen …', 'warn');
+    overpass(q).then(function (j) {
+      var list = (j.elements || []).map(function (e) {
+        var p = elLatLng(e), tg = e.tags || {};
+        return { lat: p.lat, lng: p.lng, tags: tg, name: tg.name || tg.brand || tg.operator || 'Tankstelle', d: dist(here.lat, here.lng, p.lat, p.lng) };
+      }).filter(function (s) { return s.lat != null && s.lng != null && !isNaN(s.d); })
+        .sort(function (a, b) { return a.d - b.d; }).slice(0, 10);
+      renderFuelList(list, mode);
+      setStatus(list.length ? list.length + ' Tankstellen gefunden.' : 'Keine Tankstelle gefunden.', list.length ? 'ok' : 'warn');
+    }).catch(function () {
+      setStatus('Tankstellensuche fehlgeschlagen. Bitte später nochmal versuchen.', 'err');
+    }).then(function () { fuelBusy = false; });
+  }
+
+  function renderFuelList(list, mode) {
+    var ul = $('nvFuel');
+    ul.classList.remove('hidden');
+    fillList(ul, list.map(function (s) {
+      var li = el('li', 'click wrap');
+      li.appendChild(el('span', 'nm', s.name));
+      li.appendChild(el('span', 'ago', fmtDist(s.d)));
+      if (s.tags.opening_hours) li.appendChild(el('div', 'sub', 'Öffnungszeiten: ' + hoursText(s.tags.opening_hours)));
+      li.addEventListener('click', function () { pickFuel(s, mode); });
+      return li;
+    }), 'Keine Tankstelle gefunden.');
+  }
+
+  function pickFuel(s, mode) {
+    $('nvFuel').classList.add('hidden');
+    var d = { lat: s.lat, lng: s.lng, label: s.name };
+    if (nav && mode === 'route') {
+      if (!confirm('Die aktuelle Navigation wird beendet und die Route zu „' + s.name + '“ gestartet. Fortfahren?')) return;
+      stopNavigation(true); setDest(d); $('nvGo').click();
+    } else setDest(d);
+  }
+  $('nvFuelNear').addEventListener('click', function () { fuelSearch('near'); });
+  $('nvFuelRoute').addEventListener('click', function () { fuelSearch('route'); });
 
   // =====================================================
   //  START
