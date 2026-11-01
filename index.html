@@ -154,6 +154,18 @@
   .camchip { position: absolute; z-index: 1000; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); max-width: calc(100% - 150px); display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 99px; background: var(--paper); color: var(--ink); font-size: .8rem; font-weight: 600; white-space: nowrap; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
   .camchip a { color: var(--me); text-decoration: none; font-weight: 700; }
   body.picking .camchip { display: none; }
+  input[type=number], textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; color: var(--ink); background: var(--field); }
+  input[type=number]:focus-visible, textarea:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
+  textarea { min-height: 70px; resize: vertical; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .thumb { width: 84px; height: 62px; border-radius: 10px; background: var(--soft); overflow: hidden; flex: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 1.6rem; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .list li.vcard { align-items: flex-start; }
+  .vinfo { flex: 1; min-width: 0; }
+  .vinfo .sub { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+  .vbtns { display: flex; flex-direction: column; gap: 6px; }
+  .pill.on { background: var(--ok); color: #fff; margin-left: 6px; }
+  .rank { font-weight: 700; width: 26px; text-align: center; flex: none; font-variant-numeric: tabular-nums; }
   .hidden { display: none; }
 </style>
 </head>
@@ -168,7 +180,10 @@
 <div id="menu" class="menu hidden" role="menu">
   <div class="menu-head" id="who"></div>
   <button type="button" role="menuitem" data-go="Profile"><span>Profil</span></button>
+  <button type="button" role="menuitem" data-go="Garage"><span>Garage</span></button>
   <button type="button" role="menuitem" data-go="Stats"><span>Statistiken</span></button>
+  <button type="button" role="menuitem" data-go="Boards"><span>Ranglisten</span></button>
+  <button type="button" role="menuitem" data-go="History"><span>Rennhistorie</span></button>
   <button type="button" role="menuitem" data-go="Friends"><span>Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Settings"><span>Einstellungen</span></button>
   <hr>
@@ -256,6 +271,8 @@
       </div>
 
       <div id="raceCreate" class="hidden">
+        <label for="rcTrack">Strecke</label>
+        <select id="rcTrack"><option value="">Neue Strecke (Start und Ziel selbst setzen)</option></select>
         <label for="rcName">Name des Rennens</label>
         <input id="rcName" type="text" maxlength="40" placeholder="z. B. Feierabendrunde">
         <label for="rcRadius">Größe von Start- und Zielkreis</label>
@@ -360,6 +377,81 @@
       <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
       <input id="pNewPass" type="password" autocomplete="new-password">
       <button id="pPassSave" type="button">Passwort ändern</button>
+    </div>
+
+    <!-- Garage -->
+    <div id="tabGarage" class="hidden">
+      <div id="garListBox">
+        <button id="garAdd" type="button">Fahrzeug hinzufügen</button>
+        <ul id="garList" class="list" style="margin-top:12px"></ul>
+        <p class="hint">Dein aktives Fahrzeug wird bei jedem Rennen mit dem Ergebnis gespeichert. Bilder sind über ihren Link öffentlich lesbar. Verdecke deshalb Kennzeichen.</p>
+      </div>
+      <div id="garForm" class="hidden">
+        <div class="avatar-edit">
+          <span id="gfPreview"></span>
+          <div class="btns">
+            <button id="gfPick" class="ghost" type="button">Foto wählen</button>
+            <button id="gfRemovePic" class="ghost" type="button">Foto entfernen</button>
+          </div>
+          <input id="gfFile" type="file" accept="image/*" class="hidden">
+        </div>
+        <label for="gfNick">Bezeichnung (optional)</label>
+        <input id="gfNick" type="text" maxlength="40" placeholder="z. B. Der Blaue">
+        <label for="gfKind">Fahrzeugart</label>
+        <select id="gfKind"></select>
+        <div id="gfCarRow" class="hidden"><label for="gfCar">Autokategorie</label><select id="gfCar"></select></div>
+        <div class="grid2">
+          <div><label for="gfMake">Marke</label><input id="gfMake" type="text" maxlength="40"></div>
+          <div><label for="gfModel">Modell</label><input id="gfModel" type="text" maxlength="60"></div>
+          <div><label for="gfYear">Baujahr</label><input id="gfYear" type="number" inputmode="numeric" min="1900" max="2100"></div>
+          <div><label for="gfFuel">Antrieb</label><select id="gfFuel"><option value="">–</option></select></div>
+          <div><label for="gfPs">Leistung (PS)</label><input id="gfPs" type="number" inputmode="numeric" min="0" max="5000"></div>
+          <div><label for="gfKw">Leistung (kW)</label><input id="gfKw" type="text" disabled></div>
+          <div><label for="gfCc">Hubraum (cm³)</label><input id="gfCc" type="number" inputmode="numeric" min="0" max="20000"></div>
+          <div><label for="gfKg">Gewicht (kg)</label><input id="gfKg" type="number" inputmode="numeric" min="0" max="20000"></div>
+        </div>
+        <label for="gfNotes">Notizen, Tuning, Besonderheiten</label>
+        <textarea id="gfNotes" maxlength="500"></textarea>
+        <button id="gfSave" type="button">Speichern</button>
+        <button id="gfCancel" class="ghost wide" type="button">Abbrechen</button>
+        <button id="gfDelete" class="danger hidden" type="button">Fahrzeug löschen</button>
+      </div>
+    </div>
+
+    <!-- Ranglisten -->
+    <div id="tabBoards" class="hidden">
+      <div class="tabs" role="tablist">
+        <button id="bdTabTracks" role="tab" aria-selected="true" type="button">Strecken</button>
+        <button id="bdTabOverall" role="tab" aria-selected="false" type="button">Gesamt</button>
+      </div>
+      <div id="bdTracks">
+        <p class="hint" id="bdTracksMsg"></p>
+        <ul id="bdTrackList" class="list" style="margin-top:10px"></ul>
+      </div>
+      <div id="bdTrack" class="hidden">
+        <h3 id="bdTrackName" style="margin-top:12px"></h3>
+        <p class="hint" id="bdTrackInfo"></p>
+        <button id="bdStart" type="button">Rennen auf dieser Strecke starten</button>
+        <label for="bdClass">Fahrzeugklasse</label>
+        <select id="bdClass"></select>
+        <ul id="bdBoard" class="list" style="margin-top:10px"></ul>
+        <button id="bdDelete" class="ghost wide hidden" type="button">Strecke löschen</button>
+      </div>
+      <div id="bdOverall" class="hidden">
+        <ul id="bdOverallList" class="list" style="margin-top:12px"></ul>
+        <p class="hint">Es zählen du und deine Freunde. Siege und Podien gibt es nur in Rennen mit mindestens zwei Teilnehmern.</p>
+      </div>
+    </div>
+
+    <!-- Rennhistorie -->
+    <div id="tabHistory" class="hidden">
+      <div id="hsList"><ul id="hsListUl" class="list" style="margin-top:12px"></ul></div>
+      <div id="hsDetail" class="hidden">
+        <h3 id="hsName" style="margin-top:12px"></h3>
+        <p class="hint" id="hsInfo"></p>
+        <ul id="hsMembers" class="list"></ul>
+        <p class="hint" id="hsHint"></p>
+      </div>
     </div>
 
     <!-- Statistiken -->
@@ -618,7 +710,7 @@
 
   function applyProfile(p) {
     myName = p.username; myColor = p.color || '#1d4ed8'; myAvatar = safeAvatar(p.avatar_url);
-    myVehicle = p.vehicle || 'fahrrad'; myCar = p.car_category || null;
+    myVehicle = p.vehicle || 'fahrrad'; myCar = p.car_category || null; myActiveVehicle = p.active_vehicle_id || null;
     trail.setStyle({ color: myColor });
     if (accuracy) accuracy.setStyle({ color: myColor });
     if (me) me.setIcon(iconFor(myColor, myAvatar));
@@ -627,7 +719,7 @@
 
   function afterLogin(user) {
     myId = user.id; myEmail = user.email || '';
-    db.from('profiles').select('username,color,vehicle,car_category,avatar_url').eq('id', myId).single().then(function (res) {
+    db.from('profiles').select('username,color,vehicle,car_category,avatar_url,active_vehicle_id').eq('id', myId).single().then(function (res) {
       if (res.error || !res.data) { setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err'); return; }
       applyProfile(res.data);
       $('nvMode').value = NAV_MODE_FOR[myVehicle] || 'bike';
@@ -638,7 +730,7 @@
       startOverlays();
       setStatus('Bereit');
       syncClock();
-      loadFriends(); loadMyRaces(false);
+      loadFriends(); loadMyRaces(false); loadMyGarage();
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); }, POLL_MS);
       if (pendingCode) { var c = pendingCode; pendingCode = null; joinCode(c); }
@@ -679,7 +771,7 @@
     var row = { username: name, color: $('pColor').value, vehicle: vehicle, car_category: vehicle === 'auto' ? $('pCar').value : null };
     db.from('profiles').update(row).eq('id', myId).then(function (res) {
       if (res.error) { setStatus(res.error.code === '23505' ? 'Dieser Spielername ist schon vergeben.' : 'Speichern fehlgeschlagen: ' + res.error.message, 'err'); return; }
-      row.avatar_url = myAvatar;
+      row.avatar_url = myAvatar; row.active_vehicle_id = myActiveVehicle;
       applyProfile(row);
       setStatus('Profil gespeichert.', 'ok');
     });
@@ -828,7 +920,7 @@
       ]);
     }), 'Keine offenen Anfragen.');
     fillList($('listFriends'), accepted.map(function (f) {
-      return friendRow(f, [{ label: 'Entfernen', ghost: true, run: function () { if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id); } }]);
+      return friendRow(f, [{ label: 'Garage', ghost: true, run: function () { showScreen('Garage'); openGarage(otherId(f)); } }, { label: 'Entfernen', ghost: true, run: function () { if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id); } }]);
     }), 'Noch keine Freunde. Such oben nach dem Spielernamen.');
     fillList($('listOutgoing'), outgoing.map(function (f) {
       return friendRow(f, [{ label: 'Zurückziehen', ghost: true, run: function () { removeFriendship(f.id); } }]);
@@ -1102,10 +1194,7 @@
     $('rcStartInfo').textContent = draft.start ? 'Start gesetzt ✓' : 'Start: noch nicht gesetzt';
     $('rcFinishInfo').textContent = draft.finish ? 'Ziel gesetzt ✓' : 'Ziel: noch nicht gesetzt';
   }
-  $('raceNew').addEventListener('click', function () {
-    draft = { start: null, finish: null }; $('rcName').value = '';
-    drawDraft(); showRaceView('Create');
-  });
+  $('raceNew').addEventListener('click', function () { prepareCreate(null); });
   $('rcRadius').addEventListener('change', drawDraft);
   $('rcPickStart').addEventListener('click', function () {
     pickOnMap('Tippe auf der Karte auf den Startpunkt', function (ll) { draft.start = { lat: ll.lat, lng: ll.lng }; drawDraft(); });
@@ -1126,7 +1215,7 @@
     $('rcCreate').disabled = true;
     db.rpc('create_race', {
       p_name: $('rcName').value.trim(), p_slat: draft.start.lat, p_slng: draft.start.lng,
-      p_flat: draft.finish.lat, p_flng: draft.finish.lng, p_radius: rad
+      p_flat: draft.finish.lat, p_flng: draft.finish.lng, p_radius: rad, p_track: $('rcTrack').value || null
     }).then(function (res) {
       $('rcCreate').disabled = false;
       if (res.error) { setStatus('Erstellen fehlgeschlagen: ' + res.error.message, 'err'); return; }
@@ -1164,7 +1253,7 @@
       if (res.error || !res.data) { setStatus('Rennen nicht gefunden.', 'err'); return; }
       unfollowRace();
       raceCur = res.data; raceMembers = [];
-      seenOutside = false; lastFix = null; goFired = false; raceFinishing = false; finishTries = 0; raceDist = 0;
+      seenOutside = false; lastFix = null; goFired = false; raceFinishing = false; finishTries = 0; raceDist = 0; routePts = []; routeLast = null;
       actionSig = ''; inviteSig = '';
       draftLayer.clearLayers();
       drawRace(raceCur, true);
@@ -1284,7 +1373,11 @@
     });
   }
   function startRace() { rpcThen('start_race', { p_race: raceCur.id, p_delay: 8 }); }
-  function giveUp() { if (confirm('Wirklich aufgeben?')) rpcThen('give_up', { p_race: raceCur.id }, 'Du hast aufgegeben.'); }
+  function giveUp() {
+    if (!confirm('Wirklich aufgeben?')) return;
+    var snap = vehicleSnapshot(), rid = raceCur.id;
+    rpcThen('give_up', { p_race: rid, p_vehicle: snap.label, p_class: snap.cls }, 'Du hast aufgegeben.').then(function (ok) { if (ok) saveRoute(rid); });
+  }
   function endRace() { if (confirm('Das Rennen für alle beenden?')) rpcThen('end_race', { p_race: raceCur.id }, 'Rennen beendet.'); }
   function respondInvite(accept) {
     rpcThen('respond_invite', { p_race: raceCur.id, p_accept: accept }).then(function () {
@@ -1366,8 +1459,10 @@
     var ms = Math.round(tFin - starts);
     if (ms <= 0) return;
     raceFinishing = true; finishTries++;
-    db.rpc('finish_race', { p_race: raceCur.id, p_ms: ms, p_dist: Math.round(raceDist) }).then(function (res) {
+    var snap = vehicleSnapshot();
+    db.rpc('finish_race', { p_race: raceCur.id, p_ms: ms, p_dist: Math.round(raceDist), p_vehicle: snap.label, p_class: snap.cls }).then(function (res) {
       if (res.error) { raceFinishing = false; setStatus('Ziel konnte nicht gespeichert werden: ' + res.error.message, 'err'); return; }
+      saveRoute(raceCur.id);
       setStatus('Im Ziel! Zeit: ' + fmtMs(ms), 'ok');
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
       refreshRace(); loadMyRaces(false);
@@ -1570,8 +1665,8 @@
   // =====================================================
   var currentScreen = 'Home', raceView = 'List';
   var incomingCount = 0, inviteCount = 0, raceDist = 0;
-  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'Stats', 'Settings'];
-  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', Stats: 'Statistiken', Settings: 'Einstellungen' };
+  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'Garage', 'Stats', 'Boards', 'History', 'Settings'];
+  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', Garage: 'Garage', Stats: 'Statistiken', Boards: 'Ranglisten', History: 'Rennhistorie', Settings: 'Einstellungen' };
 
   function showScreen(t) {
     currentScreen = t;
@@ -1585,10 +1680,18 @@
     if (t === 'Stats') loadStats();
     if (t === 'Race') loadMyRaces(true);
     if (t === 'Navi') refreshNaviSetup();
+    if (t !== 'History') histLayer.clearLayers();
+    if (t !== 'Boards') trackLayer.clearLayers();
+    if (t === 'Garage') openGarage(myId);
+    if (t === 'Boards') boardsOpen();
+    if (t === 'History') histOpen();
   }
 
   $('backBtn').addEventListener('click', function () {
     if (currentScreen === 'Race' && raceView !== 'List') raceBack();
+    else if (currentScreen === 'Boards' && boardView === 'Track') showBoardTab('Tracks');
+    else if (currentScreen === 'History' && histView === 'Detail') histOpen();
+    else if (currentScreen === 'Garage' && garView === 'Form') garBack();
     else showScreen('Home');
   });
   $('homeRace').addEventListener('click', function () { showScreen('Race'); });
@@ -1650,7 +1753,10 @@
           ride.pendDist += d; ride.pendSecs += dt;
           if (raceCur && raceCur.status === 'running' && raceCur.starts_at && !raceFinishing) {
             var mine = myMember();
-            if (mine && mine.status === 'joined' && t + serverOffset >= new Date(raceCur.starts_at).getTime()) raceDist += d;
+            if (mine && mine.status === 'joined' && t + serverOffset >= new Date(raceCur.starts_at).getTime()) {
+              raceDist += d;
+              recordRoutePoint(ride.lastLat, ride.lastLng, c.latitude, c.longitude);
+            }
           }
         }
       }
@@ -2143,6 +2249,479 @@
   }
   $('nvFuelNear').addEventListener('click', function () { fuelSearch('near'); });
   $('nvFuelRoute').addEventListener('click', function () { fuelSearch('route'); });
+
+  // =====================================================
+  //  GARAGE, STRECKEN, RANGLISTEN, RENNHISTORIE
+  // =====================================================
+  var GARAGE_PREFIX = SUPABASE_URL + '/storage/v1/object/public/garage/';
+  function safeGarage(url) { return (typeof url === 'string' && url.indexOf(GARAGE_PREFIX) === 0) ? url : null; }
+  var KINDS = { auto: 'Auto', motorrad: 'Motorrad', fahrrad: 'Fahrrad', ebike: 'E-Bike', roller: 'Roller / E-Scooter', sonstiges: 'Sonstiges' };
+  var FUELS = { benzin: 'Benzin', diesel: 'Diesel', elektro: 'Elektro', hybrid: 'Hybrid', gas: 'Gas', sonstiges: 'Sonstiges' };
+  var myActiveVehicle = null, myVehicles = [], garUser = null, garView = 'List', garEditing = null;
+  var garPhotoBlob = null, garPhotoRemoved = false;
+  var boardView = 'List', histView = 'List', trackCache = [], curTrack = null, boardRows = [];
+  var histLayer = L.layerGroup().addTo(map), trackLayer = L.layerGroup().addTo(map);
+  var routePts = [], routeLast = null;
+
+  function txt(id) { var v = $(id).value.trim(); return v ? v : null; }
+  function num(id) { var v = parseInt($(id).value, 10); return isNaN(v) ? null : v; }
+  function classLabel(c) { return VEHICLES[c] || KINDS[c] || c || ''; }
+  function fitWithPanel(b) {
+    follow = false;
+    map.fitBounds(b, { paddingTopLeft: [30, 70], paddingBottomRight: [30, $('panel').offsetHeight + 20], maxZoom: 17 });
+  }
+  function resizeImage(file, maxSide) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var k = Math.min(1, maxSide / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { if (b) resolve(b); else reject(new Error('Bild konnte nicht verarbeitet werden.')); }, 'image/jpeg', 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Die Datei ist kein lesbares Bild.')); };
+      img.src = url;
+    });
+  }
+
+  // ---------- Garage ----------
+  fillSelect($('gfKind'), KINDS); fillSelect($('gfCar'), CARS); fillSelect($('gfFuel'), FUELS);
+
+  function vehicleTitle(v) { return v.nickname || [v.make, v.model].filter(Boolean).join(' ') || KINDS[v.kind] || 'Fahrzeug'; }
+  function vehicleSub(v) {
+    var parts = [];
+    if (v.nickname && (v.make || v.model)) parts.push([v.make, v.model].filter(Boolean).join(' '));
+    parts.push(v.kind === 'auto' && v.car_category && CARS[v.car_category] ? CARS[v.car_category] : KINDS[v.kind]);
+    if (v.year) parts.push(v.year);
+    return parts.join(' · ');
+  }
+  function vehicleSpecs(v) {
+    var p = [];
+    if (v.power_ps) p.push(v.power_ps + ' PS (' + Math.round(v.power_ps * 0.7355) + ' kW)');
+    if (v.displacement_cc) p.push(v.displacement_cc + ' cm³');
+    if (v.weight_kg) p.push(v.weight_kg + ' kg');
+    if (v.fuel && FUELS[v.fuel]) p.push(FUELS[v.fuel]);
+    return p.join(' · ');
+  }
+  // Fahrzeug, das mit dem Rennergebnis gespeichert wird
+  function vehicleSnapshot() {
+    var v = myVehicles.filter(function (x) { return x.id === myActiveVehicle; })[0];
+    if (v) {
+      var name = [v.make, v.model].filter(Boolean).join(' ') || v.nickname || KINDS[v.kind];
+      return { label: (name + (v.power_ps ? ' · ' + v.power_ps + ' PS' : '')).slice(0, 80), cls: v.kind };
+    }
+    var lbl = (myVehicle === 'auto' && myCar && CARS[myCar]) ? CARS[myCar] : (VEHICLES[myVehicle] || '');
+    return { label: lbl, cls: myVehicle };
+  }
+
+  function thumbNode(url) {
+    var t = el('div', 'thumb'), safe = safeGarage(url);
+    if (safe) { var im = document.createElement('img'); im.src = safe; im.alt = ''; t.appendChild(im); }
+    else t.textContent = '🚗';
+    return t;
+  }
+
+  function renderGarage(list, mine) {
+    $('garAdd').classList.toggle('hidden', !mine);
+    fillList($('garList'), list.map(function (v) {
+      var li = el('li', 'vcard');
+      li.appendChild(thumbNode(v.photo_url));
+      var info = el('div', 'vinfo'), head = el('div');
+      head.appendChild(el('strong', '', vehicleTitle(v)));
+      if (mine && v.id === myActiveVehicle) head.appendChild(el('span', 'pill on', 'Aktiv'));
+      info.appendChild(head);
+      info.appendChild(el('div', 'sub', vehicleSub(v)));
+      var specs = vehicleSpecs(v);
+      if (specs) info.appendChild(el('div', 'sub', specs));
+      if (v.notes) info.appendChild(el('div', 'sub', v.notes));
+      li.appendChild(info);
+      if (mine) {
+        var btns = el('div', 'vbtns');
+        var e = el('button', 'ghost', 'Bearbeiten'); e.type = 'button'; e.addEventListener('click', function () { garEdit(v); });
+        btns.appendChild(e);
+        if (v.id !== myActiveVehicle) {
+          var a = el('button', '', 'Aktiv'); a.type = 'button'; a.addEventListener('click', function () { setActiveVehicle(v.id); });
+          btns.appendChild(a);
+        }
+        li.appendChild(btns);
+      }
+      return li;
+    }), mine ? 'Noch kein Fahrzeug. Tippe oben auf „Fahrzeug hinzufügen“.' : 'Keine Fahrzeuge eingetragen.');
+  }
+
+  function loadMyGarage() {
+    if (!myId) return Promise.resolve();
+    return db.from('vehicles').select('*').eq('user_id', myId).order('created_at', { ascending: true }).then(function (res) {
+      if (res.error) { setStatus('Garage laden fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      myVehicles = res.data || [];
+      if (garUser === myId && currentScreen === 'Garage' && garView === 'List') renderGarage(myVehicles, true);
+    });
+  }
+  function openGarage(uid) {
+    garUser = uid; garView = 'List';
+    $('garForm').classList.add('hidden'); $('garListBox').classList.remove('hidden');
+    $('screenTitle').textContent = 'Garage';
+    if (uid === myId) { renderGarage(myVehicles, true); loadMyGarage(); return; }
+    $('garAdd').classList.add('hidden');
+    getProfiles([uid]).then(function () { if (garUser === uid) $('screenTitle').textContent = 'Garage von ' + pInfo(uid).name; });
+    db.from('vehicles').select('*').eq('user_id', uid).order('created_at', { ascending: true }).then(function (res) {
+      if (garUser === uid) renderGarage(res.data || [], false);
+    });
+  }
+  function garBack() { garView = 'List'; $('garForm').classList.add('hidden'); $('garListBox').classList.remove('hidden'); renderGarage(myVehicles, true); }
+
+  function setActiveVehicle(id) {
+    db.rpc('set_active_vehicle', { p_id: id }).then(function (res) {
+      if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
+      myActiveVehicle = id; renderGarage(myVehicles, true); setStatus('Aktives Fahrzeug geändert.', 'ok');
+    });
+  }
+
+  function toggleGarCar() { $('gfCarRow').classList.toggle('hidden', $('gfKind').value !== 'auto'); }
+  $('gfKind').addEventListener('change', toggleGarCar);
+  function updateKw() { var ps = num('gfPs'); $('gfKw').value = ps ? Math.round(ps * 0.7355) + ' kW' : ''; }
+  $('gfPs').addEventListener('input', updateKw);
+
+  function renderGarPreview(src) {
+    var h = $('gfPreview'); h.textContent = '';
+    var t = el('div', 'thumb');
+    t.style.width = '120px'; t.style.height = '90px';
+    if (src) { var im = document.createElement('img'); im.src = src; im.alt = ''; t.appendChild(im); } else t.textContent = '🚗';
+    h.appendChild(t);
+  }
+
+  function garEdit(v) {
+    garEditing = v || null; garPhotoBlob = null; garPhotoRemoved = false;
+    $('gfNick').value = v && v.nickname || ''; $('gfKind').value = v ? v.kind : 'auto';
+    $('gfCar').value = (v && v.car_category) || 'kompakt';
+    $('gfMake').value = v && v.make || ''; $('gfModel').value = v && v.model || '';
+    $('gfYear').value = v && v.year || ''; $('gfFuel').value = v && v.fuel || '';
+    $('gfPs').value = v && v.power_ps || ''; $('gfCc').value = v && v.displacement_cc || '';
+    $('gfKg').value = v && v.weight_kg || ''; $('gfNotes').value = v && v.notes || '';
+    $('gfDelete').classList.toggle('hidden', !v);
+    toggleGarCar(); updateKw(); renderGarPreview(v ? safeGarage(v.photo_url) : null);
+    garView = 'Form'; $('garForm').classList.remove('hidden'); $('garListBox').classList.add('hidden');
+  }
+  $('garAdd').addEventListener('click', function () { garEdit(null); });
+  $('gfCancel').addEventListener('click', garBack);
+  $('gfPick').addEventListener('click', function () { $('gfFile').click(); });
+  $('gfRemovePic').addEventListener('click', function () { garPhotoBlob = null; garPhotoRemoved = true; renderGarPreview(null); });
+  $('gfFile').addEventListener('change', function () {
+    var f = $('gfFile').files && $('gfFile').files[0];
+    $('gfFile').value = '';
+    if (!f) return;
+    if (f.size > 25 * 1024 * 1024) { setStatus('Das Bild ist zu groß (maximal 25 MB).', 'warn'); return; }
+    resizeImage(f, 1024).then(function (blob) {
+      garPhotoBlob = blob; garPhotoRemoved = false; renderGarPreview(URL.createObjectURL(blob));
+    }).catch(function (err) { setStatus(err.message, 'err'); });
+  });
+
+  function afterVehicleSaved(v) {
+    if (garPhotoBlob) {
+      var path = myId + '/' + v.id + '.jpg';
+      return db.storage.from('garage').upload(path, garPhotoBlob, { upsert: true, contentType: 'image/jpeg' }).then(function (r) {
+        if (r.error) throw new Error('Foto: ' + r.error.message);
+        var pub = db.storage.from('garage').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
+        return db.from('vehicles').update({ photo_url: pub }).eq('id', v.id).select().single().then(function (r2) {
+          if (r2.error) throw new Error(r2.error.message);
+          return r2.data;
+        });
+      });
+    }
+    if (garPhotoRemoved && v.photo_url) {
+      return db.storage.from('garage').remove([myId + '/' + v.id + '.jpg']).then(function () {
+        return db.from('vehicles').update({ photo_url: null }).eq('id', v.id).select().single().then(function (r2) { return r2.data || v; });
+      });
+    }
+    return Promise.resolve(v);
+  }
+
+  $('gfSave').addEventListener('click', function () {
+    var kind = $('gfKind').value;
+    var row = {
+      nickname: txt('gfNick'), kind: kind, car_category: kind === 'auto' ? $('gfCar').value : null,
+      make: txt('gfMake'), model: txt('gfModel'), year: num('gfYear'), fuel: $('gfFuel').value || null,
+      power_ps: num('gfPs'), displacement_cc: num('gfCc'), weight_kg: num('gfKg'), notes: txt('gfNotes')
+    };
+    if (!row.nickname && !row.make && !row.model) { setStatus('Bitte Marke, Modell oder eine Bezeichnung eintragen.', 'warn'); return; }
+    $('gfSave').disabled = true;
+    var q = garEditing
+      ? db.from('vehicles').update(row).eq('id', garEditing.id).select().single()
+      : db.from('vehicles').insert(Object.assign({ user_id: myId }, row)).select().single();
+    q.then(function (res) {
+      if (res.error) throw new Error(res.error.message);
+      return afterVehicleSaved(res.data);
+    }).then(function (v) {
+      if (!myActiveVehicle) return db.rpc('set_active_vehicle', { p_id: v.id }).then(function () { myActiveVehicle = v.id; });
+    }).then(function () { return loadMyGarage(); })
+      .then(function () { setStatus('Fahrzeug gespeichert.', 'ok'); garBack(); })
+      .catch(function (err) { setStatus('Speichern fehlgeschlagen: ' + err.message, 'err'); })
+      .then(function () { $('gfSave').disabled = false; });
+  });
+
+  $('gfDelete').addEventListener('click', function () {
+    if (!garEditing || !confirm('Fahrzeug wirklich löschen?')) return;
+    var id = garEditing.id;
+    db.storage.from('garage').remove([myId + '/' + id + '.jpg']).then(function () {
+      return db.from('vehicles').delete().eq('id', id);
+    }).then(function (res) {
+      if (res.error) { setStatus('Löschen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      if (myActiveVehicle === id) myActiveVehicle = null;
+      return loadMyGarage().then(function () { garBack(); setStatus('Fahrzeug gelöscht.', 'ok'); });
+    });
+  });
+
+  // ---------- Strecke beim Rennen wählen ----------
+  function loadTrackOptions() {
+    return db.rpc('my_tracks').then(function (res) {
+      trackCache = res.error ? [] : (res.data || []);
+      var sel = $('rcTrack');
+      sel.textContent = '';
+      var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Neue Strecke (Start und Ziel selbst setzen)'; sel.appendChild(o0);
+      trackCache.forEach(function (tr) {
+        var o = document.createElement('option'); o.value = tr.id;
+        o.textContent = tr.name + ' · ' + fmtDist(dist(tr.start_lat, tr.start_lng, tr.finish_lat, tr.finish_lng));
+        sel.appendChild(o);
+      });
+    });
+  }
+  function onTrackChange() {
+    var tr = trackCache.filter(function (x) { return x.id === $('rcTrack').value; })[0];
+    ['rcPickStart', 'rcPickFinish', 'rcMyStart', 'rcRadius'].forEach(function (id) { $(id).disabled = !!tr; });
+    if (tr) {
+      draft = { start: { lat: tr.start_lat, lng: tr.start_lng }, finish: { lat: tr.finish_lat, lng: tr.finish_lng } };
+      $('rcRadius').value = String(tr.radius);
+      if (!$('rcName').value) $('rcName').value = tr.name;
+    } else draft = { start: null, finish: null };
+    drawDraft();
+    if (tr) fitWithPanel(L.latLngBounds([[tr.start_lat, tr.start_lng], [tr.finish_lat, tr.finish_lng]]));
+  }
+  $('rcTrack').addEventListener('change', onTrackChange);
+  function prepareCreate(trackId) {
+    draft = { start: null, finish: null }; $('rcName').value = '';
+    ['rcPickStart', 'rcPickFinish', 'rcMyStart', 'rcRadius'].forEach(function (id) { $(id).disabled = false; });
+    drawDraft(); showRaceView('Create');
+    loadTrackOptions().then(function () {
+      $('rcTrack').value = trackId || '';
+      if (trackId) onTrackChange();
+    });
+  }
+
+  // ---------- Gefahrene Linie aufzeichnen ----------
+  function recordRoutePoint(prevLat, prevLng, lat, lng) {
+    if (routePts.length >= 4000) return;
+    if (!routePts.length) { routePts.push([+prevLat.toFixed(5), +prevLng.toFixed(5)]); routeLast = [prevLat, prevLng]; }
+    if (dist(routeLast[0], routeLast[1], lat, lng) >= 10) { routePts.push([+lat.toFixed(5), +lng.toFixed(5)]); routeLast = [lat, lng]; }
+  }
+  function thinRoute(pts, max) {
+    if (pts.length <= max) return pts;
+    var out = [], step = (pts.length - 1) / (max - 1);
+    for (var i = 0; i < max; i++) out.push(pts[Math.round(i * step)]);
+    return out;
+  }
+  function saveRoute(raceId) {
+    if (routePts.length < 2) return Promise.resolve();
+    return db.from('race_routes').upsert({ race_id: raceId, user_id: myId, points: thinRoute(routePts, 800) }).then(function (res) {
+      if (res.error) setStatus('Gefahrene Linie konnte nicht gespeichert werden: ' + res.error.message, 'warn');
+    });
+  }
+
+  // ---------- Ranglisten ----------
+  $('bdTabTracks').addEventListener('click', function () { showBoardTab('Tracks'); loadTrackList(); });
+  $('bdTabOverall').addEventListener('click', function () { showBoardTab('Overall'); });
+  function boardsOpen() { showBoardTab('Tracks'); loadTrackList(); }
+  function showBoardTab(which) {
+    boardView = 'List'; trackLayer.clearLayers();
+    $('bdTabTracks').setAttribute('aria-selected', String(which === 'Tracks'));
+    $('bdTabOverall').setAttribute('aria-selected', String(which === 'Overall'));
+    $('bdTracks').classList.toggle('hidden', which !== 'Tracks');
+    $('bdTrack').classList.add('hidden');
+    $('bdOverall').classList.toggle('hidden', which !== 'Overall');
+    if (which === 'Overall') loadOverall();
+  }
+
+  function loadTrackList() {
+    $('bdTracksMsg').textContent = 'Lade Strecken …';
+    db.rpc('my_tracks').then(function (res) {
+      if (res.error) { $('bdTracksMsg').textContent = 'Strecken konnten nicht geladen werden: ' + res.error.message; fillList($('bdTrackList'), [], ''); return; }
+      trackCache = res.data || [];
+      $('bdTracksMsg').textContent = trackCache.length ? 'Tippe eine Strecke an für die Rangliste.' : '';
+      return getProfiles(trackCache.map(function (x) { return x.record_user; }).filter(Boolean)).then(function () {
+        fillList($('bdTrackList'), trackCache.map(function (tr) {
+          var li = el('li', 'click wrap');
+          li.appendChild(el('span', 'nm', tr.name));
+          li.appendChild(el('span', 'ago', tr.my_best_ms ? 'Bestzeit ' + fmtMs(tr.my_best_ms) : 'noch keine Zeit'));
+          var sub = fmtDist(dist(tr.start_lat, tr.start_lng, tr.finish_lat, tr.finish_lng)) + ' Luftlinie';
+          if (tr.record_ms) sub += ' · Rekord ' + fmtMs(tr.record_ms) + ' von ' + pInfo(tr.record_user).name;
+          li.appendChild(el('div', 'sub', sub));
+          li.addEventListener('click', function () { openTrack(tr); });
+          return li;
+        }), 'Noch keine Strecken. Erstelle ein Rennen, dann entsteht eine Strecke.');
+      });
+    });
+  }
+
+  function openTrack(tr) {
+    boardView = 'Track'; curTrack = tr;
+    $('bdTracks').classList.add('hidden'); $('bdTrack').classList.remove('hidden');
+    $('bdTrackName').textContent = tr.name;
+    $('bdTrackInfo').textContent = fmtDist(dist(tr.start_lat, tr.start_lng, tr.finish_lat, tr.finish_lng)) + ' Luftlinie · Start- und Zielkreis ' + tr.radius + ' m';
+    $('bdDelete').classList.toggle('hidden', tr.creator_id !== myId);
+    trackLayer.clearLayers();
+    addZone(trackLayer, { lat: tr.start_lat, lng: tr.start_lng }, tr.radius, '#15803d', 'Start');
+    addZone(trackLayer, { lat: tr.finish_lat, lng: tr.finish_lng }, tr.radius, '#b91c1c', 'Ziel');
+    fitWithPanel(L.latLngBounds([[tr.start_lat, tr.start_lng], [tr.finish_lat, tr.finish_lng]]));
+    fillList($('bdBoard'), [], 'Lade Rangliste …');
+    db.rpc('track_board', { p_track: tr.id }).then(function (res) {
+      if (res.error) { fillList($('bdBoard'), [], 'Fehler: ' + res.error.message); return; }
+      boardRows = res.data || [];
+      return getProfiles(boardRows.map(function (r) { return r.user_id; })).then(function () {
+        var classes = [];
+        boardRows.forEach(function (r) { if (r.vehicle_class && classes.indexOf(r.vehicle_class) === -1) classes.push(r.vehicle_class); });
+        var sel = $('bdClass'); sel.textContent = '';
+        var all = document.createElement('option'); all.value = ''; all.textContent = 'Alle Fahrzeuge'; sel.appendChild(all);
+        classes.forEach(function (c) { var o = document.createElement('option'); o.value = c; o.textContent = classLabel(c); sel.appendChild(o); });
+        renderBoard();
+      });
+    });
+  }
+  $('bdClass').addEventListener('change', renderBoard);
+  function renderBoard() {
+    var cls = $('bdClass').value;
+    var rows = boardRows.filter(function (r) { return !cls || r.vehicle_class === cls; })
+      .sort(function (a, b) { return a.best_ms - b.best_ms; });
+    fillList($('bdBoard'), rows.map(function (r, i) {
+      var info = pInfo(r.user_id), li = el('li', 'wrap');
+      li.appendChild(el('span', 'rank', i === 0 ? '🏆' : (i + 1) + '.'));
+      li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+      li.appendChild(el('span', 'nm', info.name + (r.user_id === myId ? ' (du)' : '')));
+      li.appendChild(el('span', 'ago', fmtMs(r.best_ms)));
+      if (r.vehicle_label) li.appendChild(el('div', 'sub', r.vehicle_label));
+      return li;
+    }), 'Noch keine Zeiten auf dieser Strecke.');
+  }
+  $('bdStart').addEventListener('click', function () { if (curTrack) { showScreen('Race'); prepareCreate(curTrack.id); } });
+  $('bdDelete').addEventListener('click', function () {
+    if (!curTrack || !confirm('Strecke löschen? Bereits gefahrene Rennen bleiben erhalten, verlieren aber die Zuordnung zur Strecke.')) return;
+    db.from('tracks').delete().eq('id', curTrack.id).then(function (res) {
+      if (res.error) { setStatus('Löschen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      showBoardTab('Tracks'); loadTrackList();
+    });
+  });
+
+  function loadOverall() {
+    fillList($('bdOverallList'), [], 'Lade …');
+    db.rpc('overall_board').then(function (res) {
+      if (res.error) { fillList($('bdOverallList'), [], 'Fehler: ' + res.error.message); return; }
+      var rows = (res.data || []).slice().sort(function (a, b) {
+        return (b.wins - a.wins) || (b.podiums - a.podiums) || (b.finished - a.finished) || (b.distance_m - a.distance_m);
+      });
+      return getProfiles(rows.map(function (r) { return r.user_id; })).then(function () {
+        fillList($('bdOverallList'), rows.map(function (r, i) {
+          var info = pInfo(r.user_id), li = el('li', 'wrap');
+          li.appendChild(el('span', 'rank', i === 0 && r.wins > 0 ? '🏆' : (i + 1) + '.'));
+          li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+          li.appendChild(el('span', 'nm', info.name + (r.user_id === myId ? ' (du)' : '')));
+          li.appendChild(el('span', 'ago', r.wins + ' Siege'));
+          li.appendChild(el('div', 'sub', r.podiums + ' Podien · ' + r.finished + ' im Ziel von ' + r.races + ' Rennen · ' + fmtDist(+r.distance_m || 0)));
+          return li;
+        }), 'Noch keine Ergebnisse.');
+      });
+    });
+  }
+
+  // ---------- Rennhistorie ----------
+  function loadRanks(ids) {
+    if (!ids.length) return Promise.resolve({});
+    return db.from('race_members').select('race_id,user_id,status,result_ms').in('race_id', ids).then(function (res) {
+      var by = {}, out = {};
+      (res.data || []).forEach(function (m) { (by[m.race_id] = by[m.race_id] || []).push(m); });
+      ids.forEach(function (id) {
+        var ms = by[id] || [], mine = ms.filter(function (m) { return m.user_id === myId; })[0];
+        if (!mine || mine.status !== 'finished') return;
+        var field = ms.filter(function (m) { return m.status === 'finished' || m.status === 'dnf'; });
+        out[id] = { rank: 1 + ms.filter(function (m) { return m.status === 'finished' && m.result_ms < mine.result_ms; }).length, solo: field.length < 2 };
+      });
+      return out;
+    });
+  }
+
+  function histOpen() {
+    histView = 'List'; histLayer.clearLayers();
+    $('hsDetail').classList.add('hidden'); $('hsList').classList.remove('hidden');
+    fillList($('hsListUl'), [], 'Lade …');
+    db.from('race_members')
+      .select('race_id,status,result_ms,distance_m,vehicle_label,races(name,created_at,track_id,tracks(name))')
+      .eq('user_id', myId).in('status', ['finished', 'dnf']).then(function (res) {
+        if (res.error) { fillList($('hsListUl'), [], 'Konnte nicht geladen werden: ' + res.error.message); return; }
+        var rows = (res.data || []).filter(function (r) { return r.races; })
+          .sort(function (a, b) { return new Date(b.races.created_at) - new Date(a.races.created_at); }).slice(0, 50);
+        var fin = rows.filter(function (r) { return r.status === 'finished'; }).map(function (r) { return r.race_id; });
+        return loadRanks(fin).then(function (ranks) {
+          fillList($('hsListUl'), rows.map(function (r) {
+            var li = el('li', 'click wrap'), rk = ranks[r.race_id];
+            li.appendChild(el('span', 'nm', r.races.name));
+            li.appendChild(el('span', 'ago', r.status === 'finished' ? fmtMs(r.result_ms) : 'aufgegeben'));
+            var parts = [new Date(r.races.created_at).toLocaleDateString('de-DE')];
+            if (r.races.tracks && r.races.tracks.name) parts.push(r.races.tracks.name);
+            if (r.status === 'finished') { parts.push(rk && !rk.solo ? rk.rank + '. Platz' : 'solo'); if (r.distance_m) parts.push(fmtDist(r.distance_m)); }
+            if (r.vehicle_label) parts.push(r.vehicle_label);
+            li.appendChild(el('div', 'sub', parts.join(' · ')));
+            li.addEventListener('click', function () { histDetail(r); });
+            return li;
+          }), 'Noch keine abgeschlossenen Rennen.');
+        });
+      });
+  }
+
+  function histDetail(row) {
+    histView = 'Detail'; histLayer.clearLayers();
+    $('hsList').classList.add('hidden'); $('hsDetail').classList.remove('hidden');
+    $('hsName').textContent = row.races.name; $('hsInfo').textContent = 'Lade …'; $('hsHint').textContent = '';
+    fillList($('hsMembers'), [], '');
+    Promise.all([
+      db.from('races').select('*').eq('id', row.race_id).single(),
+      db.from('race_members').select('*').eq('race_id', row.race_id),
+      db.from('race_routes').select('user_id,points').eq('race_id', row.race_id)
+    ]).then(function (rs) {
+      var race = rs[0].data, ms = rs[1].data || [], routes = rs[2].error ? [] : (rs[2].data || []);
+      if (!race) { $('hsInfo').textContent = 'Rennen nicht gefunden.'; return; }
+      return getProfiles(ms.map(function (m) { return m.user_id; })).then(function () {
+        if (histView !== 'Detail') return;
+        $('hsInfo').textContent = new Date(race.created_at).toLocaleDateString('de-DE') + ' · ' + fmtDist(dist(race.start_lat, race.start_lng, race.finish_lat, race.finish_lng)) + ' Luftlinie';
+        var bounds = L.latLngBounds([[race.start_lat, race.start_lng], [race.finish_lat, race.finish_lng]]);
+        addZone(histLayer, { lat: race.start_lat, lng: race.start_lng }, race.radius, '#15803d', 'Start');
+        addZone(histLayer, { lat: race.finish_lat, lng: race.finish_lng }, race.radius, '#b91c1c', 'Ziel');
+        routes.forEach(function (r) {
+          if (!r.points || r.points.length < 2) return;
+          var info = pInfo(r.user_id), mine = r.user_id === myId;
+          var line = L.polyline(r.points, { color: info.color, weight: mine ? 6 : 4, opacity: mine ? 0.95 : 0.75 }).addTo(histLayer);
+          line.bindTooltip(info.name, { sticky: true });
+          bounds.extend(line.getBounds());
+        });
+        fitWithPanel(bounds);
+        var fin = ms.filter(function (m) { return m.status === 'finished'; }).sort(function (a, b) { return a.result_ms - b.result_ms; });
+        var rest = ms.filter(function (m) { return m.status === 'dnf'; });
+        var place = 0;
+        fillList($('hsMembers'), fin.concat(rest).map(function (m) {
+          var info = pInfo(m.user_id), li = el('li', 'wrap');
+          li.appendChild(el('span', 'rank', m.status === 'finished' ? (++place) + '.' : '–'));
+          li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+          li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
+          li.appendChild(el('span', 'ago', m.status === 'finished' ? fmtMs(m.result_ms) : 'aufgegeben'));
+          var sub = [];
+          if (m.distance_m) sub.push(fmtDist(m.distance_m));
+          if (m.vehicle_label) sub.push(m.vehicle_label);
+          if (sub.length) li.appendChild(el('div', 'sub', sub.join(' · ')));
+          return li;
+        }), 'Keine Teilnehmer.');
+        $('hsHint').textContent = routes.length
+          ? 'Die farbigen Linien auf der Karte zeigen, welchen Weg jeder gefahren ist. Tippe oben rechts auf ▾, um das Panel einzuklappen.'
+          : 'Für dieses Rennen ist keine gefahrene Linie gespeichert. Das gibt es erst für Rennen, die mit dieser Version gefahren wurden.';
+      });
+    });
+  }
 
   // =====================================================
   //  START
