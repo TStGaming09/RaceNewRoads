@@ -3,67 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rennen – Meilenstein 5: Profilbild, Fahrzeuge, Dark Mode</title>
+<title>Rennen – Meilenstein 6: Rennmodus und Navigation</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
     color-scheme: light;
-    --ink: #14213d;
-    --paper: #ffffff;
-    --muted: #5c677d;
-    --line: #dde2ea;
-    --soft: #eef1f6;
-    --field: #ffffff;
-    --disabled: #f3f5f8;
-    --btn-bg: #14213d;
-    --btn-fg: #ffffff;
-    --me: #1d4ed8;
-    --ok: #15803d;
-    --warn: #b45309;
-    --err: #b91c1c;
+    --ink: #14213d; --paper: #ffffff; --muted: #5c677d; --line: #dde2ea; --soft: #eef1f6;
+    --field: #ffffff; --disabled: #f3f5f8; --btn-bg: #14213d; --btn-fg: #ffffff;
+    --me: #1d4ed8; --ok: #15803d; --warn: #b45309; --err: #b91c1c;
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --ink: #e8ecf4;
-    --paper: #1b2333;
-    --muted: #9aa6bb;
-    --line: #2f3a50;
-    --soft: #2a3550;
-    --field: #141b29;
-    --disabled: #222c40;
-    --btn-bg: #3d63dd;
-    --btn-fg: #ffffff;
-    --me: #7da2ff;
-    --ok: #4ade80;
-    --warn: #fbbf24;
-    --err: #f87171;
+    --ink: #e8ecf4; --paper: #1b2333; --muted: #9aa6bb; --line: #2f3a50; --soft: #2a3550;
+    --field: #141b29; --disabled: #222c40; --btn-bg: #3d63dd; --btn-fg: #ffffff;
+    --me: #7da2ff; --ok: #4ade80; --warn: #fbbf24; --err: #f87171;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); }
   #map { position: absolute; inset: 0; }
-
-  /* Dunkle Karte: Kacheln werden per Filter abgedunkelt, Marker bleiben normal */
   :root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.92); }
   :root[data-theme="dark"] .leaflet-container { background: #1a1d24; }
   :root[data-theme="dark"] .leaflet-control-attribution { background: rgba(27, 35, 51, .85); color: var(--muted); }
   :root[data-theme="dark"] .leaflet-control-attribution a { color: var(--me); }
 
-  .panel {
-    position: absolute; z-index: 1000;
-    left: 12px; right: 12px;
+  .panel, #pickBar {
+    position: absolute; z-index: 1000; left: 12px; right: 12px;
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     max-width: 440px; margin: 0 auto;
     background: var(--paper); color: var(--ink);
-    border-radius: 14px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, .28);
-    padding: 14px 16px;
-    max-height: 75%; overflow-y: auto;
+    border-radius: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .28); padding: 14px 16px;
   }
+  .panel { max-height: 75%; overflow-y: auto; }
+  #pickBar { display: none; z-index: 1100; align-items: center; gap: 10px; }
+  #pickBar span { flex: 1; font-weight: 600; }
+  body.picking #pickBar { display: flex; }
+  body.picking .panel { display: none; }
+  body.picking #map { cursor: crosshair; }
+
   .status { display: flex; align-items: center; gap: 8px; font-weight: 600; }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
-  .dot.ok { background: var(--ok); }
-  .dot.warn { background: var(--warn); }
-  .dot.err { background: var(--err); }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.err { background: var(--err); }
 
   label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
   input[type=text], input[type=email], input[type=password], select {
@@ -77,35 +56,39 @@
   .tabs { display: flex; gap: 6px; margin-top: 12px; }
   .tabs button { flex: 1; min-width: 0; margin: 0; padding: 10px 2px; font-size: .82rem; background: var(--soft); color: var(--ink); }
   .tabs button[aria-selected=true] { background: var(--btn-bg); color: var(--btn-fg); }
+  .tabs.scroll { overflow-x: auto; scrollbar-width: none; }
+  .tabs.scroll::-webkit-scrollbar { display: none; }
+  .tabs.scroll button { flex: 0 0 auto; padding: 10px 14px; }
 
   .who { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
   .who .me { display: flex; align-items: center; gap: 8px; min-width: 0; }
   .who strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .avatar {
-    display: inline-flex; align-items: center; justify-content: center; flex: none;
-    border-radius: 50%; overflow: hidden; color: #fff; font-weight: 700;
-  }
+  .avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; overflow: hidden; color: #fff; font-weight: 700; }
   .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .avatar-edit { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
   .avatar-edit .btns { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 
   h3 { margin: 18px 0 6px; font-size: 1rem; }
   .row { display: flex; gap: 8px; align-items: center; }
-  .row input { flex: 1; min-width: 0; }
+  .row input, .row select { flex: 1; min-width: 0; }
   .row button { width: auto; margin: 0; padding: 11px 14px; }
+  .between { justify-content: space-between; margin-top: 12px; }
 
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 0; }
-  .stats .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .stats .l { font-size: .8rem; color: var(--muted); }
+  .stats4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .stats .v, .stats4 .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stats .l, .stats4 .l { font-size: .8rem; color: var(--muted); }
 
   .list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
   .list li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .list li.click { cursor: pointer; }
   .list .nm { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .list .ago { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .list .ago { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .list .empty { color: var(--muted); font-size: .9rem; }
   .list li button { width: auto; margin: 0; padding: 6px 12px; font-weight: 500; }
   .list li button.ghost { background: var(--soft); color: var(--ink); }
+  .pill { font-size: .75rem; padding: 2px 8px; border-radius: 99px; background: var(--soft); color: var(--muted); white-space: nowrap; }
 
   button {
     width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 10px;
@@ -114,20 +97,28 @@
   button:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
   button[disabled] { opacity: .5; cursor: default; }
   button.ghost { width: auto; margin: 0; padding: 6px 12px; background: var(--soft); color: var(--ink); font-weight: 500; }
+  button.ghost.wide { width: 100%; margin-top: 10px; padding: 11px; }
+  button.danger { background: var(--err); color: #fff; }
   .hint { margin: 10px 0 0; font-size: .85rem; color: var(--muted); line-height: 1.4; }
+
+  .timer { font-size: 2.4rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; margin: 10px 0 4px; }
+  .timer.go { color: var(--ok); }
+  .code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 1.3rem; letter-spacing: .15em; font-weight: 700; flex: 1; }
+  .navcard { background: var(--soft); border-radius: 12px; padding: 12px 14px; margin-top: 12px; }
+  .navdist { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .navtext { font-size: 1.05rem; margin-top: 2px; }
 
   .pin { border-radius: 50%; border: 3px solid #fff; overflow: hidden; box-sizing: border-box; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
   .pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .name-tip {
-    background: var(--paper); color: var(--ink); border: 0; border-radius: 6px;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; padding: 2px 8px;
-  }
+  .name-tip { background: var(--paper); color: var(--ink); border: 0; border-radius: 6px; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; padding: 2px 8px; }
   .name-tip::before { display: none; }
   .hidden { display: none; }
 </style>
 </head>
 <body>
 <div id="map" role="application" aria-label="Karte"></div>
+
+<div id="pickBar"><span id="pickMsg"></span><button id="pickCancel" class="ghost" type="button">Abbrechen</button></div>
 
 <section class="panel" aria-live="polite">
   <div class="status"><span id="dot" class="dot"></span><span id="status">Lade …</span></div>
@@ -156,14 +147,16 @@
       <button id="logout" class="ghost" type="button">Abmelden</button>
     </div>
 
-    <div class="tabs" role="tablist" id="nav">
+    <div class="tabs scroll" role="tablist" id="nav">
       <button role="tab" type="button" data-tab="Map" aria-selected="true">Karte</button>
+      <button role="tab" type="button" data-tab="Race" aria-selected="false" id="navRace">Rennen</button>
+      <button role="tab" type="button" data-tab="Navi" aria-selected="false">Navi</button>
       <button role="tab" type="button" data-tab="Friends" aria-selected="false" id="navFriends">Freunde</button>
       <button role="tab" type="button" data-tab="Profile" aria-selected="false">Profil</button>
       <button role="tab" type="button" data-tab="Settings" aria-selected="false">Einstellungen</button>
     </div>
 
-    <!-- Tab Karte -->
+    <!-- Karte -->
     <div id="tabMap">
       <div id="statsBox" class="stats hidden">
         <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
@@ -172,26 +165,106 @@
       </div>
       <button id="start" type="button">Starten</button>
       <ul id="players" class="list hidden" style="margin-top:10px"></ul>
-      <p class="hint" id="hint">Tippe auf „Starten“. Du siehst nur Freunde, die ebenfalls gestartet haben.</p>
+      <p class="hint" id="hint">Tippe auf „Starten“. Du siehst Freunde und Rennteilnehmer, die ebenfalls gestartet haben.</p>
     </div>
 
-    <!-- Tab Freunde -->
+    <!-- Rennen -->
+    <div id="tabRace" class="hidden">
+      <div id="raceList">
+        <button id="raceNew" type="button">Neues Rennen</button>
+        <label for="raceCode">Mit Code beitreten</label>
+        <div class="row">
+          <input id="raceCode" type="text" maxlength="6" autocapitalize="characters" autocomplete="off">
+          <button id="raceJoin" type="button">Beitreten</button>
+        </div>
+        <h3>Einladungen</h3><ul id="raceInvites" class="list"></ul>
+        <h3>Aktive Rennen</h3><ul id="raceActive" class="list"></ul>
+        <h3>Frühere Rennen</h3><ul id="racePast" class="list"></ul>
+      </div>
+
+      <div id="raceCreate" class="hidden">
+        <div class="row between"><button id="rcBack" class="ghost" type="button">‹ Zurück</button></div>
+        <label for="rcName">Name des Rennens</label>
+        <input id="rcName" type="text" maxlength="40" placeholder="z. B. Feierabendrunde">
+        <label for="rcRadius">Größe von Start- und Zielkreis</label>
+        <select id="rcRadius">
+          <option value="20">20 m</option><option value="30" selected>30 m</option>
+          <option value="50">50 m</option><option value="100">100 m</option>
+        </select>
+        <p class="hint" id="rcStartInfo">Start: noch nicht gesetzt</p>
+        <div class="row">
+          <button id="rcPickStart" class="ghost" type="button">Start auf Karte</button>
+          <button id="rcMyStart" class="ghost" type="button">Mein Standort</button>
+        </div>
+        <p class="hint" id="rcFinishInfo">Ziel: noch nicht gesetzt</p>
+        <div class="row"><button id="rcPickFinish" class="ghost" type="button">Ziel auf Karte</button></div>
+        <button id="rcCreate" type="button">Rennen erstellen</button>
+        <p class="hint">Es gibt keine vorgegebene Route. Jeder sucht seinen eigenen Weg vom Start zum Ziel. Es gelten immer die Verkehrsregeln. Fahrt nur dort, wo es erlaubt und sicher ist.</p>
+      </div>
+
+      <div id="raceDetail" class="hidden">
+        <div class="row between"><button id="rdBack" class="ghost" type="button">‹ Zurück</button><span class="pill" id="rdStatus"></span></div>
+        <h3 id="rdName" style="margin-top:12px"></h3>
+        <div id="rdTimer" class="timer">–</div>
+        <p id="rdInfo" class="hint" style="text-align:center"></p>
+        <div class="row" style="margin-top:12px"><span class="code" id="rdCode"></span><button id="rdShare" class="ghost" type="button">Teilen</button></div>
+        <ul id="rdMembers" class="list" style="margin-top:12px"></ul>
+        <div id="rdInviteBox" class="hidden"><h3>Freunde einladen</h3><ul id="rdInviteList" class="list"></ul></div>
+        <div id="rdActions"></div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div id="tabNavi" class="hidden">
+      <div id="navSetup">
+        <label for="nvMode">Fortbewegung</label>
+        <select id="nvMode">
+          <option value="car">Auto / Motorrad</option>
+          <option value="bike">Fahrrad / E-Bike / Roller</option>
+          <option value="foot">Zu Fuß</option>
+        </select>
+        <label for="nvQuery">Ziel suchen</label>
+        <div class="row">
+          <input id="nvQuery" type="text" placeholder="Adresse oder Ort" autocomplete="off">
+          <button id="nvSearch" type="button">Suchen</button>
+        </div>
+        <ul id="nvResults" class="list hidden" style="margin-top:8px"></ul>
+        <button id="nvPick" class="ghost wide" type="button">Ziel auf der Karte wählen</button>
+        <button id="nvRaceStart" class="ghost wide hidden" type="button">Zum Start des Rennens</button>
+        <p id="nvDest" class="hint">Noch kein Ziel gewählt.</p>
+        <button id="nvGo" class="hidden" type="button">Navigation starten</button>
+      </div>
+      <div id="navActive" class="hidden">
+        <div class="navcard"><div class="navdist" id="nvStepDist">–</div><div class="navtext" id="nvStepText"></div></div>
+        <div class="stats" style="grid-template-columns:repeat(2,1fr)">
+          <div><div class="v" id="nvRemain">–</div><div class="l">Rest</div></div>
+          <div><div class="v" id="nvEta">–</div><div class="l">Ankunft in</div></div>
+        </div>
+        <button id="nvStop" type="button">Navigation beenden</button>
+      </div>
+      <p class="hint">Routen kommen von den freien OpenStreetMap-Diensten (OSRM, Nominatim). Während eines laufenden Rennens ist die Navigation gesperrt.</p>
+    </div>
+
+    <!-- Freunde -->
     <div id="tabFriends" class="hidden">
       <label for="friendName">Freund per Spielername hinzufügen</label>
       <div class="row">
         <input id="friendName" type="text" maxlength="20" autocomplete="off">
         <button id="friendAdd" type="button">Anfrage</button>
       </div>
-      <h3>Anfragen an dich</h3>
-      <ul id="listIncoming" class="list"></ul>
-      <h3>Deine Freunde</h3>
-      <ul id="listFriends" class="list"></ul>
-      <h3>Gesendete Anfragen</h3>
-      <ul id="listOutgoing" class="list"></ul>
+      <h3>Anfragen an dich</h3><ul id="listIncoming" class="list"></ul>
+      <h3>Deine Freunde</h3><ul id="listFriends" class="list"></ul>
+      <h3>Gesendete Anfragen</h3><ul id="listOutgoing" class="list"></ul>
     </div>
 
-    <!-- Tab Profil -->
+    <!-- Profil -->
     <div id="tabProfile" class="hidden">
+      <div id="pStats" class="stats4">
+        <div><div class="v" id="stRaces">–</div><div class="l">Rennen</div></div>
+        <div><div class="v" id="stFinished">–</div><div class="l">im Ziel</div></div>
+        <div><div class="v" id="stWins">–</div><div class="l">Siege</div></div>
+        <div><div class="v" id="stPodium">–</div><div class="l">Podium</div></div>
+      </div>
       <div class="avatar-edit">
         <span id="pAvatar"></span>
         <div class="btns">
@@ -200,7 +273,6 @@
         </div>
         <input id="pFile" type="file" accept="image/*" class="hidden">
       </div>
-
       <label for="pEmail">E-Mail</label>
       <input id="pEmail" type="email" disabled>
       <label for="pName">Spielername</label>
@@ -214,14 +286,13 @@
         <select id="pCar"></select>
       </div>
       <button id="pSave" type="button">Profil speichern</button>
-
       <h3>Passwort ändern</h3>
       <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
       <input id="pNewPass" type="password" autocomplete="new-password">
       <button id="pPassSave" type="button">Passwort ändern</button>
     </div>
 
-    <!-- Tab Einstellungen -->
+    <!-- Einstellungen -->
     <div id="tabSettings" class="hidden">
       <label for="sTheme">Darstellung</label>
       <select id="sTheme">
@@ -242,10 +313,8 @@
   var SUPABASE_KEY = 'sb_publishable_LT1lr75iVAl6QWfe8GNzBQ_kWiQ9Psu';
   var AVATAR_PREFIX = SUPABASE_URL + '/storage/v1/object/public/avatars/';
 
-  var SEND_EVERY_MS = 2000;
-  var STALE_AFTER_MS = 30000;
-  var GONE_AFTER_MS = 300000;
-  var FRIEND_POLL_MS = 30000;
+  var SEND_EVERY_MS = 2000, STALE_AFTER_MS = 30000, GONE_AFTER_MS = 300000;
+  var POLL_MS = 30000, RACE_POLL_MS = 2500;
 
   var VEHICLES = {
     fahrrad: 'Fahrrad', ebike: 'E-Bike', roller: 'Roller / E-Scooter', laufen: 'Zu Fuß',
@@ -253,9 +322,9 @@
   };
   var CARS = {
     kleinwagen: 'Kleinwagen', kompakt: 'Kompaktklasse', limousine: 'Limousine / Kombi',
-    suv: 'SUV / Geländewagen', sportwagen: 'Sportwagen', elektro: 'Elektroauto',
-    oldtimer: 'Oldtimer / Youngtimer'
+    suv: 'SUV / Geländewagen', sportwagen: 'Sportwagen', elektro: 'Elektroauto', oldtimer: 'Oldtimer / Youngtimer'
   };
+  var NAV_MODE_FOR = { auto: 'car', motorrad: 'car', fahrrad: 'bike', ebike: 'bike', roller: 'bike', laufen: 'foot', sonstiges: 'bike' };
 
   function $(id) { return document.getElementById(id); }
   function el(tag, cls, text) {
@@ -263,6 +332,26 @@
     if (cls) e.className = cls;
     if (text != null) e.textContent = text;
     return e;
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function dist(lat1, lng1, lat2, lng2) {
+    var R = 6371000, r = Math.PI / 180;
+    var dLat = (lat2 - lat1) * r, dLng = (lng2 - lng1) * r;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  function fmtDist(m) { return m < 1000 ? Math.round(m) + ' m' : (m / 1000).toFixed(m < 10000 ? 1 : 0) + ' km'; }
+  function fmtDur(s) {
+    var min = Math.round(s / 60);
+    if (min < 1) return '< 1 min';
+    if (min < 60) return min + ' min';
+    return Math.floor(min / 60) + ' h ' + pad(min % 60) + ' min';
+  }
+  function fmtMs(ms) {
+    var t = Math.floor(ms / 100), tenth = t % 10, s = Math.floor(t / 10);
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    return (h ? h + ':' + pad(m) : '' + m) + ':' + pad(sec) + '.' + tenth;
   }
 
   // ---------- Dark Mode ----------
@@ -274,10 +363,7 @@
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
   }
   applyTheme();
-  if (mq) {
-    if (mq.addEventListener) mq.addEventListener('change', applyTheme);
-    else if (mq.addListener) mq.addListener(applyTheme);
-  }
+  if (mq) { if (mq.addEventListener) mq.addEventListener('change', applyTheme); else if (mq.addListener) mq.addListener(applyTheme); }
   $('sTheme').value = themePref;
   $('sTheme').addEventListener('change', function () {
     themePref = $('sTheme').value;
@@ -290,7 +376,6 @@
   var authView = $('authView'), mainView = $('mainView');
   var tabLogin = $('tabLogin'), tabSignup = $('tabSignup'), usernameRow = $('usernameRow');
   var usernameIn = $('username'), emailIn = $('email'), passIn = $('password'), submitBtn = $('submit');
-  var logoutBtn = $('logout');
   var statsBox = $('statsBox'), speedEl = $('speed'), accEl = $('acc'), sentEl = $('sent');
   var startBtn = $('start'), playersEl = $('players'), hint = $('hint');
 
@@ -305,67 +390,64 @@
 
   var myId = null, myName = '', myColor = '#1d4ed8', myEmail = '', myAvatar = null;
   var myVehicle = 'fahrrad', myCar = null;
-  var me = null, accuracy = null;
+  var me = null, accuracy = null, myPos = null;
   var trail = L.polyline([], { color: '#1d4ed8', weight: 4, opacity: 0.7 }).addTo(map);
   var watchId = null, follow = true, sentCount = 0, lastSent = 0;
   var others = {};
-  var channel = null, tick = null, friendTimer = null;
+  var channel = null, tick = null, pollTimer = null;
   var mode = 'login';
-  var friendships = [];
-  var friendInfo = {};   // user_id -> { name, avatar, color, label }
+  var friendships = [], serverOffset = 0, pendingCode = null;
+  var profCache = {};   // user_id -> Profilzeile
 
   function setStatus(text, kind) {
     statusEl.textContent = text;
     dot.className = 'dot' + (kind ? ' ' + kind : '');
   }
 
-  // ---------- Profilbilder und Marker ----------
-  function safeAvatar(url) {
-    return (typeof url === 'string' && url.indexOf(AVATAR_PREFIX) === 0) ? url : null;
+  // ---------- Profile laden (mit Zwischenspeicher) ----------
+  function getProfiles(ids, force) {
+    var missing = ids.filter(function (id, i) { return ids.indexOf(id) === i && (force || !profCache[id]); });
+    if (!missing.length) return Promise.resolve();
+    return db.from('profiles').select('id,username,avatar_url,color,vehicle,car_category').in('id', missing).then(function (res) {
+      (res.data || []).forEach(function (p) { profCache[p.id] = p; });
+    });
+  }
+  function pInfo(id) {
+    var p = profCache[id];
+    return p ? { name: p.username, avatar: p.avatar_url, color: p.color || '#667', label: vehicleLabel(p) }
+             : { name: '…', avatar: null, color: '#667', label: '' };
+  }
+  function vehicleLabel(p) {
+    if (p.vehicle === 'auto' && p.car_category && CARS[p.car_category]) return CARS[p.car_category];
+    return VEHICLES[p.vehicle] || '';
   }
 
+  // ---------- Profilbilder und Marker ----------
+  function safeAvatar(url) { return (typeof url === 'string' && url.indexOf(AVATAR_PREFIX) === 0) ? url : null; }
   function avatarNode(url, name, color, size) {
     var d = el('span', 'avatar');
     d.style.width = d.style.height = size + 'px';
     d.style.background = color || '#667';
     d.style.fontSize = Math.round(size * 0.45) + 'px';
     var safe = safeAvatar(url);
-    if (safe) {
-      var img = document.createElement('img');
-      img.src = safe; img.alt = '';
-      d.appendChild(img);
-    } else {
-      d.textContent = (name || '?').charAt(0).toUpperCase();
-    }
+    if (safe) { var img = document.createElement('img'); img.src = safe; img.alt = ''; d.appendChild(img); }
+    else d.textContent = (name || '?').charAt(0).toUpperCase();
     return d;
   }
-
   function iconFor(color, url) {
-    var safe = safeAvatar(url);
-    var size = safe ? 40 : 22;
+    var safe = safeAvatar(url), size = safe ? 40 : 22;
     var pin = el('div', 'pin');
     pin.style.width = pin.style.height = size + 'px';
     pin.style.background = color;
-    if (safe) {
-      pin.style.borderColor = color;
-      var img = document.createElement('img');
-      img.src = safe; img.alt = '';
-      pin.appendChild(img);
-    }
+    if (safe) { pin.style.borderColor = color; var img = document.createElement('img'); img.src = safe; img.alt = ''; pin.appendChild(img); }
     return L.divIcon({ html: pin, className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
   }
-
   function renderWho() {
     $('who').textContent = myName;
-    var holder = $('whoAvatar');
-    holder.textContent = '';
-    holder.appendChild(avatarNode(myAvatar, myName, myColor, 32));
+    var h = $('whoAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 32));
   }
-
   function renderProfileAvatar() {
-    var holder = $('pAvatar');
-    holder.textContent = '';
-    holder.appendChild(avatarNode(myAvatar, myName, myColor, 84));
+    var h = $('pAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 84));
   }
 
   // ---------- Anmeldung ----------
@@ -377,7 +459,7 @@
     usernameRow.classList.toggle('hidden', !signup);
     submitBtn.textContent = signup ? 'Konto erstellen' : 'Anmelden';
     passIn.setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
-    setStatus(signup ? 'Neues Konto erstellen' : 'Bitte anmelden');
+    setStatus(signup ? 'Neues Konto erstellen' : (pendingCode ? 'Bitte anmelden, um dem Rennen beizutreten' : 'Bitte anmelden'));
   }
   tabLogin.addEventListener('click', function () { setMode('login'); });
   tabSignup.addEventListener('click', function () { setMode('signup'); });
@@ -394,28 +476,19 @@
   }
 
   function submit() {
-    var email = emailIn.value.trim();
-    var pass = passIn.value;
+    var email = emailIn.value.trim(), pass = passIn.value;
     if (!email || !pass) { setStatus('Bitte E-Mail und Passwort eingeben.', 'warn'); return; }
     if (pass.length < 8) { setStatus('Das Passwort braucht mindestens 8 Zeichen.', 'warn'); return; }
     submitBtn.disabled = true;
-
     if (mode === 'signup') {
       var name = usernameIn.value.trim();
-      if (name.length < 2 || name.length > 20) {
-        setStatus('Der Spielername braucht 2 bis 20 Zeichen.', 'warn');
-        submitBtn.disabled = false; return;
-      }
-      db.auth.signUp({ email: email, password: pass, options: { data: { username: name } } })
-        .then(function (res) {
-          submitBtn.disabled = false;
-          if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
-          if (res.data.session) { afterLogin(res.data.session.user); }
-          else {
-            setMode('login');
-            setStatus('Bestätigungsmail gesendet. Klicke den Link, dann hier anmelden.', 'ok');
-          }
-        });
+      if (name.length < 2 || name.length > 20) { setStatus('Der Spielername braucht 2 bis 20 Zeichen.', 'warn'); submitBtn.disabled = false; return; }
+      db.auth.signUp({ email: email, password: pass, options: { data: { username: name } } }).then(function (res) {
+        submitBtn.disabled = false;
+        if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
+        if (res.data.session) afterLogin(res.data.session.user);
+        else { setMode('login'); setStatus('Bestätigungsmail gesendet. Klicke den Link, dann hier anmelden.', 'ok'); }
+      });
     } else {
       db.auth.signInWithPassword({ email: email, password: pass }).then(function (res) {
         submitBtn.disabled = false;
@@ -431,102 +504,86 @@
     mainView.classList.add('hidden');
     authView.classList.remove('hidden');
     passIn.value = '';
-    if (friendTimer) { clearInterval(friendTimer); friendTimer = null; }
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     setMode(mode);
   }
 
   function applyProfile(p) {
-    myName = p.username;
-    myColor = p.color || '#1d4ed8';
-    myAvatar = safeAvatar(p.avatar_url);
-    myVehicle = p.vehicle || 'fahrrad';
-    myCar = p.car_category || null;
+    myName = p.username; myColor = p.color || '#1d4ed8'; myAvatar = safeAvatar(p.avatar_url);
+    myVehicle = p.vehicle || 'fahrrad'; myCar = p.car_category || null;
     trail.setStyle({ color: myColor });
     if (accuracy) accuracy.setStyle({ color: myColor });
     if (me) me.setIcon(iconFor(myColor, myAvatar));
-    renderWho();
-    renderProfileAvatar();
+    renderWho(); renderProfileAvatar();
   }
 
   function afterLogin(user) {
-    myId = user.id;
-    myEmail = user.email || '';
+    myId = user.id; myEmail = user.email || '';
     db.from('profiles').select('username,color,vehicle,car_category,avatar_url').eq('id', myId).single().then(function (res) {
-      if (res.error || !res.data) {
-        setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err');
-        return;
-      }
+      if (res.error || !res.data) { setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err'); return; }
       applyProfile(res.data);
+      $('nvMode').value = NAV_MODE_FOR[myVehicle] || 'bike';
       authView.classList.add('hidden');
       mainView.classList.remove('hidden');
       showTab('Map');
       setStatus('Bereit');
-      loadFriends();
-      if (friendTimer) clearInterval(friendTimer);
-      friendTimer = setInterval(loadFriends, FRIEND_POLL_MS);
+      syncClock();
+      loadFriends(); loadMyRaces(false);
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); }, POLL_MS);
+      if (pendingCode) { var c = pendingCode; pendingCode = null; joinCode(c); }
     });
   }
 
-  logoutBtn.addEventListener('click', function () {
+  $('logout').addEventListener('click', function () {
     if (watchId !== null) stop();
+    unfollowRace(); stopNavigation(true);
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
   // ---------- Tabs ----------
-  var TABS = ['Map', 'Friends', 'Profile', 'Settings'];
+  var TABS = ['Map', 'Race', 'Navi', 'Friends', 'Profile', 'Settings'];
   function showTab(t) {
     TABS.forEach(function (n) { $('tab' + n).classList.toggle('hidden', n !== t); });
     var btns = $('nav').querySelectorAll('button');
-    for (var i = 0; i < btns.length; i++) {
-      btns[i].setAttribute('aria-selected', String(btns[i].getAttribute('data-tab') === t));
-    }
+    for (var i = 0; i < btns.length; i++) btns[i].setAttribute('aria-selected', String(btns[i].getAttribute('data-tab') === t));
     if (t === 'Friends') loadFriends();
-    if (t === 'Profile') fillProfile();
+    if (t === 'Profile') { fillProfile(); loadStats(); }
+    if (t === 'Race') loadMyRaces(true);
+    if (t === 'Navi') refreshNaviSetup();
   }
   $('nav').addEventListener('click', function (e) {
     var t = e.target.getAttribute && e.target.getAttribute('data-tab');
     if (t) showTab(t);
   });
 
+  // ---------- Eigene Karte wählen (Antippen) ----------
+  var pickCb = null;
+  function pickOnMap(msg, cb) { pickCb = cb; $('pickMsg').textContent = msg; document.body.classList.add('picking'); }
+  function endPick() { pickCb = null; document.body.classList.remove('picking'); }
+  map.on('click', function (e) { if (!pickCb) return; var cb = pickCb; endPick(); cb(e.latlng); });
+  $('pickCancel').addEventListener('click', endPick);
+
   // ---------- Profil ----------
-  function fillSelect(sel, map) {
-    Object.keys(map).forEach(function (k) {
-      var o = document.createElement('option');
-      o.value = k; o.textContent = map[k];
-      sel.appendChild(o);
-    });
-  }
+  function fillSelect(sel, m) { Object.keys(m).forEach(function (k) { var o = document.createElement('option'); o.value = k; o.textContent = m[k]; sel.appendChild(o); }); }
   fillSelect($('pVehicle'), VEHICLES);
   fillSelect($('pCar'), CARS);
-
-  function toggleCarRow() {
-    $('carRow').classList.toggle('hidden', $('pVehicle').value !== 'auto');
-  }
+  function toggleCarRow() { $('carRow').classList.toggle('hidden', $('pVehicle').value !== 'auto'); }
   $('pVehicle').addEventListener('change', toggleCarRow);
 
   function fillProfile() {
-    $('pEmail').value = myEmail;
-    $('pName').value = myName;
-    $('pColor').value = myColor;
-    $('pVehicle').value = myVehicle;
-    $('pCar').value = myCar || 'kompakt';
-    toggleCarRow();
-    renderProfileAvatar();
+    $('pEmail').value = myEmail; $('pName').value = myName; $('pColor').value = myColor;
+    $('pVehicle').value = myVehicle; $('pCar').value = myCar || 'kompakt';
+    toggleCarRow(); renderProfileAvatar();
   }
 
   $('pSave').addEventListener('click', function () {
     var name = $('pName').value.trim();
     if (name.length < 2 || name.length > 20) { setStatus('Der Spielername braucht 2 bis 20 Zeichen.', 'warn'); return; }
     var vehicle = $('pVehicle').value;
-    var row = {
-      username: name, color: $('pColor').value, vehicle: vehicle,
-      car_category: vehicle === 'auto' ? $('pCar').value : null
-    };
+    var row = { username: name, color: $('pColor').value, vehicle: vehicle, car_category: vehicle === 'auto' ? $('pCar').value : null };
     db.from('profiles').update(row).eq('id', myId).then(function (res) {
-      if (res.error) {
-        setStatus(res.error.code === '23505' ? 'Dieser Spielername ist schon vergeben.' : 'Speichern fehlgeschlagen: ' + res.error.message, 'err');
-        return;
-      }
+      if (res.error) { setStatus(res.error.code === '23505' ? 'Dieser Spielername ist schon vergeben.' : 'Speichern fehlgeschlagen: ' + res.error.message, 'err'); return; }
       row.avatar_url = myAvatar;
       applyProfile(row);
       setStatus('Profil gespeichert.', 'ok');
@@ -538,44 +595,63 @@
     if (pw.length < 8) { setStatus('Das neue Passwort braucht mindestens 8 Zeichen.', 'warn'); return; }
     db.auth.updateUser({ password: pw }).then(function (res) {
       if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
-      $('pNewPass').value = '';
-      setStatus('Passwort geändert.', 'ok');
+      $('pNewPass').value = ''; setStatus('Passwort geändert.', 'ok');
     });
   });
 
-  // ---------- Profilbild hochladen ----------
-  // Bild mittig quadratisch zuschneiden, auf 256 x 256 verkleinern, als JPEG speichern
+  // Statistik aus abgeschlossenen Rennen
+  function loadStats() {
+    db.from('race_members').select('race_id,status').eq('user_id', myId).in('status', ['finished', 'dnf']).then(function (res) {
+      if (res.error) return;
+      var mine = res.data || [];
+      var finishedIds = mine.filter(function (m) { return m.status === 'finished'; }).map(function (m) { return m.race_id; });
+      $('stRaces').textContent = mine.length;
+      $('stFinished').textContent = finishedIds.length;
+      if (!finishedIds.length) { $('stWins').textContent = 0; $('stPodium').textContent = 0; return; }
+      db.from('race_members').select('race_id,user_id,status,result_ms').in('race_id', finishedIds).then(function (r2) {
+        if (r2.error) return;
+        var byRace = {};
+        (r2.data || []).forEach(function (m) { (byRace[m.race_id] = byRace[m.race_id] || []).push(m); });
+        var wins = 0, podium = 0;
+        finishedIds.forEach(function (rid) {
+          var ms = byRace[rid] || [];
+          var field = ms.filter(function (m) { return m.status === 'finished' || m.status === 'dnf'; });
+          if (field.length < 2) return;                       // allein gefahren zählt nicht
+          var mineRow = ms.filter(function (m) { return m.user_id === myId; })[0];
+          if (!mineRow) return;
+          var rank = 1 + ms.filter(function (m) { return m.status === 'finished' && m.result_ms < mineRow.result_ms; }).length;
+          if (rank === 1) wins++;
+          if (rank <= 3) podium++;
+        });
+        $('stWins').textContent = wins; $('stPodium').textContent = podium;
+      });
+    });
+  }
+
+  // ---------- Profilbild ----------
   function processImage(file) {
     return new Promise(function (resolve, reject) {
-      var url = URL.createObjectURL(file);
-      var img = new Image();
+      var url = URL.createObjectURL(file), img = new Image();
       img.onload = function () {
-        var s = Math.min(img.width, img.height);
-        var c = document.createElement('canvas');
+        var s = Math.min(img.width, img.height), c = document.createElement('canvas');
         c.width = c.height = 256;
         c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 256, 256);
         URL.revokeObjectURL(url);
-        c.toBlob(function (b) {
-          if (b) resolve(b); else reject(new Error('Bild konnte nicht verarbeitet werden.'));
-        }, 'image/jpeg', 0.85);
+        c.toBlob(function (b) { if (b) resolve(b); else reject(new Error('Bild konnte nicht verarbeitet werden.')); }, 'image/jpeg', 0.85);
       };
       img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Die Datei ist kein lesbares Bild.')); };
       img.src = url;
     });
   }
-
   function saveAvatarUrl(url) {
     return db.from('profiles').update({ avatar_url: url }).eq('id', myId).then(function (res) {
       if (res.error) throw new Error(res.error.message);
       myAvatar = safeAvatar(url);
       if (me) me.setIcon(iconFor(myColor, myAvatar));
-      renderWho();
-      renderProfileAvatar();
+      renderWho(); renderProfileAvatar();
     });
   }
-
   $('pPick').addEventListener('click', function () { $('pFile').click(); });
-
   $('pFile').addEventListener('change', function () {
     var file = $('pFile').files && $('pFile').files[0];
     $('pFile').value = '';
@@ -587,115 +663,75 @@
       return db.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
     }).then(function (res) {
       if (res.error) throw new Error(res.error.message);
-      var pub = db.storage.from('avatars').getPublicUrl(path).data.publicUrl;
-      return saveAvatarUrl(pub + '?v=' + Date.now());
-    }).then(function () {
-      setStatus('Profilbild gespeichert.', 'ok');
-    }).catch(function (err) {
-      setStatus('Bild-Upload fehlgeschlagen: ' + err.message, 'err');
-    });
+      return saveAvatarUrl(db.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now());
+    }).then(function () { setStatus('Profilbild gespeichert.', 'ok'); })
+      .catch(function (err) { setStatus('Bild-Upload fehlgeschlagen: ' + err.message, 'err'); });
   });
-
   $('pRemovePic').addEventListener('click', function () {
     if (!myAvatar) { setStatus('Du hast noch kein Profilbild.', 'warn'); return; }
-    db.storage.from('avatars').remove([myId + '/avatar.jpg']).then(function () {
-      return saveAvatarUrl(null);
-    }).then(function () {
-      setStatus('Profilbild entfernt.', 'ok');
-    }).catch(function (err) {
-      setStatus('Entfernen fehlgeschlagen: ' + err.message, 'err');
-    });
+    db.storage.from('avatars').remove([myId + '/avatar.jpg']).then(function () { return saveAvatarUrl(null); })
+      .then(function () { setStatus('Profilbild entfernt.', 'ok'); })
+      .catch(function (err) { setStatus('Entfernen fehlgeschlagen: ' + err.message, 'err'); });
   });
 
   // ---------- Freunde ----------
   function otherId(f) { return f.requester_id === myId ? f.addressee_id : f.requester_id; }
-
-  function vehicleLabel(p) {
-    if (p.vehicle === 'auto' && p.car_category && CARS[p.car_category]) return CARS[p.car_category];
-    return VEHICLES[p.vehicle] || '';
-  }
 
   function loadFriends() {
     if (!myId) return;
     db.from('friendships').select('*').then(function (res) {
       if (res.error) { setStatus('Freunde laden fehlgeschlagen: ' + res.error.message, 'err'); return; }
       friendships = res.data || [];
-      var ids = friendships.map(otherId);
-      if (!ids.length) { friendInfo = {}; renderFriends(); return; }
-      db.from('profiles').select('id,username,avatar_url,color,vehicle,car_category').in('id', ids).then(function (r2) {
-        friendInfo = {};
-        (r2.data || []).forEach(function (p) {
-          friendInfo[p.id] = { name: p.username, avatar: p.avatar_url, color: p.color, label: vehicleLabel(p) };
-        });
-        renderFriends();
-      });
+      getProfiles(friendships.map(otherId), true).then(renderFriends);
     });
   }
-
   function fillList(ul, items, emptyText) {
     ul.textContent = '';
-    if (!items.length) {
-      var li = el('li'); li.appendChild(el('span', 'empty', emptyText)); ul.appendChild(li);
-      return;
-    }
+    if (!items.length) { var li = el('li'); li.appendChild(el('span', 'empty', emptyText)); ul.appendChild(li); return; }
     items.forEach(function (it) { ul.appendChild(it); });
   }
-
   function friendRow(f, buttons) {
-    var li = el('li');
-    var info = friendInfo[otherId(f)] || { name: '…', avatar: null, color: '#667', label: '' };
+    var li = el('li'), info = pInfo(otherId(f));
     li.appendChild(avatarNode(info.avatar, info.name, info.color, 32));
     li.appendChild(el('span', 'nm', info.name));
     if (info.label) li.appendChild(el('span', 'ago', info.label));
     buttons.forEach(function (b) {
       var btn = el('button', b.ghost ? 'ghost' : '', b.label);
-      btn.type = 'button';
-      btn.addEventListener('click', b.run);
-      li.appendChild(btn);
+      btn.type = 'button'; btn.addEventListener('click', b.run); li.appendChild(btn);
     });
     return li;
   }
-
   function renderFriends() {
     var incoming = friendships.filter(function (f) { return f.status === 'pending' && f.addressee_id === myId; });
     var outgoing = friendships.filter(function (f) { return f.status === 'pending' && f.requester_id === myId; });
     var accepted = friendships.filter(function (f) { return f.status === 'accepted'; });
-
     $('navFriends').textContent = incoming.length ? 'Freunde (' + incoming.length + ')' : 'Freunde';
-
     fillList($('listIncoming'), incoming.map(function (f) {
       return friendRow(f, [
         { label: 'Annehmen', run: function () { answerRequest(f.id); } },
         { label: 'Ablehnen', ghost: true, run: function () { removeFriendship(f.id); } }
       ]);
     }), 'Keine offenen Anfragen.');
-
     fillList($('listFriends'), accepted.map(function (f) {
-      return friendRow(f, [{ label: 'Entfernen', ghost: true, run: function () {
-        if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id);
-      } }]);
+      return friendRow(f, [{ label: 'Entfernen', ghost: true, run: function () { if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id); } }]);
     }), 'Noch keine Freunde. Such oben nach dem Spielernamen.');
-
     fillList($('listOutgoing'), outgoing.map(function (f) {
       return friendRow(f, [{ label: 'Zurückziehen', ghost: true, run: function () { removeFriendship(f.id); } }]);
     }), 'Keine gesendeten Anfragen.');
+    if (raceCur) renderInviteList(true);
   }
-
   function answerRequest(id) {
     db.from('friendships').update({ status: 'accepted' }).eq('id', id).then(function (res) {
       if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
-      setStatus('Ihr seid jetzt Freunde.', 'ok');
-      loadFriends();
+      setStatus('Ihr seid jetzt Freunde.', 'ok'); loadFriends();
     });
   }
-
   function removeFriendship(id) {
     db.from('friendships').delete().eq('id', id).then(function (res) {
       if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
       loadFriends();
     });
   }
-
   $('friendAdd').addEventListener('click', function () {
     var name = $('friendName').value.trim();
     if (!name) { setStatus('Bitte einen Spielernamen eingeben.', 'warn'); return; }
@@ -705,16 +741,10 @@
       var p = res.data && res.data[0];
       if (!p) { setStatus('Niemanden mit diesem Namen gefunden.', 'warn'); return; }
       if (p.id === myId) { setStatus('Das bist du selbst.', 'warn'); return; }
-      var exists = friendships.some(function (f) { return otherId(f) === p.id; });
-      if (exists) { setStatus('Mit ' + p.username + ' gibt es schon eine Verbindung oder Anfrage.', 'warn'); return; }
+      if (friendships.some(function (f) { return otherId(f) === p.id; })) { setStatus('Mit ' + p.username + ' gibt es schon eine Verbindung oder Anfrage.', 'warn'); return; }
       db.from('friendships').insert({ requester_id: myId, addressee_id: p.id }).then(function (r2) {
-        if (r2.error) {
-          setStatus(r2.error.code === '23505' ? 'Es gibt schon eine Anfrage mit dieser Person.' : 'Anfrage fehlgeschlagen: ' + r2.error.message, 'err');
-          return;
-        }
-        $('friendName').value = '';
-        setStatus('Anfrage an ' + p.username + ' gesendet.', 'ok');
-        loadFriends();
+        if (r2.error) { setStatus(r2.error.code === '23505' ? 'Es gibt schon eine Anfrage mit dieser Person.' : 'Anfrage fehlgeschlagen: ' + r2.error.message, 'err'); return; }
+        $('friendName').value = ''; setStatus('Anfrage an ' + p.username + ' gesendet.', 'ok'); loadFriends();
       });
     });
   });
@@ -733,8 +763,7 @@
   // ---------- Karte: andere Spieler ----------
   function upsertOther(row) {
     if (!row || !row.user_id || row.user_id === myId) return;
-    var ll = [row.lat, row.lng];
-    var o = others[row.user_id];
+    var ll = [row.lat, row.lng], o = others[row.user_id];
     if (!o) {
       var color = row.color || colorFor(row.username);
       var marker = L.marker(ll, { icon: iconFor(color, row.avatar_url), keyboard: false }).addTo(map);
@@ -742,68 +771,44 @@
       o = others[row.user_id] = { name: row.username, marker: marker, color: color, avatar: row.avatar_url || null };
     } else {
       o.marker.setLatLng(ll);
-      if ((row.avatar_url || null) !== o.avatar) {
-        o.avatar = row.avatar_url || null;
-        o.marker.setIcon(iconFor(o.color, o.avatar));
-      }
+      if ((row.avatar_url || null) !== o.avatar) { o.avatar = row.avatar_url || null; o.marker.setIcon(iconFor(o.color, o.avatar)); }
     }
     o.updated = new Date(row.updated_at).getTime();
     renderPlayers();
   }
-
-  function removeOther(id) {
-    var o = others[id];
-    if (!o) return;
-    map.removeLayer(o.marker);
-    delete others[id];
-  }
-
+  function removeOther(id) { var o = others[id]; if (!o) return; map.removeLayer(o.marker); delete others[id]; }
   function renderPlayers() {
     var now = Date.now();
     var ids = Object.keys(others).sort(function (a, b) { return others[a].name.localeCompare(others[b].name); });
-    var items = ids.map(function (id) {
-      var o = others[id];
-      var age = now - o.updated;
+    fillList(playersEl, ids.map(function (id) {
+      var o = others[id], age = now - o.updated;
       o.marker.setOpacity(age > STALE_AFTER_MS ? 0.4 : 1);
       var li = el('li');
       li.appendChild(avatarNode(o.avatar, o.name, o.color, 28));
       li.appendChild(el('span', 'nm', o.name));
       li.appendChild(el('span', 'ago', ago(age)));
       return li;
-    });
-    fillList(playersEl, items, 'Noch kein Freund online.');
+    }), 'Noch niemand online.');
   }
-
   function sweep() {
     var now = Date.now();
-    Object.keys(others).forEach(function (id) {
-      if (now - others[id].updated > GONE_AFTER_MS) removeOther(id);
-    });
+    Object.keys(others).forEach(function (id) { if (now - others[id].updated > GONE_AFTER_MS) removeOther(id); });
     renderPlayers();
   }
-
   function loadAll() {
     return db.from('positions').select('*').then(function (res) {
       if (res.error) { setStatus('Datenbank-Fehler: ' + res.error.message, 'err'); return; }
-      res.data.forEach(upsertOther);
-      renderPlayers();
+      res.data.forEach(upsertOther); renderPlayers();
     });
   }
-
   function subscribe() {
     channel = db.channel('positions-live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'positions' }, function (payload) {
-        if (payload.eventType === 'DELETE') {
-          if (payload.old && payload.old.user_id) removeOther(payload.old.user_id);
-          renderPlayers();
-        } else {
-          upsertOther(payload.new);
-        }
+        if (payload.eventType === 'DELETE') { if (payload.old && payload.old.user_id) removeOther(payload.old.user_id); renderPlayers(); }
+        else upsertOther(payload.new);
       })
       .subscribe(function (state) {
-        if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT') {
-          setStatus('Live-Verbindung gestört. Seite neu laden.', 'err');
-        }
+        if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT') setStatus('Live-Verbindung gestört. Seite neu laden.', 'err');
       });
   }
 
@@ -814,34 +819,33 @@
     lastSent = now;
     db.from('positions').upsert({
       user_id: myId, username: myName, color: myColor, avatar_url: myAvatar,
-      lat: c.latitude, lng: c.longitude, accuracy: c.accuracy,
-      updated_at: new Date().toISOString()
+      lat: c.latitude, lng: c.longitude, accuracy: c.accuracy, updated_at: new Date().toISOString()
     }).then(function (res) {
       if (res.error) { setStatus('Senden fehlgeschlagen: ' + res.error.message, 'err'); return; }
-      sentCount += 1;
-      sentEl.textContent = sentCount;
+      sentCount += 1; sentEl.textContent = sentCount;
     });
   }
 
   function onPosition(pos) {
-    var c = pos.coords;
-    var ll = [c.latitude, c.longitude];
+    var c = pos.coords, ll = [c.latitude, c.longitude];
+    var tDev = Math.abs(pos.timestamp - Date.now()) < 5000 ? pos.timestamp : Date.now();
+    myPos = { lat: c.latitude, lng: c.longitude, acc: c.accuracy, t: tDev };
     if (!me) {
       me = L.marker(ll, { icon: iconFor(myColor, myAvatar), zIndexOffset: 1000, keyboard: false }).addTo(map);
       accuracy = L.circle(ll, { radius: c.accuracy, color: myColor, weight: 1, fillOpacity: 0.12 }).addTo(map);
-      map.setView(ll, 17);
+      if (!raceCur) map.setView(ll, 17);
     } else {
-      me.setLatLng(ll);
-      accuracy.setLatLng(ll).setRadius(c.accuracy);
+      me.setLatLng(ll); accuracy.setLatLng(ll).setRadius(c.accuracy);
     }
     trail.addLatLng(ll);
     if (follow) map.panTo(ll);
-
     speedEl.textContent = (c.speed != null && !isNaN(c.speed)) ? (c.speed * 3.6).toFixed(1) : '–';
     accEl.textContent = Math.round(c.accuracy);
     if (c.accuracy <= 20) setStatus('Live als „' + myName + '“', 'ok');
     else setStatus('GPS ungenau – am besten draußen testen', 'warn');
     sendPosition(c);
+    raceOnPosition(c, tDev);
+    navOnPosition(c);
   }
 
   function onError(err) {
@@ -855,41 +859,603 @@
   }
 
   function start() {
+    if (watchId !== null) return;
     if (!('geolocation' in navigator)) { setStatus('Dieser Browser unterstützt keinen Standort.', 'err'); return; }
     if (!window.isSecureContext) { setStatus('Standort geht nur über https oder localhost.', 'err'); return; }
-    statsBox.classList.remove('hidden');
-    playersEl.classList.remove('hidden');
+    statsBox.classList.remove('hidden'); playersEl.classList.remove('hidden');
     startBtn.textContent = 'Stoppen';
-    hint.textContent = 'Läuft. Sobald ein Freund startet, erscheint sein Punkt auf der Karte.';
+    hint.textContent = 'Läuft. Lass den Bildschirm an, damit das GPS nicht unterbrochen wird.';
     setStatus('Suche Position …', 'warn');
-    follow = true;
+    follow = !raceCur;
     loadAll().then(subscribe);
     tick = setInterval(sweep, 5000);
-    watchId = navigator.geolocation.watchPosition(onPosition, onError, {
-      enableHighAccuracy: true, maximumAge: 0, timeout: 15000
-    });
+    watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
   }
 
   function stop() {
     if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-    watchId = null;
+    watchId = null; myPos = null;
     if (tick) clearInterval(tick);
     tick = null;
     if (channel) { db.removeChannel(channel); channel = null; }
     if (myId) db.from('positions').delete().eq('user_id', myId).then(function () {});
     Object.keys(others).forEach(removeOther);
-    statsBox.classList.add('hidden');
-    playersEl.classList.add('hidden');
+    statsBox.classList.add('hidden'); playersEl.classList.add('hidden');
     startBtn.textContent = 'Starten';
-    hint.textContent = 'Tippe auf „Starten“. Du siehst nur Freunde, die ebenfalls gestartet haben.';
+    hint.textContent = 'Tippe auf „Starten“. Du siehst Freunde und Rennteilnehmer, die ebenfalls gestartet haben.';
     setStatus('Gestoppt');
   }
+  startBtn.addEventListener('click', function () { if (watchId === null) start(); else stop(); });
 
-  startBtn.addEventListener('click', function () {
-    if (watchId === null) start(); else stop();
+  // =====================================================
+  //  RENNMODUS
+  // =====================================================
+  var raceCur = null, raceMembers = [], racePoll = null, raceLayerFor = null, myRaces = [];
+  var seenOutside = false, lastFix = null, goFired = false, raceFinishing = false, finishTries = 0;
+  var actionSig = '', inviteSig = '';
+  var raceLayer = L.layerGroup().addTo(map), draftLayer = L.layerGroup().addTo(map);
+  var draft = { start: null, finish: null };
+
+  function syncClock() {
+    var t0 = Date.now();
+    return db.rpc('server_time').then(function (res) {
+      if (res.error || !res.data) return;
+      var t1 = Date.now();
+      serverOffset = new Date(res.data).getTime() + (t1 - t0) / 2 - t1;
+    });
+  }
+
+  function showRaceView(v) {
+    ['List', 'Create', 'Detail'].forEach(function (n) { $('race' + n).classList.toggle('hidden', n !== v); });
+  }
+
+  function addZone(layer, p, radius, color, label) {
+    var c = L.circle([p.lat, p.lng], { radius: radius, color: color, weight: 2, fillColor: color, fillOpacity: 0.2 });
+    c.bindTooltip(label, { permanent: true, direction: 'center', className: 'name-tip' });
+    c.addTo(layer);
+  }
+  function drawRace(r, fit) {
+    raceLayer.clearLayers(); raceLayerFor = r.id;
+    addZone(raceLayer, { lat: r.start_lat, lng: r.start_lng }, r.radius, '#15803d', 'Start');
+    addZone(raceLayer, { lat: r.finish_lat, lng: r.finish_lng }, r.radius, '#b91c1c', 'Ziel');
+    if (fit) { follow = false; map.fitBounds(L.latLngBounds([[r.start_lat, r.start_lng], [r.finish_lat, r.finish_lng]]).pad(0.4)); }
+  }
+
+  // ----- Liste -----
+  function loadMyRaces(render) {
+    if (!myId) return Promise.resolve();
+    return db.from('race_members')
+      .select('status,result_ms,races(id,code,name,status,creator_id,starts_at,created_at)')
+      .eq('user_id', myId).then(function (res) {
+        if (res.error) return;
+        myRaces = (res.data || []).filter(function (x) { return x.races; })
+          .sort(function (a, b) { return new Date(b.races.created_at) - new Date(a.races.created_at); });
+        var inv = myRaces.filter(function (x) { return x.status === 'invited' && x.races.status === 'lobby'; }).length;
+        $('navRace').textContent = inv ? 'Rennen (' + inv + ')' : 'Rennen';
+        if (render) renderRaceList();
+      });
+  }
+  function renderRaceList() {
+    var invites = [], active = [], past = [];
+    myRaces.forEach(function (x) {
+      var r = x.races;
+      if (x.status === 'invited') { if (r.status === 'lobby') invites.push(x); }
+      else if (x.status === 'declined') return;
+      else if (r.status === 'finished') past.push(x);
+      else active.push(x);
+    });
+    function row(x, extra) {
+      var li = el('li', 'click');
+      li.appendChild(el('span', 'nm', x.races.name));
+      extra(li);
+      return li;
+    }
+    fillList($('raceInvites'), invites.map(function (x) {
+      var li = row(x, function (li) {
+        var a = el('button', '', 'Annehmen'); a.type = 'button';
+        a.addEventListener('click', function (e) { e.stopPropagation(); db.rpc('respond_invite', { p_race: x.races.id, p_accept: true }).then(function () { followRace(x.races.id); }); });
+        var d = el('button', 'ghost', 'Ablehnen'); d.type = 'button';
+        d.addEventListener('click', function (e) { e.stopPropagation(); db.rpc('respond_invite', { p_race: x.races.id, p_accept: false }).then(function () { loadMyRaces(true); }); });
+        li.appendChild(a); li.appendChild(d);
+      });
+      li.addEventListener('click', function () { followRace(x.races.id); });
+      return li;
+    }), 'Keine Einladungen.');
+    fillList($('raceActive'), active.map(function (x) {
+      var li = row(x, function (li) { li.appendChild(el('span', 'pill', x.races.status === 'running' ? 'Läuft' : 'Lobby')); });
+      li.addEventListener('click', function () { followRace(x.races.id); });
+      return li;
+    }), 'Keine aktiven Rennen.');
+    fillList($('racePast'), past.slice(0, 15).map(function (x) {
+      var li = row(x, function (li) { li.appendChild(el('span', 'ago', x.status === 'finished' ? fmtMs(x.result_ms) : 'aufgegeben')); });
+      li.addEventListener('click', function () { followRace(x.races.id); });
+      return li;
+    }), 'Noch keine Rennen.');
+  }
+
+  // ----- Erstellen -----
+  function drawDraft() {
+    draftLayer.clearLayers();
+    var rad = +$('rcRadius').value;
+    if (draft.start) addZone(draftLayer, draft.start, rad, '#15803d', 'Start');
+    if (draft.finish) addZone(draftLayer, draft.finish, rad, '#b91c1c', 'Ziel');
+    $('rcStartInfo').textContent = draft.start ? 'Start gesetzt ✓' : 'Start: noch nicht gesetzt';
+    $('rcFinishInfo').textContent = draft.finish ? 'Ziel gesetzt ✓' : 'Ziel: noch nicht gesetzt';
+  }
+  $('raceNew').addEventListener('click', function () {
+    draft = { start: null, finish: null }; $('rcName').value = '';
+    drawDraft(); showRaceView('Create');
+  });
+  $('rcBack').addEventListener('click', function () { draftLayer.clearLayers(); showRaceView('List'); });
+  $('rcRadius').addEventListener('change', drawDraft);
+  $('rcPickStart').addEventListener('click', function () {
+    pickOnMap('Tippe auf der Karte auf den Startpunkt', function (ll) { draft.start = { lat: ll.lat, lng: ll.lng }; drawDraft(); });
+  });
+  $('rcPickFinish').addEventListener('click', function () {
+    pickOnMap('Tippe auf der Karte auf den Zielpunkt', function (ll) { draft.finish = { lat: ll.lat, lng: ll.lng }; drawDraft(); });
+  });
+  $('rcMyStart').addEventListener('click', function () {
+    if (!myPos) { setStatus('Noch keine GPS-Position. Starte zuerst den Standort (Reiter Karte).', 'warn'); return; }
+    draft.start = { lat: myPos.lat, lng: myPos.lng }; drawDraft();
+  });
+  $('rcCreate').addEventListener('click', function () {
+    if (!draft.start || !draft.finish) { setStatus('Bitte Start und Ziel setzen.', 'warn'); return; }
+    var rad = +$('rcRadius').value;
+    if (dist(draft.start.lat, draft.start.lng, draft.finish.lat, draft.finish.lng) < rad * 3) {
+      setStatus('Start und Ziel liegen zu nah beieinander.', 'warn'); return;
+    }
+    $('rcCreate').disabled = true;
+    db.rpc('create_race', {
+      p_name: $('rcName').value.trim(), p_slat: draft.start.lat, p_slng: draft.start.lng,
+      p_flat: draft.finish.lat, p_flng: draft.finish.lng, p_radius: rad
+    }).then(function (res) {
+      $('rcCreate').disabled = false;
+      if (res.error) { setStatus('Erstellen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      var r = Array.isArray(res.data) ? res.data[0] : res.data;
+      setStatus('Rennen erstellt. Code: ' + r.code, 'ok');
+      followRace(r.id);
+    });
   });
 
-  // ---------- Start: gespeicherte Anmeldung wiederherstellen ----------
+  // ----- Beitreten -----
+  function joinCode(code) {
+    code = (code || '').trim().toUpperCase();
+    if (code.length < 4) { setStatus('Bitte den Code eingeben.', 'warn'); return; }
+    db.rpc('join_race', { p_code: code }).then(function (res) {
+      if (res.error) { setStatus(res.error.message, 'err'); return; }
+      var r = Array.isArray(res.data) ? res.data[0] : res.data;
+      $('raceCode').value = '';
+      setStatus('Beigetreten: ' + r.name, 'ok');
+      followRace(r.id);
+    });
+  }
+  $('raceJoin').addEventListener('click', function () { joinCode($('raceCode').value); });
+
+  // ----- Detailansicht -----
+  function myMember() { return raceMembers.filter(function (m) { return m.user_id === myId; })[0] || null; }
+  function startRacePoll() { stopRacePoll(); racePoll = setInterval(refreshRace, RACE_POLL_MS); }
+  function stopRacePoll() { if (racePoll) clearInterval(racePoll); racePoll = null; }
+  function unfollowRace() {
+    stopRacePoll(); raceCur = null; raceMembers = []; raceLayerFor = null; raceLayer.clearLayers();
+    refreshNaviSetup();
+  }
+
+  function followRace(id) {
+    return db.from('races').select('*').eq('id', id).single().then(function (res) {
+      if (res.error || !res.data) { setStatus('Rennen nicht gefunden.', 'err'); return; }
+      unfollowRace();
+      raceCur = res.data; raceMembers = [];
+      seenOutside = false; lastFix = null; goFired = false; raceFinishing = false; finishTries = 0;
+      actionSig = ''; inviteSig = '';
+      draftLayer.clearLayers();
+      drawRace(raceCur, true);
+      syncClock();
+      showTab('Race'); showRaceView('Detail');
+      startRacePoll(); refreshRace();
+      if (raceCur.status !== 'finished' && watchId === null) start();
+      refreshNaviSetup();
+    });
+  }
+
+  function refreshRace() {
+    if (!raceCur) return;
+    var id = raceCur.id;
+    Promise.all([
+      db.from('races').select('*').eq('id', id).maybeSingle(),
+      db.from('race_members').select('*').eq('race_id', id)
+    ]).then(function (rs) {
+      if (!raceCur || raceCur.id !== id) return;
+      if (rs[0].error || rs[1].error) return;
+      var r = rs[0].data;
+      if (!r) { setStatus('Das Rennen wurde gelöscht.', 'warn'); unfollowRace(); showRaceView('List'); loadMyRaces(true); return; }
+      var changed = r.status !== raceCur.status || r.starts_at !== raceCur.starts_at;
+      raceCur = r; raceMembers = rs[1].data || [];
+      return getProfiles(raceMembers.map(function (m) { return m.user_id; })).then(function () {
+        if (changed || raceLayerFor !== id) drawRace(r, false);
+        renderRaceDetail();
+        if (r.status === 'finished') { stopRacePoll(); loadMyRaces(false); }
+        if (watchId !== null) loadAll();
+      });
+    });
+  }
+
+  var ORDER = { finished: 0, joined: 1, invited: 2, dnf: 3 };
+  function renderRaceDetail() {
+    var r = raceCur; if (!r) return;
+    var mine = myMember(), isCreator = r.creator_id === myId;
+    $('rdName').textContent = r.name;
+    $('rdStatus').textContent = { lobby: 'Lobby', running: 'Läuft', finished: 'Beendet' }[r.status] || r.status;
+    $('rdCode').textContent = r.code;
+    var list = raceMembers.filter(function (m) { return m.status !== 'declined'; }).sort(function (a, b) {
+      if (ORDER[a.status] !== ORDER[b.status]) return ORDER[a.status] - ORDER[b.status];
+      return (a.result_ms || 0) - (b.result_ms || 0);
+    });
+    var place = 0;
+    fillList($('rdMembers'), list.map(function (m) {
+      var info = pInfo(m.user_id), li = el('li');
+      li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+      li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
+      var txt;
+      if (m.status === 'finished') { place++; txt = place + '. ' + fmtMs(m.result_ms); }
+      else if (m.status === 'joined') txt = r.status === 'running' ? 'unterwegs' : 'dabei';
+      else if (m.status === 'invited') txt = 'eingeladen';
+      else txt = 'aufgegeben';
+      li.appendChild(el('span', 'ago', txt));
+      return li;
+    }), 'Noch niemand dabei.');
+    renderActions(r, mine, isCreator);
+    renderInviteList(false);
+    updateTimer();
+  }
+
+  function renderActions(r, mine, isCreator) {
+    var sig = [r.status, mine ? mine.status : '-', isCreator].join('|');
+    if (sig === actionSig) return;
+    actionSig = sig;
+    var box = $('rdActions'); box.textContent = '';
+    function add(label, cls, fn) { var b = el('button', cls, label); b.type = 'button'; b.addEventListener('click', fn); box.appendChild(b); }
+    if (mine && mine.status === 'invited' && r.status === 'lobby') {
+      add('Einladung annehmen', '', function () { respondInvite(true); });
+      add('Ablehnen', 'ghost wide', function () { respondInvite(false); });
+    }
+    if (isCreator && r.status === 'lobby') {
+      add('Los! Countdown starten', '', startRace);
+      add('Rennen löschen', 'ghost wide', deleteRace);
+    } else if (mine && mine.status === 'joined' && r.status === 'lobby') {
+      add('Rennen verlassen', 'ghost wide', leaveRace);
+    }
+    if (mine && mine.status === 'joined' && r.status === 'running') add('Aufgeben', 'danger', giveUp);
+    if (isCreator && r.status === 'running') add('Rennen für alle beenden', 'ghost wide', endRace);
+    if (r.status === 'finished') add(isCreator ? 'Rennen löschen' : 'Aus meiner Liste entfernen', 'ghost wide', isCreator ? deleteRace : leaveRace);
+  }
+
+  function renderInviteList(force) {
+    var box = $('rdInviteBox');
+    if (!raceCur || raceCur.creator_id !== myId || raceCur.status !== 'lobby') { box.classList.add('hidden'); return; }
+    var memberIds = raceMembers.map(function (m) { return m.user_id; });
+    var cands = friendships.filter(function (f) { return f.status === 'accepted'; }).map(otherId)
+      .filter(function (id) { return memberIds.indexOf(id) === -1; });
+    var sig = cands.join(',');
+    if (!force && sig === inviteSig) return;
+    inviteSig = sig;
+    if (!cands.length) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    fillList($('rdInviteList'), cands.map(function (id) {
+      var info = pInfo(id), li = el('li');
+      li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+      li.appendChild(el('span', 'nm', info.name));
+      var b = el('button', '', 'Einladen'); b.type = 'button';
+      b.addEventListener('click', function () {
+        db.from('race_members').insert({ race_id: raceCur.id, user_id: id }).then(function (res) {
+          if (res.error) { setStatus('Einladen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+          setStatus(info.name + ' wurde eingeladen.', 'ok'); refreshRace();
+        });
+      });
+      li.appendChild(b);
+      return li;
+    }), '');
+  }
+
+  function rpcThen(name, args, okMsg) {
+    return db.rpc(name, args).then(function (res) {
+      if (res.error) { setStatus(res.error.message, 'err'); return false; }
+      if (okMsg) setStatus(okMsg, 'ok');
+      refreshRace(); loadMyRaces(false);
+      return true;
+    });
+  }
+  function startRace() { rpcThen('start_race', { p_race: raceCur.id, p_delay: 8 }); }
+  function giveUp() { if (confirm('Wirklich aufgeben?')) rpcThen('give_up', { p_race: raceCur.id }, 'Du hast aufgegeben.'); }
+  function endRace() { if (confirm('Das Rennen für alle beenden?')) rpcThen('end_race', { p_race: raceCur.id }, 'Rennen beendet.'); }
+  function respondInvite(accept) {
+    rpcThen('respond_invite', { p_race: raceCur.id, p_accept: accept }).then(function () {
+      if (!accept) { unfollowRace(); showRaceView('List'); loadMyRaces(true); }
+    });
+  }
+  function leaveRace() {
+    if (!confirm('Dieses Rennen aus deiner Liste entfernen?')) return;
+    db.from('race_members').delete().eq('race_id', raceCur.id).eq('user_id', myId).then(function (res) {
+      if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
+      unfollowRace(); showRaceView('List'); loadMyRaces(true);
+    });
+  }
+  function deleteRace() {
+    if (!confirm('Rennen für alle löschen?')) return;
+    db.from('races').delete().eq('id', raceCur.id).then(function (res) {
+      if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
+      unfollowRace(); showRaceView('List'); loadMyRaces(true);
+    });
+  }
+  $('rdBack').addEventListener('click', function () {
+    if (raceCur && raceCur.status === 'finished') unfollowRace();
+    showRaceView('List'); loadMyRaces(true);
+  });
+
+  $('rdShare').addEventListener('click', function () {
+    if (!raceCur) return;
+    var url = location.origin + location.pathname + '?race=' + raceCur.code;
+    var text = 'Rennen „' + raceCur.name + '“ – Start und Ziel sind im Link. Code: ' + raceCur.code;
+    if (navigator.share) navigator.share({ title: raceCur.name, text: text, url: url }).catch(function () {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(text + ' ' + url).then(function () { setStatus('Link kopiert.', 'ok'); });
+    else setStatus(url, 'ok');
+  });
+
+  // ----- Zeit und Anzeige -----
+  function updateTimer() {
+    if (!raceCur || $('tabRace').classList.contains('hidden') || $('raceDetail').classList.contains('hidden')) return;
+    var r = raceCur, mine = myMember(), now = Date.now() + serverOffset, tm = $('rdTimer'), info = '';
+    tm.classList.remove('go');
+    if (mine && mine.status === 'finished') { tm.textContent = fmtMs(mine.result_ms); tm.classList.add('go'); info = 'Im Ziel!'; }
+    else if (r.status === 'running' && r.starts_at) {
+      var starts = new Date(r.starts_at).getTime();
+      if (now < starts) tm.textContent = 'Start in ' + Math.ceil((starts - now) / 1000);
+      else {
+        if (!goFired) { goFired = true; if (navigator.vibrate) navigator.vibrate(300); }
+        tm.textContent = (mine && mine.status === 'joined') ? fmtMs(now - starts) : '–';
+      }
+    } else tm.textContent = r.status === 'lobby' ? 'Warten …' : '–';
+    if (mine && mine.status === 'joined') {
+      if (!myPos) info = 'Warte auf GPS …';
+      else if (r.status === 'lobby') {
+        var ds = dist(myPos.lat, myPos.lng, r.start_lat, r.start_lng);
+        info = ds <= r.radius ? 'Du bist im Startkreis ✓' : 'Noch ' + fmtDist(ds - r.radius) + ' bis zum Startkreis';
+      } else if (r.status === 'running') {
+        var df = dist(myPos.lat, myPos.lng, r.finish_lat, r.finish_lng);
+        info = 'Luftlinie zum Ziel: ' + fmtDist(Math.max(0, df - r.radius));
+      }
+    } else if (r.status === 'finished' && !info) info = 'Das Rennen ist beendet.';
+    $('rdInfo').textContent = info;
+  }
+
+  // ----- Zieldurchfahrt erkennen -----
+  function raceOnPosition(c, tDev) {
+    if (!raceCur || raceCur.status !== 'running' || raceFinishing || !raceCur.starts_at) { lastFix = null; return; }
+    var mine = myMember();
+    if (!mine || mine.status !== 'joined') return;
+    var t = tDev + serverOffset, starts = new Date(raceCur.starts_at).getTime();
+    if (t < starts) { lastFix = null; return; }
+    if (c.accuracy > 50) return;
+    var R = raceCur.radius, d = dist(c.latitude, c.longitude, raceCur.finish_lat, raceCur.finish_lng);
+    if (d > R) { seenOutside = true; lastFix = { d: d, t: t }; return; }
+    if (!seenOutside || finishTries >= 3) return;
+    // genauen Zeitpunkt zwischen den letzten beiden Messungen berechnen
+    var tFin = t;
+    if (lastFix && lastFix.d > R && lastFix.t >= starts && lastFix.d > d) {
+      tFin = lastFix.t + ((lastFix.d - R) / (lastFix.d - d)) * (t - lastFix.t);
+    }
+    var ms = Math.round(tFin - starts);
+    if (ms <= 0) return;
+    raceFinishing = true; finishTries++;
+    db.rpc('finish_race', { p_race: raceCur.id, p_ms: ms }).then(function (res) {
+      if (res.error) { raceFinishing = false; setStatus('Ziel konnte nicht gespeichert werden: ' + res.error.message, 'err'); return; }
+      setStatus('Im Ziel! Zeit: ' + fmtMs(ms), 'ok');
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      refreshRace(); loadMyRaces(false);
+    });
+  }
+
+  // =====================================================
+  //  NAVIGATION
+  // =====================================================
+  var navDest = null, nav = null, navLayer = L.layerGroup().addTo(map), searchBusy = false;
+  var MOD = {
+    'left': 'links', 'slight left': 'leicht links', 'sharp left': 'scharf links',
+    'right': 'rechts', 'slight right': 'leicht rechts', 'sharp right': 'scharf rechts',
+    'straight': 'geradeaus', 'uturn': 'wenden'
+  };
+
+  function stepText(s) {
+    var m = s.maneuver, t = m.type, mod = m.modifier, dir = MOD[mod] || '';
+    var on = s.name ? ' auf ' + s.name : '';
+    if (t === 'depart') return 'Losfahren' + on;
+    if (t === 'arrive') return 'Ziel erreicht';
+    if (t === 'roundabout' || t === 'rotary' || t === 'roundabout turn') {
+      return m.exit ? 'Im Kreisverkehr die ' + m.exit + '. Ausfahrt nehmen' + on : 'Im Kreisverkehr abbiegen' + on;
+    }
+    if (t === 'turn' || t === 'end of road') return mod === 'uturn' ? 'Wenden' : 'Abbiegen ' + dir + on;
+    if (t === 'fork') return 'An der Gabelung ' + dir + ' halten' + on;
+    if (t === 'merge') return 'Einfädeln ' + dir + on;
+    if (t === 'on ramp') return 'Auffahrt ' + dir + on;
+    if (t === 'off ramp') return 'Ausfahrt ' + dir + on;
+    if (t === 'new name' || t === 'continue') return (mod && mod !== 'straight' ? 'Weiter ' + dir : 'Weiter geradeaus') + on;
+    return 'Weiter' + on;
+  }
+
+  function inRunningRace() {
+    var mine = myMember();
+    if (raceCur && raceCur.status === 'running' && mine && mine.status === 'joined') return true;
+    return myRaces.some(function (x) { return x.status === 'joined' && x.races.status === 'running'; });
+  }
+
+  function refreshNaviSetup() {
+    var blocked = inRunningRace();
+    $('nvRaceStart').classList.toggle('hidden', !(raceCur && raceCur.status === 'lobby'));
+    if (raceCur && raceCur.status === 'lobby') $('nvRaceStart').textContent = 'Zum Start von „' + raceCur.name + '“';
+    ['nvSearch', 'nvPick', 'nvRaceStart', 'nvGo'].forEach(function (id) { $(id).disabled = blocked; });
+    if (blocked) $('nvDest').textContent = 'Während eines laufenden Rennens ist die Navigation gesperrt.';
+    else updateDestUI();
+  }
+
+  function updateDestUI() {
+    $('nvDest').textContent = navDest ? 'Ziel: ' + navDest.label : 'Noch kein Ziel gewählt.';
+    $('nvGo').classList.toggle('hidden', !navDest);
+  }
+
+  function setDest(d) {
+    navDest = d;
+    navLayer.clearLayers();
+    L.marker([d.lat, d.lng], { keyboard: false }).addTo(navLayer);
+    map.panTo([d.lat, d.lng]); follow = false;
+    updateDestUI();
+  }
+
+  $('nvSearch').addEventListener('click', function () {
+    var q = $('nvQuery').value.trim();
+    if (!q || searchBusy) return;
+    searchBusy = true; setStatus('Suche …', 'warn');
+    fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=de&q=' + encodeURIComponent(q))
+      .then(function (r) { return r.json(); })
+      .then(function (list) {
+        var ul = $('nvResults');
+        ul.classList.remove('hidden');
+        fillList(ul, list.map(function (x) {
+          var li = el('li', 'click');
+          li.appendChild(el('span', 'nm', x.display_name));
+          li.addEventListener('click', function () {
+            ul.classList.add('hidden');
+            setDest({ lat: +x.lat, lng: +x.lon, label: x.display_name });
+          });
+          return li;
+        }), 'Nichts gefunden.');
+        setStatus(list.length ? 'Wähle ein Ergebnis.' : 'Nichts gefunden.', list.length ? '' : 'warn');
+      })
+      .catch(function () { setStatus('Suche fehlgeschlagen. Später nochmal versuchen.', 'err'); })
+      .then(function () { setTimeout(function () { searchBusy = false; }, 1200); });
+  });
+  $('nvQuery').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('nvSearch').click(); });
+
+  $('nvPick').addEventListener('click', function () {
+    pickOnMap('Tippe auf der Karte auf dein Ziel', function (ll) {
+      setDest({ lat: ll.lat, lng: ll.lng, label: 'Punkt auf der Karte' });
+    });
+  });
+  $('nvRaceStart').addEventListener('click', function () {
+    if (!raceCur) return;
+    setDest({ lat: raceCur.start_lat, lng: raceCur.start_lng, label: 'Start von „' + raceCur.name + '“' });
+  });
+
+  function fetchRoute(from, dest, modeName) {
+    var url = 'https://routing.openstreetmap.de/routed-' + modeName + '/route/v1/driving/' +
+      from.lng + ',' + from.lat + ';' + dest.lng + ',' + dest.lat + '?overview=full&geometries=geojson&steps=true';
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.code !== 'Ok' || !j.routes || !j.routes[0]) throw new Error(j.message || j.code || 'keine Route');
+      var rt = j.routes[0], steps = [];
+      rt.legs.forEach(function (leg) {
+        leg.steps.forEach(function (s) {
+          steps.push({ dist: s.distance, loc: [s.maneuver.location[1], s.maneuver.location[0]], text: stepText(s) });
+        });
+      });
+      return {
+        coords: rt.geometry.coordinates.map(function (c) { return [c[1], c[0]]; }),
+        steps: steps, dist: rt.distance, dur: rt.duration
+      };
+    });
+  }
+
+  function applyRoute(route) {
+    nav.coords = route.coords; nav.steps = route.steps;
+    nav.secPerM = route.dist > 0 ? route.dur / route.dist : 0;
+    nav.idx = route.steps.length > 1 ? 1 : 0;
+    nav.off = 0;
+    navLayer.clearLayers();
+    L.polyline(route.coords, { color: '#0284c7', weight: 6, opacity: 0.85 }).addTo(navLayer);
+    L.marker([nav.dest.lat, nav.dest.lng], { keyboard: false }).addTo(navLayer);
+  }
+
+  $('nvGo').addEventListener('click', function () {
+    if (inRunningRace()) { setStatus('Während eines Rennens ist die Navigation gesperrt.', 'warn'); return; }
+    if (!navDest) return;
+    if (!myPos) {
+      if (watchId === null) start();
+      setStatus('Warte auf GPS-Position. Tippe danach nochmal auf „Navigation starten“.', 'warn');
+      return;
+    }
+    $('nvGo').disabled = true; setStatus('Route wird berechnet …', 'warn');
+    nav = { dest: navDest, mode: $('nvMode').value, lastReroute: Date.now(), fetching: false };
+    fetchRoute(myPos, navDest, nav.mode).then(function (route) {
+      $('nvGo').disabled = false;
+      applyRoute(route);
+      $('navSetup').classList.add('hidden'); $('navActive').classList.remove('hidden');
+      follow = true; map.setView([myPos.lat, myPos.lng], 17);
+      setStatus('Navigation läuft', 'ok');
+      navOnPosition({ latitude: myPos.lat, longitude: myPos.lng, accuracy: myPos.acc });
+    }).catch(function (err) {
+      $('nvGo').disabled = false; nav = null;
+      setStatus('Route konnte nicht berechnet werden: ' + err.message, 'err');
+    });
+  });
+
+  function stopNavigation(silent) {
+    nav = null; navDest = null;
+    navLayer.clearLayers();
+    $('navActive').classList.add('hidden'); $('navSetup').classList.remove('hidden');
+    updateDestUI();
+    if (!silent) setStatus('Navigation beendet.');
+  }
+  $('nvStop').addEventListener('click', function () { stopNavigation(false); });
+
+  function distToPolyline(lat, lng, pts) {
+    var k = Math.cos(lat * Math.PI / 180), best = Infinity, px = lng * k * 111320, py = lat * 110540;
+    for (var i = 0; i < pts.length - 1; i++) {
+      var ax = pts[i][1] * k * 111320, ay = pts[i][0] * 110540, bx = pts[i + 1][1] * k * 111320, by = pts[i + 1][0] * 110540;
+      var dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy;
+      var t = len2 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
+      t = Math.max(0, Math.min(1, t));
+      var cx = ax + t * dx, cy = ay + t * dy, d = Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy));
+      if (d < best) best = d;
+    }
+    return best;
+  }
+
+  function navOnPosition(c) {
+    if (!nav || !nav.steps) return;
+    if (inRunningRace()) { stopNavigation(false); setStatus('Navigation gestoppt: Das Rennen läuft.', 'warn'); return; }
+    var lat = c.latitude, lng = c.longitude, steps = nav.steps, last = steps.length - 1;
+    while (nav.idx < last && dist(lat, lng, steps[nav.idx].loc[0], steps[nav.idx].loc[1]) < 25) nav.idx++;
+    var st = steps[nav.idx], dNext = dist(lat, lng, st.loc[0], st.loc[1]);
+    if (nav.idx === last && dNext < 30) { stopNavigation(true); setStatus('Ziel erreicht.', 'ok'); return; }
+    var remain = dNext;
+    for (var k = nav.idx; k <= last; k++) remain += steps[k].dist;
+    $('nvStepDist').textContent = fmtDist(dNext);
+    $('nvStepText').textContent = st.text;
+    $('nvRemain').textContent = fmtDist(remain);
+    $('nvEta').textContent = fmtDur(remain * nav.secPerM);
+
+    if (c.accuracy <= 50) {
+      nav.off = distToPolyline(lat, lng, nav.coords) > 60 ? nav.off + 1 : 0;
+      if (nav.off >= 3 && !nav.fetching && Date.now() - nav.lastReroute > 10000) {
+        nav.fetching = true; nav.lastReroute = Date.now();
+        setStatus('Neue Route wird berechnet …', 'warn');
+        var cur = nav;
+        fetchRoute({ lat: lat, lng: lng }, cur.dest, cur.mode).then(function (route) {
+          if (nav === cur) { applyRoute(route); setStatus('Navigation läuft', 'ok'); }
+        }).catch(function () { setStatus('Neue Route fehlgeschlagen.', 'err'); })
+          .then(function () { cur.fetching = false; });
+      }
+    }
+  }
+
+  // =====================================================
+  //  START
+  // =====================================================
+  setInterval(updateTimer, 100);
+
+  // Einladungslink: ?race=CODE
+  try {
+    var qp = new URLSearchParams(location.search).get('race');
+    if (qp) { pendingCode = qp.toUpperCase().slice(0, 6); history.replaceState(null, '', location.pathname); }
+  } catch (e) {}
+
   db.auth.getSession().then(function (res) {
     if (res.data && res.data.session) afterLogin(res.data.session.user);
     else showAuth();
