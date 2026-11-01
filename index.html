@@ -174,6 +174,20 @@
   .list li .acts { flex-basis: 100%; display: flex; gap: 8px; margin-top: 6px; }
   .list li .acts button { flex: 1; padding: 8px 12px; }
   .brand { margin: 12px 0 0; font-size: 1.5rem; }
+  .list .badge { position: static; }
+  .msgs { max-height: 40vh; overflow-y: auto; padding: 8px 0; display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .msg { display: flex; flex-direction: column; max-width: 84%; }
+  .msg.mine { align-self: flex-end; align-items: flex-end; }
+  .msg.other { align-self: flex-start; }
+  .msg .who { font-size: .75rem; color: var(--muted); margin: 0 6px 2px; }
+  .msg .bub { background: var(--soft); color: var(--ink); padding: 8px 12px; border-radius: 14px; word-break: break-word; white-space: pre-wrap; }
+  .msg.mine .bub { background: var(--btn-bg); color: var(--btn-fg); }
+  .msg .bub button { margin-top: 8px; width: auto; }
+  .msg .meta { font-size: .7rem; color: var(--muted); margin: 2px 6px 0; }
+  .linkbtn { background: none; border: 0; color: var(--muted); padding: 0; margin: 0; width: auto; font-size: .7rem; text-decoration: underline; font-weight: 400; cursor: pointer; }
+  .composer { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .composer input { flex: 1; min-width: 0; }
+  .composer button { width: auto; margin: 0; padding: 10px 14px; }
   .hidden { display: none; }
 </style>
 </head>
@@ -193,6 +207,7 @@
   <button type="button" role="menuitem" data-go="Stats"><span>Statistiken</span></button>
   <button type="button" role="menuitem" data-go="Boards"><span>Ranglisten</span></button>
   <button type="button" role="menuitem" data-go="History"><span>Rennhistorie</span></button>
+  <button type="button" role="menuitem" data-go="Chats"><span>Nachrichten</span><span id="badgeMsgsMenu" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Friends"><span>Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Settings"><span>Einstellungen</span></button>
   <hr>
@@ -253,6 +268,11 @@
         <button id="homeNavi" class="bigcard alt" type="button">
           <span class="big-t">Navi</span>
           <span class="big-s">Route zu einem Ziel</span>
+        </button>
+        <button id="homeChats" class="bigcard alt" type="button" style="grid-column: 1 / -1; min-height: 64px">
+          <span class="big-t">Nachrichten</span>
+          <span class="big-s">Chats mit Freunden und Gruppen</span>
+          <span id="badgeMsgs" class="badge hidden"></span>
         </button>
       </div>
       <button id="homeActive" class="ghost wide hidden" type="button"></button>
@@ -387,6 +407,42 @@
       <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
       <input id="pNewPass" type="password" autocomplete="new-password">
       <button id="pPassSave" type="button">Passwort ändern</button>
+    </div>
+
+    <!-- Nachrichten und Gruppen -->
+    <div id="tabChats" class="hidden">
+      <div id="chList">
+        <button id="chNewBtn" type="button">Neuer Chat oder neue Gruppe</button>
+        <ul id="chConvs" class="list" style="margin-top:12px"></ul>
+        <p class="hint">Nachrichten liegen unverschlüsselt in eurer Datenbank. Für Freunde reicht das, es ersetzt aber keinen verschlüsselten Messenger.</p>
+      </div>
+      <div id="chNew" class="hidden">
+        <h3 style="margin-top:12px">Chat mit einem Freund</h3>
+        <ul id="chFriendList" class="list"></ul>
+        <h3>Neue Gruppe</h3>
+        <label for="grName">Gruppenname</label>
+        <input id="grName" type="text" maxlength="40">
+        <label>Mitglieder (nur Freunde)</label>
+        <ul id="grPick" class="list"></ul>
+        <button id="grCreate" type="button">Gruppe erstellen</button>
+      </div>
+      <div id="chThread" class="hidden">
+        <div class="row between"><span id="thSub" class="hint" style="margin:0"></span><button id="thInfo" class="ghost hidden" type="button">Gruppe</button></div>
+        <div id="thMsgs" class="msgs"></div>
+        <div id="thShare" class="hidden"><p class="hint">Welches Rennen soll geteilt werden?</p><ul id="thShareList" class="list"></ul></div>
+        <div class="composer">
+          <button id="thRace" class="ghost" type="button" aria-label="Rennen teilen">🏁</button>
+          <input id="thInput" type="text" maxlength="2000" placeholder="Nachricht schreiben …" autocomplete="off">
+          <button id="thSend" type="button">Senden</button>
+        </div>
+      </div>
+      <div id="chInfo" class="hidden">
+        <h3 id="giName" style="margin-top:12px"></h3>
+        <ul id="giMembers" class="list"></ul>
+        <div id="giAddBox" class="hidden"><h3>Freunde hinzufügen</h3><ul id="giAdd" class="list"></ul></div>
+        <button id="giRace" type="button">Rennen mit der Gruppe anlegen</button>
+        <button id="giLeave" class="danger" type="button">Gruppe verlassen</button>
+      </div>
     </div>
 
     <!-- Benachrichtigungen -->
@@ -753,9 +809,9 @@
       startOverlays();
       setStatus('Bereit');
       syncClock();
-      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs();
+      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs(); loadConversations(false); subscribeMessages();
       if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); loadNotifications(false); }, POLL_MS);
+      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); loadNotifications(false); loadConversations(false); }, POLL_MS);
       if (pendingCode) { var c = pendingCode; pendingCode = null; joinCode(c); }
     });
   }
@@ -764,6 +820,7 @@
     if (watchId !== null) stop();
     unfollowRace(); stopNavigation(true);
     unsubscribeNotifs(); notifs = []; unreadCount = 0; notifsLoaded = false; updateNotifBadge();
+    unsubscribeMessages(); convs = []; unreadMsgs = 0; updateMsgBadges(); curConv = null; stopThreadPoll();
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
@@ -944,7 +1001,7 @@
       ]);
     }), 'Keine offenen Anfragen.');
     fillList($('listFriends'), accepted.map(function (f) {
-      return friendRow(f, [{ label: 'Garage', ghost: true, run: function () { showScreen('Garage'); openGarage(otherId(f)); } }, { label: 'Entfernen', ghost: true, run: function () { if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id); } }]);
+      return friendRow(f, [{ label: 'Chat', ghost: true, run: function () { startDirectChat(otherId(f)); } }, { label: 'Garage', ghost: true, run: function () { showScreen('Garage'); openGarage(otherId(f)); } }, { label: 'Entfernen', ghost: true, run: function () { if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id); } }]);
     }), 'Noch keine Freunde. Such oben nach dem Spielernamen.');
     fillList($('listOutgoing'), outgoing.map(function (f) {
       return friendRow(f, [{ label: 'Zurückziehen', ghost: true, run: function () { removeFriendship(f.id); } }]);
@@ -1220,7 +1277,7 @@
     $('rcStartInfo').textContent = draft.start ? 'Start gesetzt ✓' : 'Start: noch nicht gesetzt';
     $('rcFinishInfo').textContent = draft.finish ? 'Ziel gesetzt ✓' : 'Ziel: noch nicht gesetzt';
   }
-  $('raceNew').addEventListener('click', function () { prepareCreate(null); });
+  $('raceNew').addEventListener('click', function () { pendingShareConv = null; prepareCreate(null); });
   $('rcRadius').addEventListener('change', drawDraft);
   $('rcPickStart').addEventListener('click', function () {
     pickOnMap('Tippe auf der Karte auf den Startpunkt', function (ll) { draft.start = { lat: ll.lat, lng: ll.lng }; drawDraft(); });
@@ -1247,6 +1304,12 @@
       if (res.error) { setStatus('Erstellen fehlgeschlagen: ' + res.error.message, 'err'); return; }
       var r = Array.isArray(res.data) ? res.data[0] : res.data;
       setStatus('Rennen erstellt. Code: ' + r.code, 'ok');
+      if (pendingShareConv) {
+        db.rpc('share_race', { p_conv: pendingShareConv, p_race: r.id }).then(function (r2) {
+          setStatus(r2.error ? 'Teilen in der Gruppe fehlgeschlagen: ' + r2.error.message : 'Rennen in der Gruppe geteilt, alle Mitglieder sind eingeladen.', r2.error ? 'err' : 'ok');
+        });
+        pendingShareConv = null;
+      }
       followRace(r.id);
     });
   });
@@ -1425,7 +1488,7 @@
     });
   }
   function raceBack() {
-    if (raceView === 'Create') { draftLayer.clearLayers(); showRaceView('List'); return; }
+    if (raceView === 'Create') { draftLayer.clearLayers(); pendingShareConv = null; showRaceView('List'); return; }
     if (raceCur && raceCur.status === 'finished') unfollowRace();
     showRaceView('List'); loadMyRaces(true);
   }
@@ -1691,8 +1754,8 @@
   // =====================================================
   var currentScreen = 'Home', raceView = 'List';
   var incomingCount = 0, inviteCount = 0, raceDist = 0;
-  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'Garage', 'Stats', 'Boards', 'History', 'Notifications', 'Settings'];
-  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', Garage: 'Garage', Stats: 'Statistiken', Boards: 'Ranglisten', History: 'Rennhistorie', Notifications: 'Benachrichtigungen', Settings: 'Einstellungen' };
+  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'Garage', 'Stats', 'Boards', 'History', 'Notifications', 'Chats', 'Settings'];
+  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', Garage: 'Garage', Stats: 'Statistiken', Boards: 'Ranglisten', History: 'Rennhistorie', Notifications: 'Benachrichtigungen', Chats: 'Nachrichten', Settings: 'Einstellungen' };
 
   function showScreen(t) {
     currentScreen = t;
@@ -1712,6 +1775,9 @@
     if (t === 'Boards') boardsOpen();
     if (t === 'History') histOpen();
     if (t === 'Notifications') loadNotifications(true);
+    if (t !== 'Race') pendingShareConv = null;
+    if (t !== 'Chats') { curConv = null; stopThreadPoll(); }
+    if (t === 'Chats') chatsOpen();
   }
 
   $('backBtn').addEventListener('click', function () {
@@ -1719,6 +1785,7 @@
     else if (currentScreen === 'Boards' && boardView === 'Track') showBoardTab('Tracks');
     else if (currentScreen === 'History' && histView === 'Detail') histOpen();
     else if (currentScreen === 'Garage' && garView === 'Form') garBack();
+    else if (currentScreen === 'Chats' && chView !== 'List') chBack();
     else showScreen('Home');
   });
   $('homeRace').addEventListener('click', function () { showScreen('Race'); });
@@ -2755,7 +2822,7 @@
   // =====================================================
   var notifs = [], unreadCount = 0, notifChannel = null, notifsLoaded = false, notifPref = false;
   var baseTitle = document.title;
-  var NOTIF_ICON = { friend_request: '👤', friend_accepted: '🤝', race_invite: '✉️', race_finished: '🏁' };
+  var NOTIF_ICON = { friend_request: '👤', friend_accepted: '🤝', race_invite: '✉️', race_finished: '🏁', message: '💬', group_added: '👥' };
 
   try { notifPref = localStorage.getItem('rennen-notif') === '1'; } catch (e) {}
   $('sNotif').checked = notifPref && ('Notification' in window) && Notification.permission === 'granted';
@@ -2804,6 +2871,7 @@
   }
 
   function toastNotif(n) {
+    if (n.kind === 'message') return;   // Nachrichten melden sich über den Chat selbst
     setStatus((NOTIF_ICON[n.kind] || '🔔') + ' ' + n.title + (n.body ? ': ' + n.body : ''), 'ok');
     if (n.kind === 'friend_request' || n.kind === 'friend_accepted') loadFriends();
     if (n.kind === 'race_invite' || n.kind === 'race_finished') loadMyRaces(false);
@@ -2890,6 +2958,7 @@
     var d = n.data || {};
     if (n.kind === 'friend_request' || n.kind === 'friend_accepted') showScreen('Friends');
     else if ((n.kind === 'race_invite' || n.kind === 'race_finished') && d.race_id) followRace(d.race_id);
+    else if ((n.kind === 'message' || n.kind === 'group_added') && d.conversation_id) openConversationById(d.conversation_id);
     else renderNotifs();
   }
 
@@ -2908,6 +2977,340 @@
       return li;
     }), 'Keine Benachrichtigungen.');
   }
+
+  // =====================================================
+  //  NACHRICHTEN UND GRUPPEN
+  // =====================================================
+  var convs = [], curConv = null, chView = 'List', msgChannel = null, threadPollTimer = null;
+  var unreadMsgs = 0, msgIds = {}, lastMsgId = 0, pendingShareConv = null;
+
+  function convTitle(c) { return c.kind === 'direct' ? pInfo(c.other_user).name : (c.name || 'Gruppe'); }
+  function msgTime(iso) {
+    var d = new Date(iso), now = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    return d.toDateString() === now.toDateString() ? hm : pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '. ' + hm;
+  }
+  function groupAvatar(size) {
+    var a = el('span', 'avatar', '👥');
+    a.style.width = a.style.height = size + 'px'; a.style.fontSize = Math.round(size * 0.5) + 'px';
+    a.style.background = 'var(--soft)';
+    return a;
+  }
+  function updateMsgBadges() {
+    ['badgeMsgs', 'badgeMsgsMenu'].forEach(function (id) {
+      var b = $(id); b.textContent = unreadMsgs > 99 ? '99+' : unreadMsgs; b.classList.toggle('hidden', !unreadMsgs);
+    });
+  }
+
+  function showChView(v) {
+    chView = v;
+    ['List', 'New', 'Thread', 'Info'].forEach(function (n) { $('ch' + n).classList.toggle('hidden', n !== v); });
+    var title = { List: 'Nachrichten', New: 'Neuer Chat', Info: 'Gruppe' }[v];
+    if (v === 'Thread' && curConv) title = convTitle(curConv);
+    $('screenTitle').textContent = title || 'Nachrichten';
+  }
+  function chatsOpen() { curConv = null; stopThreadPoll(); showChView('List'); loadConversations(true); }
+  function chBack() {
+    if (chView === 'Info') { showChView('Thread'); return; }
+    curConv = null; stopThreadPoll(); showChView('List'); loadConversations(true);
+  }
+  $('homeChats').addEventListener('click', function () { showScreen('Chats'); });
+
+  // ---------- Liste ----------
+  function loadConversations(render) {
+    if (!myId) return Promise.resolve();
+    return db.rpc('my_conversations').then(function (res) {
+      if (res.error) {
+        if (render) fillList($('chConvs'), [], 'Nachrichten nicht verfügbar (SQL-Schritt ausgeführt?): ' + res.error.message);
+        return;
+      }
+      convs = res.data || [];
+      var ids = [];
+      convs.forEach(function (c) { if (c.other_user) ids.push(c.other_user); if (c.last_sender) ids.push(c.last_sender); });
+      return getProfiles(ids).then(function () {
+        unreadMsgs = convs.reduce(function (s, c) { return s + (c.unread || 0); }, 0);
+        updateMsgBadges();
+        if (currentScreen === 'Chats' && chView === 'List') renderConvList();
+      });
+    });
+  }
+  function renderConvList() {
+    fillList($('chConvs'), convs.map(function (c) {
+      var li = el('li', 'click wrap'), info = c.kind === 'direct' ? pInfo(c.other_user) : null;
+      li.appendChild(info ? avatarNode(info.avatar, info.name, info.color, 36) : groupAvatar(36));
+      var nm = el('span', 'nm', convTitle(c)); if (c.unread) nm.style.fontWeight = '800';
+      li.appendChild(nm);
+      if (c.unread) li.appendChild(el('span', 'badge', String(c.unread)));
+      if (c.last_at) li.appendChild(el('span', 'ago', relTime(c.last_at)));
+      var prev = 'Noch keine Nachrichten.';
+      if (c.last_body) {
+        var who = c.last_sender === myId ? 'Du: ' : (c.kind === 'group' ? pInfo(c.last_sender).name + ': ' : '');
+        prev = (c.last_kind === 'race' ? '🏁 ' : '') + who + c.last_body;
+      }
+      li.appendChild(el('div', 'sub', prev.length > 90 ? prev.slice(0, 90) + '…' : prev));
+      li.addEventListener('click', function () { openThread(c); });
+      return li;
+    }), 'Noch keine Unterhaltungen. Tippe oben auf „Neuer Chat oder neue Gruppe“.');
+  }
+
+  function openConversationById(id) {
+    showScreen('Chats');
+    return loadConversations(false).then(function () {
+      var c = convs.filter(function (x) { return x.id === id; })[0];
+      if (c) openThread(c); else setStatus('Unterhaltung nicht gefunden.', 'warn');
+    });
+  }
+  function startDirectChat(fid) {
+    db.rpc('open_direct_chat', { p_friend: fid }).then(function (res) {
+      if (res.error) { setStatus(res.error.message, 'err'); return; }
+      openConversationById(res.data);
+    });
+  }
+
+  // ---------- Unterhaltung ----------
+  function scrollMsgs() { var b = $('thMsgs'); b.scrollTop = b.scrollHeight; }
+
+  function appendMessage(m) {
+    if (msgIds[m.id]) return;
+    msgIds[m.id] = true; if (m.id > lastMsgId) lastMsgId = m.id;
+    var mine = m.sender_id === myId, box = el('div', 'msg ' + (mine ? 'mine' : 'other'));
+    if (!mine && curConv && curConv.kind === 'group') box.appendChild(el('div', 'who', pInfo(m.sender_id).name));
+    var bub = el('div', 'bub');
+    if (m.kind === 'race') {
+      var d = m.data || {};
+      bub.appendChild(el('div', '', '🏁 ' + (d.name || 'Rennen')));
+      if (d.code) {
+        var go = el('button', 'ghost', 'Ansehen / Beitreten'); go.type = 'button';
+        go.addEventListener('click', function () { joinCode(d.code); });
+        bub.appendChild(go);
+      }
+    } else bub.textContent = m.body;
+    box.appendChild(bub);
+    var meta = el('div', 'meta', msgTime(m.created_at));
+    if (mine) {
+      meta.appendChild(document.createTextNode(' · '));
+      var del = el('button', 'linkbtn', 'löschen'); del.type = 'button';
+      del.addEventListener('click', function () {
+        if (!confirm('Nachricht löschen?')) return;
+        db.from('messages').delete().eq('id', m.id).then(function (res) {
+          if (res.error) { setStatus('Löschen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+          if (box.parentNode) box.parentNode.removeChild(box);
+        });
+      });
+      meta.appendChild(del);
+    }
+    box.appendChild(meta);
+    $('thMsgs').appendChild(box);
+  }
+
+  function openThread(c) {
+    curConv = c; msgIds = {}; lastMsgId = 0;
+    showChView('Thread');
+    $('thInfo').classList.toggle('hidden', c.kind !== 'group');
+    $('thSub').textContent = c.kind === 'group' ? c.member_count + ' Mitglieder' : '';
+    $('thShare').classList.add('hidden');
+    $('thMsgs').textContent = '';
+    db.from('messages').select('*').eq('conversation_id', c.id).order('created_at', { ascending: false }).limit(100).then(function (res) {
+      if (curConv !== c) return;
+      if (res.error) { $('thMsgs').appendChild(el('div', 'hint', 'Nachrichten konnten nicht geladen werden: ' + res.error.message)); return; }
+      var list = (res.data || []).slice().reverse();
+      return getProfiles(list.map(function (m) { return m.sender_id; })).then(function () {
+        if (curConv !== c) return;
+        if (!list.length) $('thMsgs').appendChild(el('div', 'hint', 'Noch keine Nachrichten. Schreib die erste.'));
+        list.forEach(appendMessage); scrollMsgs();
+        markConvRead(c.id);
+      });
+    });
+    stopThreadPoll(); threadPollTimer = setInterval(pollThread, 6000);
+  }
+  function stopThreadPoll() { if (threadPollTimer) clearInterval(threadPollTimer); threadPollTimer = null; }
+
+  // falls die Live-Verbindung hängt: neue Nachrichten alle 6 Sekunden nachholen
+  function pollThread() {
+    if (!curConv || currentScreen !== 'Chats' || chView !== 'Thread') return;
+    var c = curConv;
+    db.from('messages').select('*').eq('conversation_id', c.id).gt('id', lastMsgId).order('id', { ascending: true }).then(function (res) {
+      if (res.error || curConv !== c) return;
+      var list = res.data || [];
+      if (!list.length) return;
+      return getProfiles(list.map(function (m) { return m.sender_id; })).then(function () {
+        var other = false;
+        list.forEach(function (m) { if (!msgIds[m.id]) { appendMessage(m); if (m.sender_id !== myId) other = true; } });
+        scrollMsgs();
+        if (other) markConvRead(c.id);
+      });
+    });
+  }
+
+  function markConvRead(cid) {
+    db.rpc('mark_conversation_read', { p_conv: cid }).then(function () {});
+    convs.forEach(function (c) { if (c.id === cid) c.unread = 0; });
+    unreadMsgs = convs.reduce(function (s, c) { return s + (c.unread || 0); }, 0);
+    updateMsgBadges();
+    var ids = notifs.filter(function (n) { return n.kind === 'message' && n.data && n.data.conversation_id === cid && !n.read_at; })
+      .map(function (n) { return n.id; });
+    if (ids.length) markRead(ids);
+    db.from('notifications').update({ read_at: new Date().toISOString() })
+      .eq('user_id', myId).eq('kind', 'message').eq('data->>conversation_id', cid).is('read_at', null).then(function () {});
+  }
+
+  function sendMessage() {
+    var text = $('thInput').value.trim();
+    if (!text || !curConv) return;
+    $('thSend').disabled = true;
+    db.from('messages').insert({ conversation_id: curConv.id, sender_id: myId, kind: 'text', body: text }).select().single().then(function (res) {
+      $('thSend').disabled = false;
+      if (res.error) { setStatus('Senden fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      $('thInput').value = '';
+      if ($('thMsgs').firstChild && $('thMsgs').firstChild.className === 'hint') $('thMsgs').textContent = '';
+      appendMessage(res.data); scrollMsgs();
+    });
+  }
+  $('thSend').addEventListener('click', sendMessage);
+  $('thInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') sendMessage(); });
+
+  // Live-Zustellung
+  function subscribeMessages() {
+    unsubscribeMessages();
+    msgChannel = db.channel('messages-live')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function (payload) { onNewMessage(payload.new); })
+      .subscribe();
+  }
+  function unsubscribeMessages() { if (msgChannel) { db.removeChannel(msgChannel); msgChannel = null; } }
+  function onNewMessage(m) {
+    if (!m || m.sender_id === myId) return;
+    var inThread = curConv && curConv.id === m.conversation_id && currentScreen === 'Chats' && chView === 'Thread';
+    getProfiles([m.sender_id]).then(function () {
+      if (inThread) {
+        if ($('thMsgs').firstChild && $('thMsgs').firstChild.className === 'hint') $('thMsgs').textContent = '';
+        appendMessage(m); scrollMsgs(); markConvRead(m.conversation_id);
+        return;
+      }
+      loadConversations(false);
+      var name = pInfo(m.sender_id).name, text = m.kind === 'race' ? 'hat ein Rennen geteilt' : m.body.slice(0, 80);
+      setStatus('💬 ' + name + ': ' + text, 'ok');
+      if (navigator.vibrate) navigator.vibrate(120);
+      if (notifPref && document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+        try { new Notification('Neue Nachricht von ' + name, { body: text }); } catch (e) {}
+      }
+    });
+  }
+
+  // ---------- Rennen in den Chat teilen ----------
+  $('thRace').addEventListener('click', function () {
+    var box = $('thShare');
+    if (!box.classList.contains('hidden')) { box.classList.add('hidden'); return; }
+    var mine = myRaces.filter(function (x) { return x.status === 'joined' && (x.races.status === 'lobby' || x.races.status === 'running'); });
+    fillList($('thShareList'), mine.map(function (x) {
+      var li = el('li', 'click');
+      li.appendChild(el('span', 'nm', x.races.name));
+      li.appendChild(el('span', 'pill', x.races.status === 'running' ? 'Läuft' : 'Lobby'));
+      li.addEventListener('click', function () {
+        db.rpc('share_race', { p_conv: curConv.id, p_race: x.races.id }).then(function (res) {
+          if (res.error) { setStatus('Teilen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+          $('thShare').classList.add('hidden');
+          setStatus(curConv.kind === 'group' && x.races.creator_id === myId ? 'Rennen geteilt, Gruppe eingeladen.' : 'Rennen geteilt.', 'ok');
+          pollThread();
+        });
+      });
+      return li;
+    }), 'Du bist in keinem offenen Rennen. Erstelle zuerst eins.');
+    box.classList.remove('hidden');
+  });
+
+  // ---------- Neuer Chat / neue Gruppe ----------
+  $('chNewBtn').addEventListener('click', function () {
+    showChView('New');
+    var ids = friendships.filter(function (f) { return f.status === 'accepted'; }).map(otherId);
+    getProfiles(ids).then(function () {
+      fillList($('chFriendList'), ids.map(function (id) {
+        var info = pInfo(id), li = el('li', 'click');
+        li.appendChild(avatarNode(info.avatar, info.name, info.color, 32));
+        li.appendChild(el('span', 'nm', info.name));
+        li.appendChild(el('span', 'ago', 'Chat'));
+        li.addEventListener('click', function () { startDirectChat(id); });
+        return li;
+      }), 'Noch keine Freunde. Füge zuerst Freunde hinzu.');
+      fillList($('grPick'), ids.map(function (id) {
+        var info = pInfo(id), li = el('li');
+        var cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = id; cb.id = 'gp_' + id;
+        li.appendChild(cb);
+        li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+        var lab = el('label', 'nm', info.name); lab.setAttribute('for', cb.id);
+        lab.style.margin = '0'; lab.style.color = 'var(--ink)'; lab.style.fontSize = '1rem';
+        li.appendChild(lab);
+        return li;
+      }), 'Noch keine Freunde.');
+    });
+  });
+  $('grCreate').addEventListener('click', function () {
+    var name = $('grName').value.trim();
+    var picked = Array.prototype.slice.call($('grPick').querySelectorAll('input[type=checkbox]:checked')).map(function (c) { return c.value; });
+    if (!name) { setStatus('Bitte einen Gruppennamen eingeben.', 'warn'); return; }
+    if (!picked.length) { setStatus('Bitte mindestens ein Mitglied wählen.', 'warn'); return; }
+    $('grCreate').disabled = true;
+    db.rpc('create_group', { p_name: name, p_members: picked }).then(function (res) {
+      $('grCreate').disabled = false;
+      if (res.error) { setStatus(res.error.message, 'err'); return; }
+      $('grName').value = '';
+      openConversationById(res.data);
+    });
+  });
+
+  // ---------- Gruppe: Mitglieder und Aktionen ----------
+  $('thInfo').addEventListener('click', openInfo);
+  function openInfo() {
+    if (!curConv) return;
+    var c = curConv;
+    showChView('Info');
+    $('giName').textContent = c.name || 'Gruppe';
+    db.from('conversation_members').select('user_id,role').eq('conversation_id', c.id).then(function (res) {
+      var members = res.data || [], ids = members.map(function (m) { return m.user_id; });
+      var iAmAdmin = members.some(function (m) { return m.user_id === myId && m.role === 'admin'; });
+      return getProfiles(ids).then(function () {
+        if (curConv !== c) return;
+        fillList($('giMembers'), members.map(function (m) {
+          var info = pInfo(m.user_id), li = el('li');
+          li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+          li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
+          if (m.role === 'admin') li.appendChild(el('span', 'pill', 'Admin'));
+          return li;
+        }), 'Keine Mitglieder.');
+        var cands = friendships.filter(function (f) { return f.status === 'accepted'; }).map(otherId)
+          .filter(function (id) { return ids.indexOf(id) === -1; });
+        $('giAddBox').classList.toggle('hidden', !iAmAdmin || !cands.length);
+        fillList($('giAdd'), cands.map(function (id) {
+          var info = pInfo(id), li = el('li');
+          li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+          li.appendChild(el('span', 'nm', info.name));
+          var b = el('button', '', 'Hinzufügen'); b.type = 'button';
+          b.addEventListener('click', function () {
+            db.rpc('add_group_members', { p_conv: c.id, p_members: [id] }).then(function (r2) {
+              if (r2.error) { setStatus(r2.error.message, 'err'); return; }
+              c.member_count = (c.member_count || 0) + 1;
+              $('thSub').textContent = c.member_count + ' Mitglieder';
+              openInfo(); loadConversations(false);
+            });
+          });
+          li.appendChild(b);
+          return li;
+        }), '');
+      });
+    });
+  }
+  $('giRace').addEventListener('click', function () {
+    if (!curConv) return;
+    var cid = curConv.id;
+    showScreen('Race'); prepareCreate(null);
+    pendingShareConv = cid;
+    setStatus('Lege Start und Ziel fest. Danach wird das Rennen in der Gruppe geteilt und alle werden eingeladen.', 'ok');
+  });
+  $('giLeave').addEventListener('click', function () {
+    if (!curConv || !confirm('Gruppe wirklich verlassen?')) return;
+    db.from('conversation_members').delete().eq('conversation_id', curConv.id).eq('user_id', myId).then(function (res) {
+      if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
+      curConv = null; stopThreadPoll(); showChView('List'); loadConversations(true);
+    });
+  });
 
   // =====================================================
   //  START
