@@ -3,31 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rennen – Meilenstein 4: Profil und Freunde</title>
+<title>Rennen – Meilenstein 5: Profilbild, Fahrzeuge, Dark Mode</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
+    color-scheme: light;
     --ink: #14213d;
     --paper: #ffffff;
     --muted: #5c677d;
     --line: #dde2ea;
+    --soft: #eef1f6;
+    --field: #ffffff;
+    --disabled: #f3f5f8;
+    --btn-bg: #14213d;
+    --btn-fg: #ffffff;
     --me: #1d4ed8;
     --ok: #15803d;
     --warn: #b45309;
     --err: #b91c1c;
   }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #e8ecf4;
+    --paper: #1b2333;
+    --muted: #9aa6bb;
+    --line: #2f3a50;
+    --soft: #2a3550;
+    --field: #141b29;
+    --disabled: #222c40;
+    --btn-bg: #3d63dd;
+    --btn-fg: #ffffff;
+    --me: #7da2ff;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --err: #f87171;
+  }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); }
   #map { position: absolute; inset: 0; }
+
+  /* Dunkle Karte: Kacheln werden per Filter abgedunkelt, Marker bleiben normal */
+  :root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.92); }
+  :root[data-theme="dark"] .leaflet-container { background: #1a1d24; }
+  :root[data-theme="dark"] .leaflet-control-attribution { background: rgba(27, 35, 51, .85); color: var(--muted); }
+  :root[data-theme="dark"] .leaflet-control-attribution a { color: var(--me); }
 
   .panel {
     position: absolute; z-index: 1000;
     left: 12px; right: 12px;
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     max-width: 440px; margin: 0 auto;
-    background: var(--paper);
+    background: var(--paper); color: var(--ink);
     border-radius: 14px;
-    box-shadow: 0 6px 24px rgba(20, 33, 61, .22);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .28);
     padding: 14px 16px;
     max-height: 75%; overflow-y: auto;
   }
@@ -40,18 +68,27 @@
   label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
   input[type=text], input[type=email], input[type=password], select {
     width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px;
-    font: inherit; color: var(--ink); background: #fff;
+    font: inherit; color: var(--ink); background: var(--field);
   }
-  input[type=color] { width: 100%; height: 44px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  input[type=color] { width: 100%; height: 44px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); }
   input:focus-visible, select:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
-  input[disabled] { background: #f3f5f8; color: var(--muted); }
+  input[disabled] { background: var(--disabled); color: var(--muted); }
 
   .tabs { display: flex; gap: 6px; margin-top: 12px; }
-  .tabs button { margin: 0; padding: 10px 6px; background: #eef1f6; color: var(--ink); }
-  .tabs button[aria-selected=true] { background: var(--ink); color: #fff; }
+  .tabs button { flex: 1; min-width: 0; margin: 0; padding: 10px 2px; font-size: .82rem; background: var(--soft); color: var(--ink); }
+  .tabs button[aria-selected=true] { background: var(--btn-bg); color: var(--btn-fg); }
 
   .who { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
+  .who .me { display: flex; align-items: center; gap: 8px; min-width: 0; }
   .who strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .avatar {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    border-radius: 50%; overflow: hidden; color: #fff; font-weight: 700;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .avatar-edit { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+  .avatar-edit .btns { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 
   h3 { margin: 18px 0 6px; font-size: 1rem; }
   .row { display: flex; gap: 8px; align-items: center; }
@@ -64,24 +101,26 @@
 
   .list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
   .list li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-  .list .sw { width: 12px; height: 12px; border-radius: 50%; flex: none; }
   .list .nm { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .list .ago { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
   .list .empty { color: var(--muted); font-size: .9rem; }
   .list li button { width: auto; margin: 0; padding: 6px 12px; font-weight: 500; }
-  .list li button.ghost { background: #eef1f6; color: var(--ink); }
+  .list li button.ghost { background: var(--soft); color: var(--ink); }
 
   button {
     width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 10px;
-    background: var(--ink); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+    background: var(--btn-bg); color: var(--btn-fg); font: inherit; font-weight: 600; cursor: pointer;
   }
   button:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
   button[disabled] { opacity: .5; cursor: default; }
-  button.ghost { width: auto; margin: 0; padding: 6px 12px; background: #eef1f6; color: var(--ink); font-weight: 500; }
+  button.ghost { width: auto; margin: 0; padding: 6px 12px; background: var(--soft); color: var(--ink); font-weight: 500; }
   .hint { margin: 10px 0 0; font-size: .85rem; color: var(--muted); line-height: 1.4; }
+
+  .pin { border-radius: 50%; border: 3px solid #fff; overflow: hidden; box-sizing: border-box; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+  .pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .name-tip {
     background: var(--paper); color: var(--ink); border: 0; border-radius: 6px;
-    box-shadow: 0 1px 6px rgba(20, 33, 61, .3); font-weight: 600; padding: 2px 8px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; padding: 2px 8px;
   }
   .name-tip::before { display: none; }
   .hidden { display: none; }
@@ -113,7 +152,7 @@
   <!-- Hauptansicht -->
   <div id="mainView" class="hidden">
     <div class="who">
-      <span>Angemeldet als <strong id="who"></strong></span>
+      <span class="me"><span id="whoAvatar"></span><strong id="who"></strong></span>
       <button id="logout" class="ghost" type="button">Abmelden</button>
     </div>
 
@@ -121,6 +160,7 @@
       <button role="tab" type="button" data-tab="Map" aria-selected="true">Karte</button>
       <button role="tab" type="button" data-tab="Friends" aria-selected="false" id="navFriends">Freunde</button>
       <button role="tab" type="button" data-tab="Profile" aria-selected="false">Profil</button>
+      <button role="tab" type="button" data-tab="Settings" aria-selected="false">Einstellungen</button>
     </div>
 
     <!-- Tab Karte -->
@@ -152,6 +192,15 @@
 
     <!-- Tab Profil -->
     <div id="tabProfile" class="hidden">
+      <div class="avatar-edit">
+        <span id="pAvatar"></span>
+        <div class="btns">
+          <button id="pPick" class="ghost" type="button">Bild wählen</button>
+          <button id="pRemovePic" class="ghost" type="button">Bild entfernen</button>
+        </div>
+        <input id="pFile" type="file" accept="image/*" class="hidden">
+      </div>
+
       <label for="pEmail">E-Mail</label>
       <input id="pEmail" type="email" disabled>
       <label for="pName">Spielername</label>
@@ -159,18 +208,28 @@
       <label for="pColor">Deine Farbe auf der Karte</label>
       <input id="pColor" type="color" value="#1d4ed8">
       <label for="pVehicle">Womit fährst du hauptsächlich?</label>
-      <select id="pVehicle">
-        <option value="fahrrad">Fahrrad</option>
-        <option value="roller">Roller / E-Scooter</option>
-        <option value="laufen">Zu Fuß / Laufen</option>
-        <option value="sonstiges">Sonstiges</option>
-      </select>
+      <select id="pVehicle"></select>
+      <div id="carRow" class="hidden">
+        <label for="pCar">Autokategorie</label>
+        <select id="pCar"></select>
+      </div>
       <button id="pSave" type="button">Profil speichern</button>
 
       <h3>Passwort ändern</h3>
       <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
       <input id="pNewPass" type="password" autocomplete="new-password">
       <button id="pPassSave" type="button">Passwort ändern</button>
+    </div>
+
+    <!-- Tab Einstellungen -->
+    <div id="tabSettings" class="hidden">
+      <label for="sTheme">Darstellung</label>
+      <select id="sTheme">
+        <option value="system">Wie das Gerät</option>
+        <option value="light">Hell</option>
+        <option value="dark">Dunkel</option>
+      </select>
+      <p class="hint">Die Einstellung gilt nur für dieses Gerät. Bei „Dunkel“ wird auch die Karte abgedunkelt.</p>
     </div>
   </div>
 </section>
@@ -181,11 +240,22 @@
 (function () {
   var SUPABASE_URL = 'https://tolcoxgoifwtdpdhsfvq.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_LT1lr75iVAl6QWfe8GNzBQ_kWiQ9Psu';
+  var AVATAR_PREFIX = SUPABASE_URL + '/storage/v1/object/public/avatars/';
 
   var SEND_EVERY_MS = 2000;
   var STALE_AFTER_MS = 30000;
   var GONE_AFTER_MS = 300000;
   var FRIEND_POLL_MS = 30000;
+
+  var VEHICLES = {
+    fahrrad: 'Fahrrad', ebike: 'E-Bike', roller: 'Roller / E-Scooter', laufen: 'Zu Fuß',
+    motorrad: 'Motorrad', auto: 'Auto', sonstiges: 'Sonstiges'
+  };
+  var CARS = {
+    kleinwagen: 'Kleinwagen', kompakt: 'Kompaktklasse', limousine: 'Limousine / Kombi',
+    suv: 'SUV / Geländewagen', sportwagen: 'Sportwagen', elektro: 'Elektroauto',
+    oldtimer: 'Oldtimer / Youngtimer'
+  };
 
   function $(id) { return document.getElementById(id); }
   function el(tag, cls, text) {
@@ -194,17 +264,38 @@
     if (text != null) e.textContent = text;
     return e;
   }
+
+  // ---------- Dark Mode ----------
+  var themePref = 'system';
+  try { themePref = localStorage.getItem('rennen-theme') || 'system'; } catch (e) {}
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function applyTheme() {
+    var dark = themePref === 'dark' || (themePref === 'system' && mq && mq.matches);
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  }
+  applyTheme();
+  if (mq) {
+    if (mq.addEventListener) mq.addEventListener('change', applyTheme);
+    else if (mq.addListener) mq.addListener(applyTheme);
+  }
+  $('sTheme').value = themePref;
+  $('sTheme').addEventListener('change', function () {
+    themePref = $('sTheme').value;
+    try { localStorage.setItem('rennen-theme', themePref); } catch (e) {}
+    applyTheme();
+  });
+
+  // ---------- Grundobjekte ----------
   var dot = $('dot'), statusEl = $('status');
   var authView = $('authView'), mainView = $('mainView');
   var tabLogin = $('tabLogin'), tabSignup = $('tabSignup'), usernameRow = $('usernameRow');
   var usernameIn = $('username'), emailIn = $('email'), passIn = $('password'), submitBtn = $('submit');
-  var whoEl = $('who'), logoutBtn = $('logout');
+  var logoutBtn = $('logout');
   var statsBox = $('statsBox'), speedEl = $('speed'), accEl = $('acc'), sentEl = $('sent');
   var startBtn = $('start'), playersEl = $('players'), hint = $('hint');
 
   var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ---- Karte ----
   var map = L.map('map', { zoomControl: false }).setView([51.1657, 10.4515], 6);
   L.control.zoom({ position: 'topright' }).addTo(map);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -212,22 +303,72 @@
   }).addTo(map);
   map.on('dragstart', function () { follow = false; });
 
-  var myId = null, myName = '', myColor = '#1d4ed8', myEmail = '';
+  var myId = null, myName = '', myColor = '#1d4ed8', myEmail = '', myAvatar = null;
+  var myVehicle = 'fahrrad', myCar = null;
   var me = null, accuracy = null;
   var trail = L.polyline([], { color: '#1d4ed8', weight: 4, opacity: 0.7 }).addTo(map);
   var watchId = null, follow = true, sentCount = 0, lastSent = 0;
-  var others = {};   // user_id -> { name, color, marker, updated }
+  var others = {};
   var channel = null, tick = null, friendTimer = null;
   var mode = 'login';
-  var friendships = [];      // Zeilen aus der Tabelle friendships
-  var friendNames = {};      // user_id -> Spielername
+  var friendships = [];
+  var friendInfo = {};   // user_id -> { name, avatar, color, label }
 
   function setStatus(text, kind) {
     statusEl.textContent = text;
     dot.className = 'dot' + (kind ? ' ' + kind : '');
   }
 
-  // =================== Anmeldung ===================
+  // ---------- Profilbilder und Marker ----------
+  function safeAvatar(url) {
+    return (typeof url === 'string' && url.indexOf(AVATAR_PREFIX) === 0) ? url : null;
+  }
+
+  function avatarNode(url, name, color, size) {
+    var d = el('span', 'avatar');
+    d.style.width = d.style.height = size + 'px';
+    d.style.background = color || '#667';
+    d.style.fontSize = Math.round(size * 0.45) + 'px';
+    var safe = safeAvatar(url);
+    if (safe) {
+      var img = document.createElement('img');
+      img.src = safe; img.alt = '';
+      d.appendChild(img);
+    } else {
+      d.textContent = (name || '?').charAt(0).toUpperCase();
+    }
+    return d;
+  }
+
+  function iconFor(color, url) {
+    var safe = safeAvatar(url);
+    var size = safe ? 40 : 22;
+    var pin = el('div', 'pin');
+    pin.style.width = pin.style.height = size + 'px';
+    pin.style.background = color;
+    if (safe) {
+      pin.style.borderColor = color;
+      var img = document.createElement('img');
+      img.src = safe; img.alt = '';
+      pin.appendChild(img);
+    }
+    return L.divIcon({ html: pin, className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
+  }
+
+  function renderWho() {
+    $('who').textContent = myName;
+    var holder = $('whoAvatar');
+    holder.textContent = '';
+    holder.appendChild(avatarNode(myAvatar, myName, myColor, 32));
+  }
+
+  function renderProfileAvatar() {
+    var holder = $('pAvatar');
+    holder.textContent = '';
+    holder.appendChild(avatarNode(myAvatar, myName, myColor, 84));
+  }
+
+  // ---------- Anmeldung ----------
   function setMode(m) {
     mode = m;
     var signup = m === 'signup';
@@ -297,22 +438,25 @@
   function applyProfile(p) {
     myName = p.username;
     myColor = p.color || '#1d4ed8';
-    whoEl.textContent = myName;
+    myAvatar = safeAvatar(p.avatar_url);
+    myVehicle = p.vehicle || 'fahrrad';
+    myCar = p.car_category || null;
     trail.setStyle({ color: myColor });
-    if (me) me.setStyle({ fillColor: myColor });
     if (accuracy) accuracy.setStyle({ color: myColor });
+    if (me) me.setIcon(iconFor(myColor, myAvatar));
+    renderWho();
+    renderProfileAvatar();
   }
 
   function afterLogin(user) {
     myId = user.id;
     myEmail = user.email || '';
-    db.from('profiles').select('username,color,vehicle').eq('id', myId).single().then(function (res) {
+    db.from('profiles').select('username,color,vehicle,car_category,avatar_url').eq('id', myId).single().then(function (res) {
       if (res.error || !res.data) {
         setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err');
         return;
       }
       applyProfile(res.data);
-      $('pVehicle').value = res.data.vehicle || 'fahrrad';
       authView.classList.add('hidden');
       mainView.classList.remove('hidden');
       showTab('Map');
@@ -328,8 +472,8 @@
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
-  // =================== Tabs ===================
-  var TABS = ['Map', 'Friends', 'Profile'];
+  // ---------- Tabs ----------
+  var TABS = ['Map', 'Friends', 'Profile', 'Settings'];
   function showTab(t) {
     TABS.forEach(function (n) { $('tab' + n).classList.toggle('hidden', n !== t); });
     var btns = $('nav').querySelectorAll('button');
@@ -344,22 +488,46 @@
     if (t) showTab(t);
   });
 
-  // =================== Profil ===================
+  // ---------- Profil ----------
+  function fillSelect(sel, map) {
+    Object.keys(map).forEach(function (k) {
+      var o = document.createElement('option');
+      o.value = k; o.textContent = map[k];
+      sel.appendChild(o);
+    });
+  }
+  fillSelect($('pVehicle'), VEHICLES);
+  fillSelect($('pCar'), CARS);
+
+  function toggleCarRow() {
+    $('carRow').classList.toggle('hidden', $('pVehicle').value !== 'auto');
+  }
+  $('pVehicle').addEventListener('change', toggleCarRow);
+
   function fillProfile() {
     $('pEmail').value = myEmail;
     $('pName').value = myName;
     $('pColor').value = myColor;
+    $('pVehicle').value = myVehicle;
+    $('pCar').value = myCar || 'kompakt';
+    toggleCarRow();
+    renderProfileAvatar();
   }
 
   $('pSave').addEventListener('click', function () {
     var name = $('pName').value.trim();
     if (name.length < 2 || name.length > 20) { setStatus('Der Spielername braucht 2 bis 20 Zeichen.', 'warn'); return; }
-    var row = { username: name, color: $('pColor').value, vehicle: $('pVehicle').value };
+    var vehicle = $('pVehicle').value;
+    var row = {
+      username: name, color: $('pColor').value, vehicle: vehicle,
+      car_category: vehicle === 'auto' ? $('pCar').value : null
+    };
     db.from('profiles').update(row).eq('id', myId).then(function (res) {
       if (res.error) {
         setStatus(res.error.code === '23505' ? 'Dieser Spielername ist schon vergeben.' : 'Speichern fehlgeschlagen: ' + res.error.message, 'err');
         return;
       }
+      row.avatar_url = myAvatar;
       applyProfile(row);
       setStatus('Profil gespeichert.', 'ok');
     });
@@ -375,8 +543,77 @@
     });
   });
 
-  // =================== Freunde ===================
+  // ---------- Profilbild hochladen ----------
+  // Bild mittig quadratisch zuschneiden, auf 256 x 256 verkleinern, als JPEG speichern
+  function processImage(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var s = Math.min(img.width, img.height);
+        var c = document.createElement('canvas');
+        c.width = c.height = 256;
+        c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 256, 256);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) {
+          if (b) resolve(b); else reject(new Error('Bild konnte nicht verarbeitet werden.'));
+        }, 'image/jpeg', 0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Die Datei ist kein lesbares Bild.')); };
+      img.src = url;
+    });
+  }
+
+  function saveAvatarUrl(url) {
+    return db.from('profiles').update({ avatar_url: url }).eq('id', myId).then(function (res) {
+      if (res.error) throw new Error(res.error.message);
+      myAvatar = safeAvatar(url);
+      if (me) me.setIcon(iconFor(myColor, myAvatar));
+      renderWho();
+      renderProfileAvatar();
+    });
+  }
+
+  $('pPick').addEventListener('click', function () { $('pFile').click(); });
+
+  $('pFile').addEventListener('change', function () {
+    var file = $('pFile').files && $('pFile').files[0];
+    $('pFile').value = '';
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) { setStatus('Das Bild ist zu groß (maximal 15 MB).', 'warn'); return; }
+    setStatus('Bild wird hochgeladen …', 'warn');
+    var path = myId + '/avatar.jpg';
+    processImage(file).then(function (blob) {
+      return db.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    }).then(function (res) {
+      if (res.error) throw new Error(res.error.message);
+      var pub = db.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+      return saveAvatarUrl(pub + '?v=' + Date.now());
+    }).then(function () {
+      setStatus('Profilbild gespeichert.', 'ok');
+    }).catch(function (err) {
+      setStatus('Bild-Upload fehlgeschlagen: ' + err.message, 'err');
+    });
+  });
+
+  $('pRemovePic').addEventListener('click', function () {
+    if (!myAvatar) { setStatus('Du hast noch kein Profilbild.', 'warn'); return; }
+    db.storage.from('avatars').remove([myId + '/avatar.jpg']).then(function () {
+      return saveAvatarUrl(null);
+    }).then(function () {
+      setStatus('Profilbild entfernt.', 'ok');
+    }).catch(function (err) {
+      setStatus('Entfernen fehlgeschlagen: ' + err.message, 'err');
+    });
+  });
+
+  // ---------- Freunde ----------
   function otherId(f) { return f.requester_id === myId ? f.addressee_id : f.requester_id; }
+
+  function vehicleLabel(p) {
+    if (p.vehicle === 'auto' && p.car_category && CARS[p.car_category]) return CARS[p.car_category];
+    return VEHICLES[p.vehicle] || '';
+  }
 
   function loadFriends() {
     if (!myId) return;
@@ -384,10 +621,12 @@
       if (res.error) { setStatus('Freunde laden fehlgeschlagen: ' + res.error.message, 'err'); return; }
       friendships = res.data || [];
       var ids = friendships.map(otherId);
-      if (!ids.length) { friendNames = {}; renderFriends(); return; }
-      db.from('profiles').select('id,username').in('id', ids).then(function (r2) {
-        friendNames = {};
-        (r2.data || []).forEach(function (p) { friendNames[p.id] = p.username; });
+      if (!ids.length) { friendInfo = {}; renderFriends(); return; }
+      db.from('profiles').select('id,username,avatar_url,color,vehicle,car_category').in('id', ids).then(function (r2) {
+        friendInfo = {};
+        (r2.data || []).forEach(function (p) {
+          friendInfo[p.id] = { name: p.username, avatar: p.avatar_url, color: p.color, label: vehicleLabel(p) };
+        });
         renderFriends();
       });
     });
@@ -404,8 +643,10 @@
 
   function friendRow(f, buttons) {
     var li = el('li');
-    var name = friendNames[otherId(f)] || '…';
-    li.appendChild(el('span', 'nm', name));
+    var info = friendInfo[otherId(f)] || { name: '…', avatar: null, color: '#667', label: '' };
+    li.appendChild(avatarNode(info.avatar, info.name, info.color, 32));
+    li.appendChild(el('span', 'nm', info.name));
+    if (info.label) li.appendChild(el('span', 'ago', info.label));
     buttons.forEach(function (b) {
       var btn = el('button', b.ghost ? 'ghost' : '', b.label);
       btn.type = 'button';
@@ -424,7 +665,7 @@
 
     fillList($('listIncoming'), incoming.map(function (f) {
       return friendRow(f, [
-        { label: 'Annehmen', run: function () { answerRequest(f.id, true); } },
+        { label: 'Annehmen', run: function () { answerRequest(f.id); } },
         { label: 'Ablehnen', ghost: true, run: function () { removeFriendship(f.id); } }
       ]);
     }), 'Keine offenen Anfragen.');
@@ -440,7 +681,7 @@
     }), 'Keine gesendeten Anfragen.');
   }
 
-  function answerRequest(id, accept) {
+  function answerRequest(id) {
     db.from('friendships').update({ status: 'accepted' }).eq('id', id).then(function (res) {
       if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
       setStatus('Ihr seid jetzt Freunde.', 'ok');
@@ -458,7 +699,6 @@
   $('friendAdd').addEventListener('click', function () {
     var name = $('friendName').value.trim();
     if (!name) { setStatus('Bitte einen Spielernamen eingeben.', 'warn'); return; }
-    // Platzhalter-Zeichen für ilike entschärfen: Suche soll den Namen genau treffen
     var pattern = name.replace(/[\\%_]/g, '\\$&');
     db.from('profiles').select('id,username').ilike('username', pattern).limit(1).then(function (res) {
       if (res.error) { setStatus('Suche fehlgeschlagen: ' + res.error.message, 'err'); return; }
@@ -479,7 +719,7 @@
     });
   });
 
-  // =================== Karte: Zeit und Farbe ===================
+  // ---------- Karte: Hilfsfunktionen ----------
   function colorFor(name) {
     var h = 0;
     for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
@@ -490,19 +730,22 @@
     return s < 60 ? 'vor ' + s + ' s' : 'vor ' + Math.round(s / 60) + ' min';
   }
 
-  // =================== Karte: andere Spieler ===================
+  // ---------- Karte: andere Spieler ----------
   function upsertOther(row) {
     if (!row || !row.user_id || row.user_id === myId) return;
     var ll = [row.lat, row.lng];
     var o = others[row.user_id];
     if (!o) {
       var color = row.color || colorFor(row.username);
-      var marker = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map);
-      var tip = el('span', '', row.username);
-      marker.bindTooltip(tip, { permanent: true, direction: 'top', offset: [0, -10], className: 'name-tip' });
-      o = others[row.user_id] = { name: row.username, marker: marker, color: color };
+      var marker = L.marker(ll, { icon: iconFor(color, row.avatar_url), keyboard: false }).addTo(map);
+      marker.bindTooltip(el('span', '', row.username), { permanent: true, direction: 'top', offset: [0, -18], className: 'name-tip' });
+      o = others[row.user_id] = { name: row.username, marker: marker, color: color, avatar: row.avatar_url || null };
     } else {
       o.marker.setLatLng(ll);
+      if ((row.avatar_url || null) !== o.avatar) {
+        o.avatar = row.avatar_url || null;
+        o.marker.setIcon(iconFor(o.color, o.avatar));
+      }
     }
     o.updated = new Date(row.updated_at).getTime();
     renderPlayers();
@@ -521,10 +764,9 @@
     var items = ids.map(function (id) {
       var o = others[id];
       var age = now - o.updated;
-      o.marker.setStyle({ fillOpacity: age > STALE_AFTER_MS ? 0.35 : 1 });
+      o.marker.setOpacity(age > STALE_AFTER_MS ? 0.4 : 1);
       var li = el('li');
-      var sw = el('span', 'sw'); sw.style.background = o.color;
-      li.appendChild(sw);
+      li.appendChild(avatarNode(o.avatar, o.name, o.color, 28));
       li.appendChild(el('span', 'nm', o.name));
       li.appendChild(el('span', 'ago', ago(age)));
       return li;
@@ -565,13 +807,13 @@
       });
   }
 
-  // =================== Eigene Position ===================
+  // ---------- Eigene Position ----------
   function sendPosition(c) {
     var now = Date.now();
     if (now - lastSent < SEND_EVERY_MS) return;
     lastSent = now;
     db.from('positions').upsert({
-      user_id: myId, username: myName, color: myColor,
+      user_id: myId, username: myName, color: myColor, avatar_url: myAvatar,
       lat: c.latitude, lng: c.longitude, accuracy: c.accuracy,
       updated_at: new Date().toISOString()
     }).then(function (res) {
@@ -585,7 +827,7 @@
     var c = pos.coords;
     var ll = [c.latitude, c.longitude];
     if (!me) {
-      me = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: myColor, fillOpacity: 1 }).addTo(map);
+      me = L.marker(ll, { icon: iconFor(myColor, myAvatar), zIndexOffset: 1000, keyboard: false }).addTo(map);
       accuracy = L.circle(ll, { radius: c.accuracy, color: myColor, weight: 1, fillOpacity: 0.12 }).addTo(map);
       map.setView(ll, 17);
     } else {
@@ -647,7 +889,7 @@
     if (watchId === null) start(); else stop();
   });
 
-  // =================== Start: gespeicherte Anmeldung wiederherstellen ===================
+  // ---------- Start: gespeicherte Anmeldung wiederherstellen ----------
   db.auth.getSession().then(function (res) {
     if (res.data && res.data.session) afterLogin(res.data.session.user);
     else showAuth();
