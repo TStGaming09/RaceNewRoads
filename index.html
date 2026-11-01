@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rennen – Meilenstein 1: Live-Position</title>
+<title>Rennen – Meilenstein 2: Freunde live auf der Karte</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
     --ink: #14213d;
     --paper: #ffffff;
     --muted: #5c677d;
+    --line: #dde2ea;
     --me: #1d4ed8;
     --ok: #15803d;
     --warn: #b45309;
@@ -28,6 +29,7 @@
     border-radius: 14px;
     box-shadow: 0 6px 24px rgba(20, 33, 61, .22);
     padding: 14px 16px;
+    max-height: 60%; overflow-y: auto;
   }
   .status { display: flex; align-items: center; gap: 8px; font-weight: 600; }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
@@ -35,18 +37,36 @@
   .dot.warn { background: var(--warn); }
   .dot.err { background: var(--err); }
 
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
+  input[type=text] {
+    width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px;
+    font: inherit; color: var(--ink);
+  }
+  input[type=text]:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
+
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
-  .stats div { min-width: 0; }
   .stats .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .stats .l { font-size: .8rem; color: var(--muted); }
 
+  .players { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .players li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .players .sw { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .players .nm { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .players .ago { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .players .empty { color: var(--muted); font-size: .9rem; display: block; }
+
   button {
-    width: 100%; padding: 12px; border: 0; border-radius: 10px;
+    width: 100%; margin-top: 12px; padding: 12px; border: 0; border-radius: 10px;
     background: var(--ink); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
   }
   button:focus-visible { outline: 3px solid var(--me); outline-offset: 2px; }
-  button[disabled] { opacity: .5; cursor: default; }
   .hint { margin: 10px 0 0; font-size: .85rem; color: var(--muted); line-height: 1.4; }
+  .name-tip {
+    background: var(--paper); color: var(--ink); border: 0; border-radius: 6px;
+    box-shadow: 0 1px 6px rgba(20, 33, 61, .3); font-weight: 600; padding: 2px 8px;
+  }
+  .name-tip::before { display: none; }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
@@ -54,27 +74,53 @@
 
 <section class="panel" aria-live="polite">
   <div class="status"><span id="dot" class="dot"></span><span id="status">Bereit</span></div>
-  <div class="stats">
+
+  <div id="nameBox">
+    <label for="name">Dein Spielername (jeder braucht einen eigenen)</label>
+    <input id="name" type="text" maxlength="20" autocomplete="off" placeholder="z. B. Luis">
+  </div>
+
+  <div id="statsBox" class="stats hidden">
     <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
     <div><div class="v" id="acc">–</div><div class="l">Genauigkeit in m</div></div>
-    <div><div class="v" id="count">0</div><div class="l">Positionen</div></div>
+    <div><div class="v" id="sent">0</div><div class="l">gesendet</div></div>
   </div>
-  <button id="start">Standort starten</button>
-  <p class="hint" id="hint">Tippe auf „Standort starten“ und erlaube den Standortzugriff. Lass den Bildschirm an, solange du testest.</p>
+
+  <button id="start">Starten</button>
+  <ul id="players" class="players hidden"></ul>
+  <p class="hint" id="hint">Gib deinen Namen ein und tippe auf „Starten“. Lass den Bildschirm an, solange du testest.</p>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function () {
-  var startBtn = document.getElementById('start');
+  // Zugangsdaten. Der Publishable Key ist für den Einsatz im Browser gedacht.
+  var SUPABASE_URL = 'https://tolcoxgoifwtdpdhsfvq.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_LT1lr75iVAl6QWfe8GNzBQ_kWiQ9Psu';
+
+  var SEND_EVERY_MS = 2000;     // höchstens alle 2 Sekunden senden
+  var STALE_AFTER_MS = 30000;   // nach 30 s ohne Update: ausgegraut
+  var GONE_AFTER_MS = 300000;   // nach 5 min ohne Update: von der Karte entfernt
+
   var dot = document.getElementById('dot');
   var statusEl = document.getElementById('status');
-  var hint = document.getElementById('hint');
+  var nameBox = document.getElementById('nameBox');
+  var nameInput = document.getElementById('name');
+  var statsBox = document.getElementById('statsBox');
   var speedEl = document.getElementById('speed');
   var accEl = document.getElementById('acc');
-  var countEl = document.getElementById('count');
+  var sentEl = document.getElementById('sent');
+  var startBtn = document.getElementById('start');
+  var playersEl = document.getElementById('players');
+  var hint = document.getElementById('hint');
 
-  // Karte: Startansicht Deutschland, bis die erste Position da ist
+  var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Gemerkter Name (Speicher kann leer oder gesperrt sein)
+  try { nameInput.value = localStorage.getItem('rennen-name') || ''; } catch (e) {}
+
+  // Karte
   var map = L.map('map', { zoomControl: false }).setView([51.1657, 10.4515], 6);
   L.control.zoom({ position: 'topright' }).addTo(map);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -82,25 +128,143 @@
     attribution: '&copy; OpenStreetMap-Mitwirkende'
   }).addTo(map);
 
-  var me = null;          // Punkt mit deiner Position
-  var accuracy = null;    // Kreis für die Genauigkeit
+  var myName = '';
+  var me = null, accuracy = null;
   var trail = L.polyline([], { color: '#1d4ed8', weight: 4, opacity: 0.7 }).addTo(map);
   var watchId = null;
-  var count = 0;
-  var follow = true;      // Karte folgt dir, bis du sie selbst verschiebst
+  var follow = true;
+  var sentCount = 0;
+  var lastSent = 0;
+  var others = {};   // name -> { lat, lng, updated, marker }
+  var channel = null;
+  var tick = null;
 
-  map.on('dragstart', function () { follow = false; startBtn.textContent = 'Mich zentrieren'; });
+  map.on('dragstart', function () { follow = false; });
 
   function setStatus(text, kind) {
     statusEl.textContent = text;
     dot.className = 'dot' + (kind ? ' ' + kind : '');
   }
 
+  // Jede Person bekommt aus ihrem Namen eine feste Farbe
+  function colorFor(name) {
+    var h = 0;
+    for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+    return 'hsl(' + h + ', 70%, 42%)';
+  }
+
+  function ago(ms) {
+    var s = Math.max(0, Math.round(ms / 1000));
+    if (s < 60) return 'vor ' + s + ' s';
+    return 'vor ' + Math.round(s / 60) + ' min';
+  }
+
+  // ---- Andere Spieler ----
+  function upsertOther(row) {
+    if (!row || row.player === myName) return;
+    var ll = [row.lat, row.lng];
+    var o = others[row.player];
+    if (!o) {
+      var color = colorFor(row.player);
+      var marker = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map);
+      var tip = document.createElement('span');
+      tip.textContent = row.player;
+      marker.bindTooltip(tip, { permanent: true, direction: 'top', offset: [0, -10], className: 'name-tip' });
+      o = others[row.player] = { marker: marker, color: color };
+    } else {
+      o.marker.setLatLng(ll);
+    }
+    o.updated = new Date(row.updated_at).getTime();
+    renderPlayers();
+  }
+
+  function removeOther(name) {
+    var o = others[name];
+    if (!o) return;
+    map.removeLayer(o.marker);
+    delete others[name];
+  }
+
+  function renderPlayers() {
+    var now = Date.now();
+    var names = Object.keys(others).sort();
+    playersEl.textContent = '';
+    if (!names.length) {
+      var li = document.createElement('li');
+      var span = document.createElement('span');
+      span.className = 'empty';
+      span.textContent = 'Noch niemand sonst online.';
+      li.appendChild(span);
+      playersEl.appendChild(li);
+      return;
+    }
+    names.forEach(function (n) {
+      var o = others[n];
+      var age = now - o.updated;
+      o.marker.setStyle({ fillOpacity: age > STALE_AFTER_MS ? 0.35 : 1 });
+      var li = document.createElement('li');
+      var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = o.color;
+      var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = n;
+      var ag = document.createElement('span'); ag.className = 'ago'; ag.textContent = ago(age);
+      li.appendChild(sw); li.appendChild(nm); li.appendChild(ag);
+      playersEl.appendChild(li);
+    });
+  }
+
+  function sweep() {
+    var now = Date.now();
+    Object.keys(others).forEach(function (n) {
+      if (now - others[n].updated > GONE_AFTER_MS) removeOther(n);
+    });
+    renderPlayers();
+  }
+
+  function loadAll() {
+    return db.from('positions').select('*').then(function (res) {
+      if (res.error) { setStatus('Datenbank-Fehler: ' + res.error.message, 'err'); return; }
+      res.data.forEach(upsertOther);
+      renderPlayers();
+    });
+  }
+
+  function subscribe() {
+    channel = db.channel('positions-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'positions' }, function (payload) {
+        if (payload.eventType === 'DELETE') {
+          if (payload.old && payload.old.player) removeOther(payload.old.player);
+          renderPlayers();
+        } else {
+          upsertOther(payload.new);
+        }
+      })
+      .subscribe(function (state) {
+        if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT') {
+          setStatus('Live-Verbindung gestört. Seite neu laden.', 'err');
+        }
+      });
+  }
+
+  // ---- Eigene Position ----
+  function sendPosition(c) {
+    var now = Date.now();
+    if (now - lastSent < SEND_EVERY_MS) return;
+    lastSent = now;
+    db.from('positions').upsert({
+      player: myName,
+      lat: c.latitude,
+      lng: c.longitude,
+      accuracy: c.accuracy,
+      updated_at: new Date().toISOString()
+    }).then(function (res) {
+      if (res.error) { setStatus('Senden fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      sentCount += 1;
+      sentEl.textContent = sentCount;
+    });
+  }
+
   function onPosition(pos) {
     var c = pos.coords;
     var ll = [c.latitude, c.longitude];
-    count += 1;
-
     if (!me) {
       me = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: '#1d4ed8', fillOpacity: 1 }).addTo(map);
       accuracy = L.circle(ll, { radius: c.accuracy, color: '#1d4ed8', weight: 1, fillOpacity: 0.12 }).addTo(map);
@@ -112,13 +276,12 @@
     trail.addLatLng(ll);
     if (follow) map.panTo(ll);
 
-    // Geschwindigkeit kommt in m/s und kann fehlen (null)
     speedEl.textContent = (c.speed != null && !isNaN(c.speed)) ? (c.speed * 3.6).toFixed(1) : '–';
     accEl.textContent = Math.round(c.accuracy);
-    countEl.textContent = count;
-
-    if (c.accuracy <= 20) setStatus('GPS gut', 'ok');
+    if (c.accuracy <= 20) setStatus('Live als „' + myName + '“', 'ok');
     else setStatus('GPS ungenau – am besten draußen testen', 'warn');
+
+    sendPosition(c);
   }
 
   function onError(err) {
@@ -132,41 +295,46 @@
   }
 
   function start() {
-    if (!('geolocation' in navigator)) {
-      setStatus('Dieser Browser unterstützt keinen Standort.', 'err');
-      return;
-    }
-    if (!window.isSecureContext) {
-      setStatus('Standort geht nur über https oder localhost.', 'err');
-      return;
-    }
-    setStatus('Suche Position …', 'warn');
-    hint.textContent = 'Läuft. Geh ein paar Meter und schau, ob der Punkt mitwandert.';
+    var name = nameInput.value.trim();
+    if (!name) { setStatus('Bitte gib zuerst einen Namen ein.', 'warn'); nameInput.focus(); return; }
+    if (!('geolocation' in navigator)) { setStatus('Dieser Browser unterstützt keinen Standort.', 'err'); return; }
+    if (!window.isSecureContext) { setStatus('Standort geht nur über https oder localhost.', 'err'); return; }
+
+    myName = name;
+    try { localStorage.setItem('rennen-name', myName); } catch (e) {}
+    nameBox.classList.add('hidden');
+    statsBox.classList.remove('hidden');
+    playersEl.classList.remove('hidden');
     startBtn.textContent = 'Stoppen';
+    hint.textContent = 'Läuft. Sobald ein Freund mit anderem Namen startet, erscheint sein Punkt auf der Karte.';
+    setStatus('Suche Position …', 'warn');
     follow = true;
+
+    loadAll().then(subscribe);
+    tick = setInterval(sweep, 5000);
     watchId = navigator.geolocation.watchPosition(onPosition, onError, {
-      enableHighAccuracy: true,  // echtes GPS statt Funkzellen-Schätzung
-      maximumAge: 0,
-      timeout: 15000
+      enableHighAccuracy: true, maximumAge: 0, timeout: 15000
     });
   }
 
   function stop() {
     if (watchId !== null) navigator.geolocation.clearWatch(watchId);
     watchId = null;
-    startBtn.textContent = 'Standort starten';
+    if (tick) clearInterval(tick);
+    tick = null;
+    if (channel) { db.removeChannel(channel); channel = null; }
+    // Eigenen Eintrag entfernen, damit man nicht als Geist auf der Karte bleibt
+    if (myName) db.from('positions').delete().eq('player', myName).then(function () {});
+    Object.keys(others).forEach(removeOther);
+    nameBox.classList.remove('hidden');
+    statsBox.classList.add('hidden');
+    playersEl.classList.add('hidden');
+    startBtn.textContent = 'Starten';
     setStatus('Gestoppt');
   }
 
   startBtn.addEventListener('click', function () {
-    if (watchId === null) { start(); return; }
-    if (!follow && me) {            // Karte war verschoben: erst wieder zentrieren
-      follow = true;
-      startBtn.textContent = 'Stoppen';
-      map.panTo(me.getLatLng());
-      return;
-    }
-    stop();
+    if (watchId === null) start(); else stop();
   });
 })();
 </script>
