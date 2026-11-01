@@ -59,9 +59,25 @@
   .tabs.scroll { display: grid; grid-template-columns: repeat(3, 1fr); }
   .tabs.scroll button { padding: 10px 4px; font-size: .9rem; }
 
-  .who { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
-  .who .me { display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .who strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .screenhead { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+  .screenhead strong { font-size: 1.05rem; }
+  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .bigcard { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin: 0; padding: 18px 14px; text-align: left; border-radius: 14px; min-height: 96px; }
+  .bigcard.alt { background: var(--soft); color: var(--ink); }
+  .big-t { font-size: 1.3rem; font-weight: 700; }
+  .big-s { font-size: .82rem; font-weight: 400; opacity: .85; line-height: 1.3; }
+  .badge { position: absolute; top: 10px; right: 10px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 99px; background: var(--err); color: #fff; font-size: .78rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+  .menubtn { position: absolute; z-index: 1200; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; width: 48px; height: 48px; margin: 0; padding: 0; border-radius: 50%; border: 3px solid #fff; background: transparent; box-shadow: 0 2px 10px rgba(0, 0, 0, .35); display: flex; align-items: center; justify-content: center; }
+  .menubtn .dotbadge { position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; border-radius: 50%; background: var(--err); border: 2px solid #fff; }
+  .menu { position: absolute; z-index: 1200; top: calc(68px + env(safe-area-inset-top, 0px)); right: 12px; min-width: 230px; background: var(--paper); color: var(--ink); border-radius: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .3); padding: 6px 0; overflow: hidden; }
+  .menu-head { padding: 10px 14px; border-bottom: 1px solid var(--line); font-weight: 700; }
+  .menu button { display: flex; width: 100%; align-items: center; justify-content: space-between; margin: 0; padding: 13px 14px; border-radius: 0; background: transparent; color: var(--ink); text-align: left; font-weight: 500; }
+  .menu button:hover { background: var(--soft); }
+  .menu .badge { position: static; }
+  .menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+  .locbtn { position: absolute; z-index: 1000; left: 10px; top: calc(84px + env(safe-area-inset-top, 0px)); width: 34px; height: 34px; margin: 0; padding: 0; border-radius: 4px; background: #fff; color: #14213d; font-size: 18px; box-shadow: 0 1px 5px rgba(0, 0, 0, .65); }
+  body.picking .menubtn, body.picking .menu, body.picking .locbtn { display: none; }
+  .panel.collapsed #mainView, .panel.collapsed #authView { display: none; }
 
   .avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; overflow: hidden; color: #fff; font-weight: 700; }
   .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -119,8 +135,22 @@
 
 <div id="pickBar"><span id="pickMsg"></span><button id="pickCancel" class="ghost" type="button">Abbrechen</button></div>
 
-<section class="panel" aria-live="polite">
-  <div class="status"><span id="dot" class="dot"></span><span id="status">Lade …</span></div>
+<button id="menuBtn" class="menubtn hidden" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menü">
+  <span id="whoAvatar"></span><span id="menuDot" class="dotbadge hidden"></span>
+</button>
+<div id="menu" class="menu hidden" role="menu">
+  <div class="menu-head" id="who"></div>
+  <button type="button" role="menuitem" data-go="Profile"><span>Profil</span></button>
+  <button type="button" role="menuitem" data-go="Stats"><span>Statistiken</span></button>
+  <button type="button" role="menuitem" data-go="Friends"><span>Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
+  <button type="button" role="menuitem" data-go="Settings"><span>Einstellungen</span></button>
+  <hr>
+  <button type="button" role="menuitem" id="logout"><span>Abmelden</span></button>
+</div>
+<button id="locBtn" class="locbtn hidden" type="button" aria-label="Auf meinen Standort zentrieren">&#9678;</button>
+
+<section class="panel" id="panel" aria-live="polite">
+  <div class="status"><span id="dot" class="dot"></span><span id="status" style="flex:1">Lade …</span><button id="collapseBtn" class="ghost hidden" type="button" aria-label="Panel ein- oder ausklappen">&#9662;</button></div>
 
   <!-- Anmeldung -->
   <div id="authView" class="hidden">
@@ -141,30 +171,33 @@
 
   <!-- Hauptansicht -->
   <div id="mainView" class="hidden">
-    <div class="who">
-      <span class="me"><span id="whoAvatar"></span><strong id="who"></strong></span>
-      <button id="logout" class="ghost" type="button">Abmelden</button>
+    <div id="screenHead" class="screenhead hidden">
+      <button id="backBtn" class="ghost" type="button">&lsaquo; Zurück</button>
+      <strong id="screenTitle"></strong>
     </div>
 
-    <div class="tabs scroll" role="tablist" id="nav">
-      <button role="tab" type="button" data-tab="Map" aria-selected="true">Karte</button>
-      <button role="tab" type="button" data-tab="Race" aria-selected="false" id="navRace">Rennen</button>
-      <button role="tab" type="button" data-tab="Navi" aria-selected="false">Navi</button>
-      <button role="tab" type="button" data-tab="Friends" aria-selected="false" id="navFriends">Freunde</button>
-      <button role="tab" type="button" data-tab="Profile" aria-selected="false">Profil</button>
-      <button role="tab" type="button" data-tab="Settings" aria-selected="false">Einstellungen</button>
-    </div>
-
-    <!-- Karte -->
-    <div id="tabMap">
+    <!-- Startseite -->
+    <div id="tabHome">
+      <div class="home-grid">
+        <button id="homeRace" class="bigcard" type="button">
+          <span class="big-t">Rennen</span>
+          <span class="big-s">Start und Ziel, Freunde, Zeiten</span>
+          <span id="badgeRace" class="badge hidden"></span>
+        </button>
+        <button id="homeNavi" class="bigcard alt" type="button">
+          <span class="big-t">Navi</span>
+          <span class="big-s">Route zu einem Ziel</span>
+        </button>
+      </div>
+      <button id="homeActive" class="ghost wide hidden" type="button"></button>
       <div id="statsBox" class="stats hidden">
         <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
         <div><div class="v" id="acc">–</div><div class="l">Genauigkeit in m</div></div>
         <div><div class="v" id="sent">0</div><div class="l">gesendet</div></div>
       </div>
-      <button id="start" type="button">Starten</button>
+      <button id="start" type="button">Standort starten</button>
       <ul id="players" class="list hidden" style="margin-top:10px"></ul>
-      <p class="hint" id="hint">Tippe auf „Starten“. Du siehst Freunde und Rennteilnehmer, die ebenfalls gestartet haben.</p>
+      <p class="hint" id="hint">Tippe auf „Standort starten“. Du siehst Freunde und Rennteilnehmer, die ebenfalls gestartet haben.</p>
     </div>
 
     <!-- Rennen -->
@@ -182,7 +215,6 @@
       </div>
 
       <div id="raceCreate" class="hidden">
-        <div class="row between"><button id="rcBack" class="ghost" type="button">‹ Zurück</button></div>
         <label for="rcName">Name des Rennens</label>
         <input id="rcName" type="text" maxlength="40" placeholder="z. B. Feierabendrunde">
         <label for="rcRadius">Größe von Start- und Zielkreis</label>
@@ -202,7 +234,7 @@
       </div>
 
       <div id="raceDetail" class="hidden">
-        <div class="row between"><button id="rdBack" class="ghost" type="button">‹ Zurück</button><span class="pill" id="rdStatus"></span></div>
+        <div class="row between"><span></span><span class="pill" id="rdStatus"></span></div>
         <h3 id="rdName" style="margin-top:12px"></h3>
         <div id="rdTimer" class="timer">–</div>
         <p id="rdInfo" class="hint" style="text-align:center"></p>
@@ -258,12 +290,6 @@
 
     <!-- Profil -->
     <div id="tabProfile" class="hidden">
-      <div id="pStats" class="stats4">
-        <div><div class="v" id="stRaces">–</div><div class="l">Rennen</div></div>
-        <div><div class="v" id="stFinished">–</div><div class="l">im Ziel</div></div>
-        <div><div class="v" id="stWins">–</div><div class="l">Siege</div></div>
-        <div><div class="v" id="stPodium">–</div><div class="l">Podium</div></div>
-      </div>
       <div class="avatar-edit">
         <span id="pAvatar"></span>
         <div class="btns">
@@ -289,6 +315,24 @@
       <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
       <input id="pNewPass" type="password" autocomplete="new-password">
       <button id="pPassSave" type="button">Passwort ändern</button>
+    </div>
+
+    <!-- Statistiken -->
+    <div id="tabStats" class="hidden">
+      <div class="stats" style="margin-top:14px">
+        <div><div class="v" id="stDist">–</div><div class="l">Strecke gesamt</div></div>
+        <div><div class="v" id="stTime">–</div><div class="l">Fahrzeit</div></div>
+        <div><div class="v" id="stSpeed">–</div><div class="l">Ø Tempo</div></div>
+      </div>
+      <div class="stats4">
+        <div><div class="v" id="stRaces">–</div><div class="l">Rennen</div></div>
+        <div><div class="v" id="stFinished">–</div><div class="l">im Ziel</div></div>
+        <div><div class="v" id="stWins">–</div><div class="l">Siege</div></div>
+        <div><div class="v" id="stPodium">–</div><div class="l">Podium</div></div>
+      </div>
+      <h3>Meine Rennen</h3>
+      <ul id="stList" class="list"></ul>
+      <p class="hint">Strecke und Fahrzeit zählen nur, solange der Standort läuft und du dich bewegst.</p>
     </div>
 
     <!-- Einstellungen -->
@@ -381,7 +425,7 @@
   var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   var map = L.map('map', { zoomControl: false }).setView([51.1657, 10.4515], 6);
-  L.control.zoom({ position: 'topright' }).addTo(map);
+  L.control.zoom({ position: 'topleft' }).addTo(map);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; OpenStreetMap-Mitwirkende'
   }).addTo(map);
@@ -443,7 +487,7 @@
   }
   function renderWho() {
     $('who').textContent = myName;
-    var h = $('whoAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 32));
+    var h = $('whoAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 42));
   }
   function renderProfileAvatar() {
     var h = $('pAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 84));
@@ -502,6 +546,7 @@
   function showAuth() {
     mainView.classList.add('hidden');
     authView.classList.remove('hidden');
+    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden');
     passIn.value = '';
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     setMode(mode);
@@ -524,7 +569,8 @@
       $('nvMode').value = NAV_MODE_FOR[myVehicle] || 'bike';
       authView.classList.add('hidden');
       mainView.classList.remove('hidden');
-      showTab('Map');
+      $('menuBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
+      showScreen('Home');
       setStatus('Bereit');
       syncClock();
       loadFriends(); loadMyRaces(false);
@@ -540,21 +586,6 @@
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
-  // ---------- Tabs ----------
-  var TABS = ['Map', 'Race', 'Navi', 'Friends', 'Profile', 'Settings'];
-  function showTab(t) {
-    TABS.forEach(function (n) { $('tab' + n).classList.toggle('hidden', n !== t); });
-    var btns = $('nav').querySelectorAll('button');
-    for (var i = 0; i < btns.length; i++) btns[i].setAttribute('aria-selected', String(btns[i].getAttribute('data-tab') === t));
-    if (t === 'Friends') loadFriends();
-    if (t === 'Profile') { fillProfile(); loadStats(); }
-    if (t === 'Race') loadMyRaces(true);
-    if (t === 'Navi') refreshNaviSetup();
-  }
-  $('nav').addEventListener('click', function (e) {
-    var t = e.target.getAttribute && e.target.getAttribute('data-tab');
-    if (t) showTab(t);
-  });
 
   // ---------- Eigene Karte wählen (Antippen) ----------
   var pickCb = null;
@@ -598,33 +629,53 @@
     });
   });
 
-  // Statistik aus abgeschlossenen Rennen
+  // Statistik: Gesamtstrecke, Fahrzeit und Rennen
   function loadStats() {
-    db.from('race_members').select('race_id,status').eq('user_id', myId).in('status', ['finished', 'dnf']).then(function (res) {
-      if (res.error) return;
-      var mine = res.data || [];
-      var finishedIds = mine.filter(function (m) { return m.status === 'finished'; }).map(function (m) { return m.race_id; });
-      $('stRaces').textContent = mine.length;
-      $('stFinished').textContent = finishedIds.length;
-      if (!finishedIds.length) { $('stWins').textContent = 0; $('stPodium').textContent = 0; return; }
-      db.from('race_members').select('race_id,user_id,status,result_ms').in('race_id', finishedIds).then(function (r2) {
-        if (r2.error) return;
-        var byRace = {};
-        (r2.data || []).forEach(function (m) { (byRace[m.race_id] = byRace[m.race_id] || []).push(m); });
-        var wins = 0, podium = 0;
-        finishedIds.forEach(function (rid) {
-          var ms = byRace[rid] || [];
-          var field = ms.filter(function (m) { return m.status === 'finished' || m.status === 'dnf'; });
-          if (field.length < 2) return;                       // allein gefahren zählt nicht
-          var mineRow = ms.filter(function (m) { return m.user_id === myId; })[0];
-          if (!mineRow) return;
-          var rank = 1 + ms.filter(function (m) { return m.status === 'finished' && m.result_ms < mineRow.result_ms; }).length;
-          if (rank === 1) wins++;
-          if (rank <= 3) podium++;
-        });
-        $('stWins').textContent = wins; $('stPodium').textContent = podium;
-      });
+    db.from('profiles').select('total_distance_m,total_moving_s').eq('id', myId).single().then(function (res) {
+      if (res.error) { setStatus('Statistik nicht verfügbar (SQL-Schritt ausgeführt?): ' + res.error.message, 'err'); return; }
+      var d = +res.data.total_distance_m + ride.pendDist, s = +res.data.total_moving_s + ride.pendSecs;
+      $('stDist').textContent = fmtDist(d);
+      $('stTime').textContent = s >= 60 ? fmtDur(s) : '0 min';
+      $('stSpeed').textContent = s >= 60 ? (d / s * 3.6).toFixed(1) + ' km/h' : '–';
     });
+    db.from('race_members').select('race_id,status,result_ms,distance_m,races(name,created_at)')
+      .eq('user_id', myId).in('status', ['finished', 'dnf']).then(function (res) {
+        if (res.error) { setStatus('Rennstatistik nicht verfügbar: ' + res.error.message, 'err'); return; }
+        var mine = res.data || [];
+        var finished = mine.filter(function (m) { return m.status === 'finished'; });
+        $('stRaces').textContent = mine.length;
+        $('stFinished').textContent = finished.length;
+        if (!finished.length) { $('stWins').textContent = 0; $('stPodium').textContent = 0; renderStatRaces(mine, {}); return; }
+        db.from('race_members').select('race_id,user_id,status,result_ms')
+          .in('race_id', finished.map(function (m) { return m.race_id; })).then(function (r2) {
+            if (r2.error) return;
+            var byRace = {};
+            (r2.data || []).forEach(function (m) { (byRace[m.race_id] = byRace[m.race_id] || []).push(m); });
+            var wins = 0, podium = 0, ranks = {};
+            finished.forEach(function (m) {
+              var ms = byRace[m.race_id] || [];
+              var field = ms.filter(function (x) { return x.status === 'finished' || x.status === 'dnf'; });
+              var rank = 1 + ms.filter(function (x) { return x.status === 'finished' && x.result_ms < m.result_ms; }).length;
+              var solo = field.length < 2;
+              ranks[m.race_id] = { rank: rank, solo: solo };
+              if (!solo) { if (rank === 1) wins++; if (rank <= 3) podium++; }
+            });
+            $('stWins').textContent = wins; $('stPodium').textContent = podium;
+            renderStatRaces(mine, ranks);
+          });
+      });
+  }
+  function renderStatRaces(mine, ranks) {
+    var rows = mine.filter(function (m) { return m.races; })
+      .sort(function (a, b) { return new Date(b.races.created_at) - new Date(a.races.created_at); }).slice(0, 20);
+    fillList($('stList'), rows.map(function (m) {
+      var li = el('li'), rk = ranks[m.race_id];
+      li.appendChild(el('span', 'pill', m.status === 'dnf' ? 'aufgegeben' : (rk && !rk.solo ? rk.rank + '. Platz' : 'solo')));
+      li.appendChild(el('span', 'nm', m.races.name));
+      var det = m.status === 'finished' ? fmtMs(m.result_ms) + (m.distance_m ? ' · ' + fmtDist(m.distance_m) : '') : '';
+      li.appendChild(el('span', 'ago', det));
+      return li;
+    }), 'Noch keine Rennen.');
   }
 
   // ---------- Profilbild ----------
@@ -704,7 +755,7 @@
     var incoming = friendships.filter(function (f) { return f.status === 'pending' && f.addressee_id === myId; });
     var outgoing = friendships.filter(function (f) { return f.status === 'pending' && f.requester_id === myId; });
     var accepted = friendships.filter(function (f) { return f.status === 'accepted'; });
-    $('navFriends').textContent = incoming.length ? 'Freunde (' + incoming.length + ')' : 'Freunde';
+    incomingCount = incoming.length; updateBadges();
     fillList($('listIncoming'), incoming.map(function (f) {
       return friendRow(f, [
         { label: 'Annehmen', run: function () { answerRequest(f.id); } },
@@ -842,6 +893,7 @@
     accEl.textContent = Math.round(c.accuracy);
     if (c.accuracy <= 20) setStatus('Live als „' + myName + '“', 'ok');
     else setStatus('GPS ungenau – am besten draußen testen', 'warn');
+    trackRide(c, tDev);
     sendPosition(c);
     raceOnPosition(c, tDev);
     navOnPosition(c);
@@ -862,7 +914,7 @@
     if (!('geolocation' in navigator)) { setStatus('Dieser Browser unterstützt keinen Standort.', 'err'); return; }
     if (!window.isSecureContext) { setStatus('Standort geht nur über https oder localhost.', 'err'); return; }
     statsBox.classList.remove('hidden'); playersEl.classList.remove('hidden');
-    startBtn.textContent = 'Stoppen';
+    startBtn.textContent = 'Standort stoppen';
     hint.textContent = 'Läuft. Lass den Bildschirm an, damit das GPS nicht unterbrochen wird.';
     setStatus('Suche Position …', 'warn');
     follow = !raceCur;
@@ -873,14 +925,14 @@
 
   function stop() {
     if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-    watchId = null; myPos = null;
+    flushRide(); watchId = null; myPos = null; ride.lastT = 0;
     if (tick) clearInterval(tick);
     tick = null;
     if (channel) { db.removeChannel(channel); channel = null; }
     if (myId) db.from('positions').delete().eq('user_id', myId).then(function () {});
     Object.keys(others).forEach(removeOther);
     statsBox.classList.add('hidden'); playersEl.classList.add('hidden');
-    startBtn.textContent = 'Starten';
+    startBtn.textContent = 'Standort starten';
     hint.textContent = 'Tippe auf „Starten“. Du siehst Freunde und Rennteilnehmer, die ebenfalls gestartet haben.';
     setStatus('Gestoppt');
   }
@@ -905,6 +957,7 @@
   }
 
   function showRaceView(v) {
+    raceView = v;
     ['List', 'Create', 'Detail'].forEach(function (n) { $('race' + n).classList.toggle('hidden', n !== v); });
   }
 
@@ -930,7 +983,7 @@
         myRaces = (res.data || []).filter(function (x) { return x.races; })
           .sort(function (a, b) { return new Date(b.races.created_at) - new Date(a.races.created_at); });
         var inv = myRaces.filter(function (x) { return x.status === 'invited' && x.races.status === 'lobby'; }).length;
-        $('navRace').textContent = inv ? 'Rennen (' + inv + ')' : 'Rennen';
+        inviteCount = inv; updateBadges(); renderHome();
         if (render) renderRaceList();
       });
   }
@@ -985,7 +1038,6 @@
     draft = { start: null, finish: null }; $('rcName').value = '';
     drawDraft(); showRaceView('Create');
   });
-  $('rcBack').addEventListener('click', function () { draftLayer.clearLayers(); showRaceView('List'); });
   $('rcRadius').addEventListener('change', drawDraft);
   $('rcPickStart').addEventListener('click', function () {
     pickOnMap('Tippe auf der Karte auf den Startpunkt', function (ll) { draft.start = { lat: ll.lat, lng: ll.lng }; drawDraft(); });
@@ -1036,7 +1088,7 @@
   function stopRacePoll() { if (racePoll) clearInterval(racePoll); racePoll = null; }
   function unfollowRace() {
     stopRacePoll(); raceCur = null; raceMembers = []; raceLayerFor = null; raceLayer.clearLayers();
-    refreshNaviSetup();
+    refreshNaviSetup(); renderHome();
   }
 
   function followRace(id) {
@@ -1044,12 +1096,12 @@
       if (res.error || !res.data) { setStatus('Rennen nicht gefunden.', 'err'); return; }
       unfollowRace();
       raceCur = res.data; raceMembers = [];
-      seenOutside = false; lastFix = null; goFired = false; raceFinishing = false; finishTries = 0;
+      seenOutside = false; lastFix = null; goFired = false; raceFinishing = false; finishTries = 0; raceDist = 0;
       actionSig = ''; inviteSig = '';
       draftLayer.clearLayers();
       drawRace(raceCur, true);
       syncClock();
-      showTab('Race'); showRaceView('Detail');
+      showScreen('Race'); showRaceView('Detail');
       startRacePoll(); refreshRace();
       if (raceCur.status !== 'finished' && watchId === null) start();
       refreshNaviSetup();
@@ -1071,7 +1123,7 @@
       raceCur = r; raceMembers = rs[1].data || [];
       return getProfiles(raceMembers.map(function (m) { return m.user_id; })).then(function () {
         if (changed || raceLayerFor !== id) drawRace(r, false);
-        renderRaceDetail();
+        renderRaceDetail(); renderHome();
         if (r.status === 'finished') { stopRacePoll(); loadMyRaces(false); }
         if (watchId !== null) loadAll();
       });
@@ -1185,10 +1237,11 @@
       unfollowRace(); showRaceView('List'); loadMyRaces(true);
     });
   }
-  $('rdBack').addEventListener('click', function () {
+  function raceBack() {
+    if (raceView === 'Create') { draftLayer.clearLayers(); showRaceView('List'); return; }
     if (raceCur && raceCur.status === 'finished') unfollowRace();
     showRaceView('List'); loadMyRaces(true);
-  });
+  }
 
   $('rdShare').addEventListener('click', function () {
     if (!raceCur) return;
@@ -1245,7 +1298,7 @@
     var ms = Math.round(tFin - starts);
     if (ms <= 0) return;
     raceFinishing = true; finishTries++;
-    db.rpc('finish_race', { p_race: raceCur.id, p_ms: ms }).then(function (res) {
+    db.rpc('finish_race', { p_race: raceCur.id, p_ms: ms, p_dist: Math.round(raceDist) }).then(function (res) {
       if (res.error) { raceFinishing = false; setStatus('Ziel konnte nicht gespeichert werden: ' + res.error.message, 'err'); return; }
       setStatus('Im Ziel! Zeit: ' + fmtMs(ms), 'ok');
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
@@ -1443,6 +1496,111 @@
       }
     }
   }
+
+  // =====================================================
+  //  MENÜ, STARTSEITE, STATISTIK-ERFASSUNG
+  // =====================================================
+  var currentScreen = 'Home', raceView = 'List';
+  var incomingCount = 0, inviteCount = 0, raceDist = 0;
+  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'Stats', 'Settings'];
+  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', Stats: 'Statistiken', Settings: 'Einstellungen' };
+
+  function showScreen(t) {
+    currentScreen = t;
+    SCREENS.forEach(function (n) { $('tab' + n).classList.toggle('hidden', n !== t); });
+    $('screenHead').classList.toggle('hidden', t === 'Home');
+    $('screenTitle').textContent = TITLES[t] || '';
+    $('panel').classList.remove('collapsed'); $('collapseBtn').innerHTML = '&#9662;';
+    if (t === 'Home') renderHome();
+    if (t === 'Friends') loadFriends();
+    if (t === 'Profile') fillProfile();
+    if (t === 'Stats') loadStats();
+    if (t === 'Race') loadMyRaces(true);
+    if (t === 'Navi') refreshNaviSetup();
+  }
+
+  $('backBtn').addEventListener('click', function () {
+    if (currentScreen === 'Race' && raceView !== 'List') raceBack();
+    else showScreen('Home');
+  });
+  $('homeRace').addEventListener('click', function () { showScreen('Race'); });
+  $('homeNavi').addEventListener('click', function () { showScreen('Navi'); });
+  $('homeActive').addEventListener('click', function () {
+    if (!raceCur) return;
+    showScreen('Race'); showRaceView('Detail');
+  });
+
+  function updateBadges() {
+    function set(id, n) { var e = $(id); e.textContent = n; e.classList.toggle('hidden', !n); }
+    set('badgeRace', inviteCount); set('badgeFriends', incomingCount);
+    $('menuDot').classList.toggle('hidden', !incomingCount);
+  }
+  function renderHome() {
+    var b = $('homeActive');
+    if (raceCur && raceCur.status !== 'finished') {
+      b.textContent = 'Aktives Rennen: ' + raceCur.name + (raceCur.status === 'running' ? ' (läuft)' : ' (Lobby)');
+      b.classList.remove('hidden');
+    } else b.classList.add('hidden');
+  }
+
+  // Profilbild-Menü
+  function closeMenu() { $('menu').classList.add('hidden'); $('menuBtn').setAttribute('aria-expanded', 'false'); }
+  $('menuBtn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    var open = !$('menu').classList.toggle('hidden');
+    $('menuBtn').setAttribute('aria-expanded', String(open));
+  });
+  $('menu').addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('button') : null;
+    if (!btn) return;
+    closeMenu();
+    var go = btn.getAttribute('data-go');
+    if (go) showScreen(go);
+  });
+  document.addEventListener('click', function (e) { if (!$('menu').contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+
+  $('collapseBtn').addEventListener('click', function () {
+    var c = $('panel').classList.toggle('collapsed');
+    $('collapseBtn').innerHTML = c ? '&#9652;' : '&#9662;';
+  });
+  $('locBtn').addEventListener('click', function () {
+    if (myPos) { follow = true; map.setView([myPos.lat, myPos.lng], Math.max(map.getZoom(), 16)); }
+    else if (watchId === null) start();
+    else setStatus('Noch keine GPS-Position.', 'warn');
+  });
+
+  // Strecke und Fahrzeit mitzählen (nur bei guter Genauigkeit und echter Bewegung)
+  var ride = { lastLat: 0, lastLng: 0, lastT: 0, pendDist: 0, pendSecs: 0, flushing: false };
+  function trackRide(c, t) {
+    if (c.accuracy > 30) return;
+    if (ride.lastT) {
+      var dt = (t - ride.lastT) / 1000;
+      if (dt > 0 && dt < 30) {
+        var d = dist(ride.lastLat, ride.lastLng, c.latitude, c.longitude), v = d / dt;
+        if (d >= 2 && v >= 0.7 && v < 80) {
+          ride.pendDist += d; ride.pendSecs += dt;
+          if (raceCur && raceCur.status === 'running' && raceCur.starts_at && !raceFinishing) {
+            var mine = myMember();
+            if (mine && mine.status === 'joined' && t + serverOffset >= new Date(raceCur.starts_at).getTime()) raceDist += d;
+          }
+        }
+      }
+    }
+    ride.lastLat = c.latitude; ride.lastLng = c.longitude; ride.lastT = t;
+  }
+  function flushRide() {
+    if (!myId || ride.flushing) return;
+    var d = Math.min(Math.round(ride.pendDist), 50000), s = Math.min(Math.round(ride.pendSecs), 3600);
+    if (d < 1 && s < 1) return;
+    ride.flushing = true; ride.pendDist -= d; ride.pendSecs -= s;
+    db.rpc('add_ride_stats', { p_dist: d, p_secs: s }).then(function (res) {
+      ride.flushing = false;
+      if (res.error) { ride.pendDist += d; ride.pendSecs += s; }
+    });
+  }
+  setInterval(flushRide, 60000);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushRide(); });
 
   // =====================================================
   //  START
