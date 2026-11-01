@@ -127,6 +127,18 @@
   .pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .name-tip { background: var(--paper); color: var(--ink); border: 0; border-radius: 6px; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; padding: 2px 8px; }
   .name-tip::before { display: none; }
+  .limitbox { position: absolute; z-index: 1000; left: 10px; top: calc(130px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .limitsign { width: 60px; height: 60px; border-radius: 50%; background: #fff; border: 7px solid #d11; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #111; box-shadow: 0 1px 6px rgba(0, 0, 0, .5); font-variant-numeric: tabular-nums; }
+  .limitsign.unknown, .limitsign.none { border-color: #9aa3b2; color: #6b7686; font-weight: 600; }
+  .limitsign.over { animation: limitblink .7s steps(2) infinite; }
+  @keyframes limitblink { 50% { background: #d11; color: #fff; } }
+  @media (prefers-reduced-motion: reduce) { .limitsign.over { animation: none; background: #d11; color: #fff; } }
+  .limitspeed { min-width: 60px; padding: 4px 8px; border-radius: 10px; background: var(--paper); color: var(--ink); text-align: center; font-weight: 700; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); font-variant-numeric: tabular-nums; }
+  .limitspeed small { display: block; font-size: .65rem; font-weight: 500; opacity: .8; }
+  .limitspeed.over { background: #d11; color: #fff; }
+  body.picking .limitbox { display: none; }
+  .switch { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: var(--ink); font-size: 1rem; }
+  input[type=checkbox] { width: 22px; height: 22px; flex: none; }
   .hidden { display: none; }
 </style>
 </head>
@@ -148,6 +160,10 @@
   <button type="button" role="menuitem" id="logout"><span>Abmelden</span></button>
 </div>
 <button id="locBtn" class="locbtn hidden" type="button" aria-label="Auf meinen Standort zentrieren">&#9678;</button>
+<div id="limitBox" class="limitbox hidden" aria-label="Tempolimit und aktuelles Tempo">
+  <div id="limitSign" class="limitsign unknown"><span id="limitVal">–</span></div>
+  <div id="limitSpeed" class="limitspeed"><span id="curSpeed">0</span><small>km/h</small></div>
+</div>
 
 <section class="panel" id="panel" aria-live="polite">
   <div class="status"><span id="dot" class="dot"></span><span id="status" style="flex:1">Lade …</span><button id="collapseBtn" class="ghost hidden" type="button" aria-label="Panel ein- oder ausklappen">&#9662;</button></div>
@@ -344,6 +360,10 @@
         <option value="dark">Dunkel</option>
       </select>
       <p class="hint">Die Einstellung gilt nur für dieses Gerät. Bei „Dunkel“ wird auch die Karte abgedunkelt.</p>
+
+      <h3>Tempolimit</h3>
+      <label class="switch" for="sWarn"><input type="checkbox" id="sWarn"><span>Überschreitungs-Warnung</span></label>
+      <p class="hint">Das Tempolimit-Schild ist immer sichtbar, solange dein Standort läuft. Bei eingeschalteter Warnung blinkt es rot, sobald du mehr als 3 km/h zu schnell bist, dazu gibt es einen Ton und, wo das Gerät es kann, Vibration. Die Limits stammen aus OpenStreetMap und können fehlen oder falsch sein. Es gelten immer die Schilder am Straßenrand.</p>
     </div>
   </div>
 </section>
@@ -546,7 +566,7 @@
   function showAuth() {
     mainView.classList.add('hidden');
     authView.classList.remove('hidden');
-    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden');
+    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden');
     passIn.value = '';
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     setMode(mode);
@@ -894,6 +914,7 @@
     if (c.accuracy <= 20) setStatus('Live als „' + myName + '“', 'ok');
     else setStatus('GPS ungenau – am besten draußen testen', 'warn');
     trackRide(c, tDev);
+    limitOnPosition(c, tDev);
     sendPosition(c);
     raceOnPosition(c, tDev);
     navOnPosition(c);
@@ -914,6 +935,7 @@
     if (!('geolocation' in navigator)) { setStatus('Dieser Browser unterstützt keinen Standort.', 'err'); return; }
     if (!window.isSecureContext) { setStatus('Standort geht nur über https oder localhost.', 'err'); return; }
     statsBox.classList.remove('hidden'); playersEl.classList.remove('hidden');
+    $('limitBox').classList.remove('hidden'); unlockAudio();
     startBtn.textContent = 'Standort stoppen';
     hint.textContent = 'Läuft. Lass den Bildschirm an, damit das GPS nicht unterbrochen wird.';
     setStatus('Suche Position …', 'warn');
@@ -925,7 +947,7 @@
 
   function stop() {
     if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-    flushRide(); watchId = null; myPos = null; ride.lastT = 0;
+    flushRide(); watchId = null; myPos = null; ride.lastT = 0; resetLimit();
     if (tick) clearInterval(tick);
     tick = null;
     if (channel) { db.removeChannel(channel); channel = null; }
@@ -1601,6 +1623,135 @@
   }
   setInterval(flushRide, 60000);
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushRide(); });
+
+  // =====================================================
+  //  TEMPOLIMIT-SCHILD UND WARNER
+  // =====================================================
+  var warnOn = true;
+  try { warnOn = localStorage.getItem('rennen-warn') !== '0'; } catch (e) {}
+  $('sWarn').checked = warnOn;
+  $('sWarn').addEventListener('change', function () {
+    warnOn = $('sWarn').checked;
+    try { localStorage.setItem('rennen-warn', warnOn ? '1' : '0'); } catch (e) {}
+    showLimit(lim.lastFound, lim.lastKmh);
+  });
+
+  var audioCtx = null;
+  function unlockAudio() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) {}
+  }
+  document.addEventListener('pointerdown', unlockAudio);
+  function beep() {
+    try {
+      if (!audioCtx || audioCtx.state !== 'running') return;
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.frequency.value = 880; g.gain.value = 0.08;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + 0.25);
+    } catch (e) {}
+  }
+
+  var lim = { cache: null, inflight: false, lastReq: 0, blockedUntil: 0, prev: null, wasOver: false, lastFound: null, lastKmh: 0 };
+  function resetLimit() {
+    lim = { cache: null, inflight: false, lastReq: 0, blockedUntil: 0, prev: null, wasOver: false, lastFound: null, lastKmh: 0 };
+    $('limitBox').classList.add('hidden');
+  }
+
+  // Wert aus den OpenStreetMap-Tags lesen: Zahl (km/h), 'none' (kein Limit) oder null (unbekannt)
+  function parseLimit(tags) {
+    function one(v) {
+      if (v == null) return null;
+      v = String(v).trim().toLowerCase();
+      if (v === 'none' || v === 'de:motorway') return 'none';
+      if (v === 'walk' || v === 'de:living_street') return 7;
+      if (v === 'de:urban') return 50;
+      if (v === 'de:rural') return 100;
+      var m = v.match(/^(\d{1,3})\s*(mph)?$/);
+      if (m) return m[2] ? Math.round(+m[1] * 1.609) : +m[1];
+      return null;
+    }
+    var v = one(tags.maxspeed);
+    if (v == null) {
+      var f = one(tags['maxspeed:forward']), b = one(tags['maxspeed:backward']);
+      if (typeof f === 'number' && typeof b === 'number') v = Math.min(f, b);
+      else v = (f != null ? f : b);
+    }
+    if (v == null) {
+      var z = tags['zone:maxspeed'] || tags['maxspeed:type'];
+      if (z) { var mm = String(z).match(/(\d{2,3})\s*$/); v = mm ? +mm[1] : one(z); }
+    }
+    if (v == null && tags.highway === 'living_street') v = 7;
+    if (v == null && tags.highway === 'motorway') v = 'none';
+    return v;
+  }
+
+  function loadLimits(lat, lng) {
+    lim.inflight = true; lim.lastReq = Date.now();
+    var q = '[out:json][timeout:8];way(around:150,' + lat.toFixed(6) + ',' + lng.toFixed(6) +
+      ')[highway~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|road)$"];out tags geom;';
+    var mine = lim;
+    fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q))
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (j) {
+        if (lim !== mine) return;
+        lim.cache = {
+          lat: lat, lng: lng,
+          ways: (j.elements || []).filter(function (e) { return e.geometry && e.geometry.length > 1; }).map(function (e) {
+            return { pts: e.geometry.map(function (g) { return [g.lat, g.lon]; }), limit: parseLimit(e.tags || {}) };
+          })
+        };
+      })
+      .catch(function () { if (lim === mine) lim.blockedUntil = Date.now() + 30000; })
+      .then(function () { if (lim === mine) lim.inflight = false; });
+  }
+
+  // nächstgelegene Straße suchen; bei Gleichstand die mit bekanntem Limit bevorzugen
+  function nearestLimit(lat, lng) {
+    var cands = lim.cache.ways.map(function (w) { return { d: distToPolyline(lat, lng, w.pts), limit: w.limit }; })
+      .sort(function (a, b) { return a.d - b.d; });
+    if (!cands.length || cands[0].d > 30) return { limit: null };
+    var pick = cands[0];
+    if (pick.limit == null) {
+      for (var i = 1; i < cands.length; i++) {
+        if (cands[i].d <= cands[0].d + 8 && cands[i].limit != null) { pick = cands[i]; break; }
+      }
+    }
+    return { limit: pick.limit };
+  }
+
+  function showLimit(found, kmh) {
+    lim.lastFound = found; lim.lastKmh = kmh;
+    var limit = found ? found.limit : null, sign = $('limitSign'), val = $('limitVal');
+    sign.className = 'limitsign';
+    if (typeof limit === 'number') { val.textContent = limit; val.style.fontSize = limit >= 100 ? '1.05rem' : '1.3rem'; }
+    else if (limit === 'none') { sign.classList.add('none'); val.textContent = 'frei'; val.style.fontSize = '.8rem'; }
+    else { sign.classList.add('unknown'); val.textContent = '–'; val.style.fontSize = '1.3rem'; }
+    $('curSpeed').textContent = Math.round(kmh);
+    var over = warnOn && typeof limit === 'number' && kmh > limit + 3;
+    sign.classList.toggle('over', over);
+    $('limitSpeed').classList.toggle('over', over);
+    if (over && !lim.wasOver) { if (navigator.vibrate) navigator.vibrate(250); beep(); }
+    lim.wasOver = over;
+  }
+
+  function limitOnPosition(c, tDev) {
+    var lat = c.latitude, lng = c.longitude, kmh = 0;
+    if (c.speed != null && !isNaN(c.speed)) kmh = c.speed * 3.6;
+    else if (lim.prev) {
+      var dt = (tDev - lim.prev.t) / 1000;
+      if (dt > 0 && dt < 10) kmh = dist(lim.prev.lat, lim.prev.lng, lat, lng) / dt * 3.6;
+    }
+    lim.prev = { lat: lat, lng: lng, t: tDev };
+    var now = Date.now();
+    if (!lim.inflight && now >= lim.blockedUntil && now - lim.lastReq > 4000 &&
+        (!lim.cache || dist(lim.cache.lat, lim.cache.lng, lat, lng) > 60)) loadLimits(lat, lng);
+    showLimit(lim.cache ? nearestLimit(lat, lng) : null, kmh);
+  }
 
   // =====================================================
   //  START
