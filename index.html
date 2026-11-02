@@ -230,6 +230,7 @@
   .chips .hint { margin: 0; }
   .chip { width: auto; margin: 0; padding: 9px 14px; border-radius: 99px; background: var(--soft); color: var(--ink); font-weight: 600; border: 0; }
   .placepin { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 3px solid #0891b2; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); box-sizing: border-box; }
+  #map { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
   .hidden { display: none; }
 </style>
 </head>
@@ -343,6 +344,7 @@
         </button>
       </div>
       <button id="homeActive" class="ghost wide hidden" type="button"></button>
+      <p class="hint" id="mapTip">💡 Lange auf die Karte tippen: dorthin navigieren, Ort speichern oder Start und Ziel für ein Rennen setzen.</p>
       <div id="statsBox" class="stats hidden">
         <div><div class="v" id="speed">–</div><div class="l">km/h</div></div>
         <div><div class="v" id="acc">–</div><div class="l">Genauigkeit in m</div></div>
@@ -368,24 +370,34 @@
       </div>
 
       <div id="raceCreate" class="hidden">
-        <label for="rcTrack">Strecke</label>
-        <select id="rcTrack"><option value="">Neue Strecke (Start und Ziel selbst setzen)</option></select>
+        <label for="rcMode">Startart</label>
+        <select id="rcMode">
+          <option value="fixed">Gemeinsamer Startpunkt</option>
+          <option value="free">Jeder startet an seinem Standort</option>
+        </select>
+        <p class="hint" id="rcModeHint"></p>
+        <div id="rcTrackBox">
+          <label for="rcTrack">Strecke</label>
+          <select id="rcTrack"><option value="">Neue Strecke (Start und Ziel selbst setzen)</option></select>
+        </div>
         <label for="rcName">Name des Rennens</label>
         <input id="rcName" type="text" maxlength="40" placeholder="z. B. Feierabendrunde">
-        <label for="rcRadius">Größe von Start- und Zielkreis</label>
+        <label for="rcRadius" id="rcRadiusLabel">Größe von Start- und Zielkreis</label>
         <select id="rcRadius">
           <option value="20">20 m</option><option value="30" selected>30 m</option>
           <option value="50">50 m</option><option value="100">100 m</option>
         </select>
-        <p class="hint" id="rcStartInfo">Start: noch nicht gesetzt</p>
-        <div class="row">
-          <button id="rcPickStart" class="ghost" type="button">Start auf Karte</button>
-          <button id="rcMyStart" class="ghost" type="button">Mein Standort</button>
+        <div id="rcStartBox">
+          <p class="hint" id="rcStartInfo">Start: noch nicht gesetzt</p>
+          <div class="row">
+            <button id="rcPickStart" class="ghost" type="button">Start auf Karte</button>
+            <button id="rcMyStart" class="ghost" type="button">Mein Standort</button>
+          </div>
         </div>
         <p class="hint" id="rcFinishInfo">Ziel: noch nicht gesetzt</p>
         <div class="row"><button id="rcPickFinish" class="ghost" type="button">Ziel auf Karte</button></div>
         <button id="rcCreate" type="button">Rennen erstellen</button>
-        <p class="hint">Es gibt keine vorgegebene Route. Jeder sucht seinen eigenen Weg vom Start zum Ziel. Es gelten immer die Verkehrsregeln. Fahrt nur dort, wo es erlaubt und sicher ist.</p>
+        <p class="hint">Tipp: Lange auf die Karte tippen setzt Start oder Ziel dort. Es gibt keine vorgegebene Route. Jeder sucht seinen eigenen Weg zum Ziel. Es gelten immer die Verkehrsregeln. Fahrt nur dort, wo es erlaubt und sicher ist.</p>
       </div>
 
       <div id="raceDetail" class="hidden">
@@ -1375,9 +1387,15 @@
   }
   function drawRace(r, fit) {
     raceLayer.clearLayers(); raceLayerFor = r.id;
-    addZone(raceLayer, { lat: r.start_lat, lng: r.start_lng }, r.radius, '#15803d', 'Start');
+    var hasStart = r.start_lat != null;
+    if (hasStart) addZone(raceLayer, { lat: r.start_lat, lng: r.start_lng }, r.radius, '#15803d', 'Start');
     addZone(raceLayer, { lat: r.finish_lat, lng: r.finish_lng }, r.radius, '#b91c1c', 'Ziel');
-    if (fit) { follow = false; map.fitBounds(L.latLngBounds([[r.start_lat, r.start_lng], [r.finish_lat, r.finish_lng]]).pad(0.4)); }
+    if (fit) {
+      follow = false;
+      if (hasStart) map.fitBounds(L.latLngBounds([[r.start_lat, r.start_lng], [r.finish_lat, r.finish_lng]]).pad(0.4));
+      else if (myPos) map.fitBounds(L.latLngBounds([[myPos.lat, myPos.lng], [r.finish_lat, r.finish_lng]]).pad(0.4));
+      else map.setView([r.finish_lat, r.finish_lng], 15);
+    }
   }
 
   // ----- Liste -----
@@ -1454,16 +1472,33 @@
     if (!myPos) { setStatus('Noch keine GPS-Position. Starte zuerst den Standort (Reiter Karte).', 'warn'); return; }
     draft.start = { lat: myPos.lat, lng: myPos.lng }; drawDraft();
   });
-  $('rcCreate').addEventListener('click', function () {
-    if (!draft.start || !draft.finish) { setStatus('Bitte Start und Ziel setzen.', 'warn'); return; }
+  function rcFree() { return $('rcMode').value === 'free'; }
+  // Bei freiem Start gibt es nur das gemeinsame Ziel; Strecken (mit Rangliste) brauchen einen festen Start
+  function applyMode() {
+    var free = rcFree();
+    $('rcStartBox').classList.toggle('hidden', free);
+    $('rcTrackBox').classList.toggle('hidden', free);
+    $('rcRadiusLabel').textContent = free ? 'Größe des Zielkreises' : 'Größe von Start- und Zielkreis';
+    $('rcModeHint').textContent = free ? 'Alle starten gleichzeitig dort, wo sie gerade stehen. Pflicht ist nur das gemeinsame Ziel. Wer weiter weg ist, hat einen längeren Weg.' : '';
+    if (free) {
+      draft.start = null; $('rcTrack').value = '';
+      ['rcPickStart', 'rcPickFinish', 'rcMyStart', 'rcRadius'].forEach(function (id) { $(id).disabled = false; });
+    }
+    drawDraft();
+  }
+  $('rcMode').addEventListener('change', applyMode);
+
+  function createRace() {
+    var free = rcFree();
+    if (free ? !draft.finish : (!draft.start || !draft.finish)) { setStatus(free ? 'Bitte das Ziel setzen.' : 'Bitte Start und Ziel setzen.', 'warn'); return; }
     var rad = +$('rcRadius').value;
-    if (dist(draft.start.lat, draft.start.lng, draft.finish.lat, draft.finish.lng) < rad * 3) {
+    if (!free && dist(draft.start.lat, draft.start.lng, draft.finish.lat, draft.finish.lng) < rad * 3) {
       setStatus('Start und Ziel liegen zu nah beieinander.', 'warn'); return;
     }
     $('rcCreate').disabled = true;
     db.rpc('create_race', {
-      p_name: $('rcName').value.trim(), p_slat: draft.start.lat, p_slng: draft.start.lng,
-      p_flat: draft.finish.lat, p_flng: draft.finish.lng, p_radius: rad, p_track: $('rcTrack').value || null
+      p_name: $('rcName').value.trim(), p_slat: free ? null : draft.start.lat, p_slng: free ? null : draft.start.lng,
+      p_flat: draft.finish.lat, p_flng: draft.finish.lng, p_radius: rad, p_track: free ? null : ($('rcTrack').value || null)
     }).then(function (res) {
       $('rcCreate').disabled = false;
       if (res.error) { setStatus('Erstellen fehlgeschlagen: ' + res.error.message, 'err'); return; }
@@ -1477,7 +1512,8 @@
       }
       followRace(r.id);
     });
-  });
+  }
+  $('rcCreate').addEventListener('click', createRace);
 
   // ----- Beitreten -----
   function joinCode(code) {
@@ -1684,8 +1720,12 @@
     if (mine && mine.status === 'joined') {
       if (!myPos) info = 'Warte auf GPS …';
       else if (r.status === 'lobby') {
-        var ds = dist(myPos.lat, myPos.lng, r.start_lat, r.start_lng);
-        info = ds <= r.radius ? 'Du bist im Startkreis ✓' : 'Noch ' + fmtDist(ds - r.radius) + ' bis zum Startkreis';
+        if (r.start_lat == null) {
+          info = 'Freier Start: du startest dort, wo du stehst. Luftlinie zum Ziel: ' + fmtDist(Math.max(0, dist(myPos.lat, myPos.lng, r.finish_lat, r.finish_lng) - r.radius));
+        } else {
+          var ds = dist(myPos.lat, myPos.lng, r.start_lat, r.start_lng);
+          info = ds <= r.radius ? 'Du bist im Startkreis ✓' : 'Noch ' + fmtDist(ds - r.radius) + ' bis zum Startkreis';
+        }
       } else if (r.status === 'running') {
         var df = dist(myPos.lat, myPos.lng, r.finish_lat, r.finish_lng);
         info = 'Luftlinie zum Ziel: ' + fmtDist(Math.max(0, df - r.radius));
@@ -1759,8 +1799,9 @@
   function refreshNaviSetup() {
     renderNaviQuick();
     var blocked = inRunningRace();
-    $('nvRaceStart').classList.toggle('hidden', !(raceCur && raceCur.status === 'lobby'));
-    if (raceCur && raceCur.status === 'lobby') $('nvRaceStart').textContent = 'Zum Start von „' + raceCur.name + '“';
+    var hasRaceStart = !!(raceCur && raceCur.status === 'lobby' && raceCur.start_lat != null);
+    $('nvRaceStart').classList.toggle('hidden', !hasRaceStart);
+    if (hasRaceStart) $('nvRaceStart').textContent = 'Zum Start von „' + raceCur.name + '“';
     ['nvSearch', 'nvPick', 'nvRaceStart', 'nvGo'].forEach(function (id) { $(id).disabled = blocked; });
     if (blocked) $('nvDest').textContent = 'Während eines laufenden Rennens ist die Navigation gesperrt.';
     else updateDestUI();
@@ -1812,7 +1853,7 @@
     });
   });
   $('nvRaceStart').addEventListener('click', function () {
-    if (!raceCur) return;
+    if (!raceCur || raceCur.start_lat == null) return;
     setDest({ lat: raceCur.start_lat, lng: raceCur.start_lng, label: 'Start von „' + raceCur.name + '“' });
   });
 
@@ -3247,6 +3288,7 @@
   $('rcTrack').addEventListener('change', onTrackChange);
   function prepareCreate(trackId) {
     draft = { start: null, finish: null }; $('rcName').value = '';
+    $('rcMode').value = 'fixed'; applyMode();
     ['rcPickStart', 'rcPickFinish', 'rcMyStart', 'rcRadius'].forEach(function (id) { $(id).disabled = false; });
     drawDraft(); showRaceView('Create');
     loadTrackOptions().then(function () {
@@ -3436,9 +3478,11 @@
       if (!race) { $('hsInfo').textContent = 'Rennen nicht gefunden.'; return; }
       return getProfiles(ms.map(function (m) { return m.user_id; })).then(function () {
         if (histView !== 'Detail') return;
-        $('hsInfo').textContent = new Date(race.created_at).toLocaleDateString('de-DE') + ' · ' + fmtDist(dist(race.start_lat, race.start_lng, race.finish_lat, race.finish_lng)) + ' Luftlinie';
-        var bounds = L.latLngBounds([[race.start_lat, race.start_lng], [race.finish_lat, race.finish_lng]]);
-        addZone(histLayer, { lat: race.start_lat, lng: race.start_lng }, race.radius, '#15803d', 'Start');
+        var hasStart = race.start_lat != null;
+        $('hsInfo').textContent = new Date(race.created_at).toLocaleDateString('de-DE') +
+          (hasStart ? ' · ' + fmtDist(dist(race.start_lat, race.start_lng, race.finish_lat, race.finish_lng)) + ' Luftlinie' : ' · freier Start');
+        var bounds = L.latLngBounds([[race.finish_lat, race.finish_lng]]);
+        if (hasStart) { bounds.extend([race.start_lat, race.start_lng]); addZone(histLayer, { lat: race.start_lat, lng: race.start_lng }, race.radius, '#15803d', 'Start'); }
         addZone(histLayer, { lat: race.finish_lat, lng: race.finish_lng }, race.radius, '#b91c1c', 'Ziel');
         routes.forEach(function (r) {
           if (!r.points || r.points.length < 2) return;
@@ -4443,6 +4487,97 @@
     });
   }
   $('nvSaveOk').addEventListener('click', savePlace);
+
+  // =====================================================
+  //  KARTE: LANGES TIPPEN / RECHTSKLICK
+  // =====================================================
+  var LONGPRESS_MS = 650, selPopup = null, selMarker = null, lastMenuAt = 0;
+
+  function reverseGeocode(pt) {
+    var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var to = setTimeout(function () { if (ctl) ctl.abort(); }, 6000);
+    return fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=de&zoom=18&lat=' + pt.lat.toFixed(6) + '&lon=' + pt.lng.toFixed(6),
+      ctl ? { signal: ctl.signal } : undefined)
+      .then(function (r) { return r.json(); })
+      .then(function (j) { clearTimeout(to); return j && j.display_name ? String(j.display_name) : null; })
+      .catch(function () { clearTimeout(to); return null; });
+  }
+
+  // Start oder Ziel eines neuen Rennens setzen; öffnet das Formular, falls es noch nicht offen ist
+  function setRaceDraftPoint(which, pt) {
+    if (!(currentScreen === 'Race' && raceView === 'Create')) {
+      pendingShareConv = null;
+      showScreen('Race'); prepareCreate(null);
+    }
+    if (which === 'start' && rcFree()) { $('rcMode').value = 'fixed'; applyMode(); }
+    if ($('rcTrack').value) {                       // gespeicherte Strecken haben feste Punkte: freigeben
+      $('rcTrack').value = '';
+      ['rcPickStart', 'rcPickFinish', 'rcMyStart', 'rcRadius'].forEach(function (id) { $(id).disabled = false; });
+      draft = { start: null, finish: null };
+    }
+    draft[which] = { lat: pt.lat, lng: pt.lng };
+    drawDraft();
+    setStatus((which === 'start' ? 'Start' : 'Ziel') + ' gesetzt. Weiter im Formular „Neues Rennen“.', 'ok');
+  }
+
+  function buildMapMenu(ctx) {
+    var box = el('div', 'fuelpop');
+    box.appendChild(el('strong', '', 'Ausgewählter Ort'));
+    var addr = el('div', '', ctx.pt.lat.toFixed(5) + ', ' + ctx.pt.lng.toFixed(5)); addr.style.fontSize = '.8rem';
+    box.appendChild(addr);
+    function label() { return ctx.address ? shortLabel(ctx.address) : 'Punkt auf der Karte'; }
+    function btn(text, fn) {
+      var b = el('button', '', text); b.type = 'button';
+      b.addEventListener('click', function () { closeMapMenu(); fn(); });
+      box.appendChild(b);
+    }
+    btn('Hierher navigieren', function () { showScreen('Navi'); quickNav({ lat: ctx.pt.lat, lng: ctx.pt.lng, label: label() }); });
+    btn('Ort speichern', function () { showScreen('Navi'); openSaveBox(ctx.pt.lat, ctx.pt.lng, ctx.address, ctx.address ? shortLabel(ctx.address).slice(0, 30) : ''); });
+    btn('Als Rennziel setzen', function () { setRaceDraftPoint('finish', ctx.pt); });
+    btn('Als Rennstart setzen', function () { setRaceDraftPoint('start', ctx.pt); });
+    box.setAddress = function (text) { ctx.address = text; addr.textContent = shortLabel(text); };
+    return box;
+  }
+
+  function closeMapMenu() {
+    if (selMarker) { map.removeLayer(selMarker); selMarker = null; }
+    if (selPopup) { map.closePopup(selPopup); selPopup = null; }
+  }
+
+  function openMapMenu(ll) {
+    if (!myId || pickCb || document.body.classList.contains('picking') || document.body.classList.contains('modal-open')) return;
+    if (!$('userModal').classList.contains('hidden')) return;
+    if (Date.now() - lastMenuAt < 800) return;      // Handy: Long-Press und contextmenu feuern beide
+    lastMenuAt = Date.now();
+    closeMapMenu();
+    var ctx = { pt: { lat: ll.lat, lng: ll.lng }, address: null };
+    selMarker = L.circleMarker([ctx.pt.lat, ctx.pt.lng], { radius: 8, color: '#ffffff', weight: 3, fillColor: '#0284c7', fillOpacity: 1, interactive: false }).addTo(map);
+    var box = buildMapMenu(ctx);
+    selPopup = L.popup({ maxWidth: 260, closeOnClick: false, offset: [0, -4] }).setLatLng([ctx.pt.lat, ctx.pt.lng]).setContent(box).openOn(map);
+    var mine = selPopup;
+    reverseGeocode(ctx.pt).then(function (name) { if (name && selPopup === mine) box.setAddress(name); });
+  }
+  map.on('popupclose', function (e) { if (e.popup === selPopup && selMarker) { map.removeLayer(selMarker); selMarker = null; selPopup = null; } });
+
+  (function () {
+    var cont = map.getContainer(), timer = null, sx = 0, sy = 0;
+    function cancel() { clearTimeout(timer); timer = null; }
+    cont.addEventListener('pointerdown', function (e) {
+      if (!e.isPrimary) { cancel(); return; }                       // zweiter Finger (Zoomen): abbrechen
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest && e.target.closest('.leaflet-marker-icon, .leaflet-control, .leaflet-popup')) return;
+      cancel(); sx = e.clientX; sy = e.clientY;
+      timer = setTimeout(function () {
+        timer = null;
+        var r = cont.getBoundingClientRect();
+        openMapMenu(map.containerPointToLatLng(L.point(sx - r.left, sy - r.top)));
+      }, LONGPRESS_MS);
+    });
+    cont.addEventListener('pointermove', function (e) { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel(); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { cont.addEventListener(n, cancel); });
+    map.on('movestart zoomstart', cancel);
+    map.on('contextmenu', function (e) { openMapMenu(e.latlng); });    // Rechtsklick am Computer
+  })();
 
   // =====================================================
   //  START
