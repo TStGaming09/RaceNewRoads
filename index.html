@@ -191,6 +191,24 @@
   .menu a { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; color: var(--ink); text-decoration: none; font-weight: 500; }
   .menu a:hover { background: var(--soft); }
   .btnlink { display: block; text-align: center; text-decoration: none; padding: 12px; margin-top: 12px; border-radius: 10px; background: var(--btn-bg); color: var(--btn-fg); font-weight: 600; }
+  .modal { position: fixed; inset: 0; z-index: 1300; background: rgba(0, 0, 0, .45); }
+  .modal-card { position: absolute; left: 12px; right: 12px; top: calc(12px + env(safe-area-inset-top, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    max-width: 480px; margin: 0 auto; background: var(--paper); color: var(--ink); border-radius: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, .28);
+    display: flex; flex-direction: column; overflow: hidden; }
+  .modal-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--paper); flex: none; }
+  .modal-head strong { flex: 1; font-size: 1.05rem; }
+  .modal-tabs { margin: 0; padding: 10px 16px 0; flex: none; }
+  .modal-tabs button { margin: 0; padding: 10px 4px; font-size: .88rem; }
+  .sm-status { margin: 8px 16px 0; font-size: .85rem; font-weight: 600; flex: none; }
+  .sm-status.err { color: var(--err); }
+  .sm-status.warn { color: var(--warn); }
+  .sm-status.ok { color: var(--ok); }
+  .modal-body { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
+  .modal.collapsed { background: transparent; pointer-events: none; }
+  .modal.collapsed .modal-card { bottom: auto; pointer-events: auto; }
+  .modal.collapsed .modal-tabs, .modal.collapsed .modal-body, .modal.collapsed .sm-status { display: none; }
+  body.modal-open .panel, body.modal-open .menubtn, body.modal-open .bellbtn, body.modal-open .menu { display: none; }
+  .screenhead { position: sticky; top: 0; z-index: 5; background: var(--paper); padding: 10px 0; margin-top: 0; }
   .hidden { display: none; }
 </style>
 </head>
@@ -199,6 +217,22 @@
 
 <div id="pickBar"><span id="pickMsg"></span><button id="pickCancel" class="ghost" type="button">Abbrechen</button></div>
 
+<div id="statsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="smTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <button id="smBack" class="ghost" type="button">&lsaquo; Zurück</button>
+      <strong id="smTitle">Statistiken</strong>
+      <button id="smCollapse" class="ghost" type="button" aria-label="Fenster ein- oder ausklappen">&#9662;</button>
+    </div>
+    <div class="tabs modal-tabs" id="smTabs" role="tablist">
+      <button role="tab" type="button" data-st="Stats" aria-selected="true">Übersicht</button>
+      <button role="tab" type="button" data-st="Boards" aria-selected="false">Ranglisten</button>
+      <button role="tab" type="button" data-st="History" aria-selected="false">Rennhistorie</button>
+    </div>
+    <div id="smStatus" class="sm-status hidden"></div>
+    <div id="smBody" class="modal-body"></div>
+  </div>
+</div>
 <button id="bellBtn" class="bellbtn hidden" type="button" aria-label="Benachrichtigungen">🔔<span id="bellBadge" class="badge hidden"></span></button>
 <button id="menuBtn" class="menubtn hidden" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menü">
   <span id="whoAvatar"></span><span id="menuDot" class="dotbadge hidden"></span>
@@ -208,8 +242,6 @@
   <button type="button" role="menuitem" data-go="Profile"><span>Profil</span></button>
   <button type="button" role="menuitem" data-go="Garage"><span>Garage</span></button>
   <button type="button" role="menuitem" data-go="Stats"><span>Statistiken</span></button>
-  <button type="button" role="menuitem" data-go="Boards"><span>Ranglisten</span></button>
-  <button type="button" role="menuitem" data-go="History"><span>Rennhistorie</span></button>
   <button type="button" role="menuitem" data-go="Chats"><span>Nachrichten</span><span id="badgeMsgsMenu" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Friends"><span>Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Settings"><span>Einstellungen</span></button>
@@ -510,6 +542,7 @@
       <div id="bdTrack" class="hidden">
         <h3 id="bdTrackName" style="margin-top:12px"></h3>
         <p class="hint" id="bdTrackInfo"></p>
+        <button id="bdMap" class="ghost wide" type="button">Karte ansehen</button>
         <button id="bdStart" type="button">Rennen auf dieser Strecke starten</button>
         <label for="bdClass">Fahrzeugklasse</label>
         <select id="bdClass"></select>
@@ -530,6 +563,7 @@
         <p class="hint" id="hsInfo"></p>
         <ul id="hsMembers" class="list"></ul>
         <p class="hint" id="hsHint"></p>
+        <button id="hsMap" class="ghost wide" type="button">Karte ansehen</button>
       </div>
     </div>
 
@@ -546,8 +580,9 @@
         <div><div class="v" id="stWins">–</div><div class="l">Siege</div></div>
         <div><div class="v" id="stPodium">–</div><div class="l">Podium</div></div>
       </div>
-      <h3>Meine Rennen</h3>
-      <ul id="stList" class="list"></ul>
+      <ul id="stList" class="list hidden"></ul>
+      <button id="stToBoards" class="ghost wide" type="button">Ranglisten ansehen</button>
+      <button id="stToHistory" class="ghost wide" type="button">Rennhistorie ansehen</button>
       <p class="hint">Strecke und Fahrzeit zählen nur, solange der Standort läuft und du dich bewegst.</p>
     </div>
 
@@ -690,6 +725,11 @@
     else if (kind === 'ok') statusLock = now + 4000;
     statusEl.textContent = text;
     dot.className = 'dot' + (kind ? ' ' + kind : '');
+    // Solange das Statistik-Fenster offen ist, ist das Panel verdeckt: Meldungen dort anzeigen
+    if (!fromGps && document.body.classList.contains('modal-open')) {
+      var sm = $('smStatus');
+      sm.textContent = text; sm.className = 'sm-status' + (kind ? ' ' + kind : '');
+    }
   }
 
   // ---------- Profile laden (mit Zwischenspeicher) ----------
@@ -1772,6 +1812,7 @@
     SCREENS.forEach(function (n) { $('tab' + n).classList.toggle('hidden', n !== t); });
     $('screenHead').classList.toggle('hidden', t === 'Home');
     $('screenTitle').textContent = TITLES[t] || '';
+    syncStatsModal(t);
     $('panel').classList.remove('collapsed'); $('collapseBtn').innerHTML = '&#9662;';
     if (t === 'Home') renderHome();
     if (t === 'Friends') loadFriends();
@@ -2372,7 +2413,8 @@
   function classLabel(c) { return VEHICLES[c] || KINDS[c] || c || ''; }
   function fitWithPanel(b) {
     follow = false;
-    map.fitBounds(b, { paddingTopLeft: [30, 70], paddingBottomRight: [30, $('panel').offsetHeight + 20], maxZoom: 17 });
+    var modal = document.body.classList.contains('modal-open');
+    map.fitBounds(b, { paddingTopLeft: [30, modal ? 90 : 70], paddingBottomRight: [30, modal ? 30 : $('panel').offsetHeight + 20], maxZoom: 17 });
   }
   function resizeImage(file, maxSide) {
     return new Promise(function (resolve, reject) {
@@ -2821,7 +2863,7 @@
           return li;
         }), 'Keine Teilnehmer.');
         $('hsHint').textContent = routes.length
-          ? 'Die farbigen Linien auf der Karte zeigen, welchen Weg jeder gefahren ist. Tippe oben rechts auf ▾, um das Panel einzuklappen.'
+          ? 'Die farbigen Linien auf der Karte zeigen, welchen Weg jeder gefahren ist. Tippe oben im Fenster auf ▾ oder „Karte ansehen“, um die Karte zu sehen.'
           : 'Für dieses Rennen ist keine gefahrene Linie gespeichert. Das gibt es erst für Rennen, die mit dieser Version gefahren wurden.';
       });
     });
@@ -3320,6 +3362,45 @@
       if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
       curConv = null; stopThreadPoll(); showChView('List'); loadConversations(true);
     });
+  });
+
+  // =====================================================
+  //  STATISTIK-FENSTER (Übersicht, Ranglisten, Rennhistorie)
+  // =====================================================
+  ['tabStats', 'tabBoards', 'tabHistory'].forEach(function (id) { $('smBody').appendChild($(id)); });
+
+  function setStatsCollapsed(c) {
+    $('statsModal').classList.toggle('collapsed', c);
+    $('smCollapse').innerHTML = c ? '&#9652;' : '&#9662;';
+  }
+  function syncStatsModal(t) {
+    var inStats = t === 'Stats' || t === 'Boards' || t === 'History';
+    var m = $('statsModal'), wasOpen = !m.classList.contains('hidden');
+    m.classList.toggle('hidden', !inStats);
+    document.body.classList.toggle('modal-open', inStats);
+    if (inStats && !wasOpen) setStatsCollapsed(false);
+    $('smStatus').classList.add('hidden');
+    var btns = $('smTabs').querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) btns[i].setAttribute('aria-selected', String(btns[i].getAttribute('data-st') === t));
+  }
+  function smBack() {
+    if (currentScreen === 'Boards' && boardView === 'Track') { setStatsCollapsed(false); showBoardTab('Tracks'); }
+    else if (currentScreen === 'History' && histView === 'Detail') { setStatsCollapsed(false); histOpen(); }
+    else showScreen('Home');
+    $('smStatus').classList.add('hidden');
+  }
+  $('smBack').addEventListener('click', smBack);
+  $('smCollapse').addEventListener('click', function () { setStatsCollapsed(!$('statsModal').classList.contains('collapsed')); });
+  $('smTabs').addEventListener('click', function (e) {
+    var st = e.target.getAttribute && e.target.getAttribute('data-st');
+    if (st) showScreen(st);
+  });
+  $('stToBoards').addEventListener('click', function () { showScreen('Boards'); });
+  $('stToHistory').addEventListener('click', function () { showScreen('History'); });
+  $('hsMap').addEventListener('click', function () { setStatsCollapsed(true); });
+  $('bdMap').addEventListener('click', function () { setStatsCollapsed(true); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('statsModal').classList.contains('hidden')) smBack();
   });
 
   // =====================================================
