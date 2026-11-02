@@ -352,7 +352,7 @@
       </div>
       <button id="start" type="button">Standort starten</button>
       <ul id="players" class="list hidden" style="margin-top:10px"></ul>
-      <p class="hint" id="hint">Tippe auf „Standort starten“. Du siehst Freunde und Rennteilnehmer, die ebenfalls gestartet haben.</p>
+      <p class="hint" id="hint">Der Standort startet automatisch beim Öffnen der App. Du siehst Freunde und Rennteilnehmer, die ihren Standort ebenfalls teilen.</p>
     </div>
 
     <!-- Rennen -->
@@ -707,6 +707,10 @@
       </select>
       <p class="hint">Die Einstellung gilt nur für dieses Gerät. Bei „Dunkel“ wird auch die Karte abgedunkelt.</p>
 
+      <h3>Standort</h3>
+      <label class="switch" for="sAutoLoc"><input type="checkbox" id="sAutoLoc"><span>Standort beim Öffnen automatisch starten</span></label>
+      <p class="hint">Solange dein Standort läuft, sehen ihn deine Freunde und die Teilnehmer deiner Rennen auf der Karte, sonst niemand. Beim ersten Mal fragt dein Browser oder Handy nach der Erlaubnis. Ständiges GPS kostet Akku. Wenn du ausschaltest, startest du den Standort wieder selbst auf der Startseite. Das gilt ab dem nächsten Öffnen. Mit „Standort stoppen“ kannst du jederzeit pausieren.</p>
+
       <h3>Tempolimit</h3>
       <label class="switch" for="sWarn"><input type="checkbox" id="sWarn"><span>Überschreitungs-Warnung</span></label>
       <p class="hint">Das Tempolimit-Schild ist immer sichtbar, solange dein Standort läuft. Bei eingeschalteter Warnung blinkt es rot, sobald du mehr als 3 km/h zu schnell bist, dazu gibt es einen Ton und, wo das Gerät es kann, Vibration. Die Limits stammen aus OpenStreetMap und können fehlen oder falsch sein. Es gelten immer die Schilder am Straßenrand.</p>
@@ -983,6 +987,7 @@
       showScreen('Home');
       startOverlays();
       setStatus('Bereit');
+      autoStartLocation();
       syncClock();
       loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs(); loadConversations(false); subscribeMessages(); loadAdminRole(); loadMapPoints(); loadPlaces();
       if (pollTimer) clearInterval(pollTimer);
@@ -993,6 +998,7 @@
 
   $('logout').addEventListener('click', function () {
     if (watchId !== null) stop();
+    userStoppedLoc = false;
     unfollowRace(); stopNavigation(true);
     unsubscribeNotifs(); notifs = []; unreadCount = 0; notifsLoaded = false; updateNotifBadge();
     unsubscribeMessages(); convs = []; unreadMsgs = 0; updateMsgBadges(); curConv = null; stopThreadPoll();
@@ -1324,7 +1330,7 @@
       3: 'Zeitüberschreitung beim Abrufen der Position.'
     }[err.code] || 'Unbekannter Standortfehler.';
     setStatus(msg, 'err');
-    if (err.code === 1) stop();
+    if (err.code === 1) { stop(); setStatus(msg, 'err'); }
   }
 
   function start() {
@@ -1352,10 +1358,36 @@
     Object.keys(others).forEach(removeOther);
     statsBox.classList.add('hidden'); playersEl.classList.add('hidden');
     startBtn.textContent = 'Standort starten';
-    hint.textContent = 'Tippe auf „Starten“. Du siehst Freunde und Rennteilnehmer, die ebenfalls gestartet haben.';
+    hint.textContent = idleHint();
     setStatus('Gestoppt');
   }
-  startBtn.addEventListener('click', function () { if (watchId === null) start(); else stop(); });
+  // ----- Standort automatisch beim Öffnen starten -----
+  var autoLoc = true, userStoppedLoc = false;
+  try { autoLoc = localStorage.getItem('rennen-autoloc') !== '0'; } catch (e) {}
+  $('sAutoLoc').checked = autoLoc;
+  function idleHint() {
+    return (autoLoc ? 'Der Standort startet automatisch beim Öffnen der App. ' : 'Tippe auf „Standort starten“. ') +
+      'Du siehst Freunde und Rennteilnehmer, die ihren Standort ebenfalls teilen.';
+  }
+  hint.textContent = idleHint();
+
+  function onStartButton() {
+    if (watchId === null) { userStoppedLoc = false; start(); }
+    else { userStoppedLoc = true; stop(); }     // wer selbst stoppt, wird in dieser Sitzung nicht wieder automatisch gestartet
+  }
+  startBtn.addEventListener('click', onStartButton);
+
+  function autoStartLocation() {
+    if (!autoLoc || userStoppedLoc || watchId !== null || !myId) return;
+    start();
+  }
+  function setAutoLoc(v) {
+    autoLoc = v;
+    try { localStorage.setItem('rennen-autoloc', v ? '1' : '0'); } catch (e) {}
+    if (watchId === null) hint.textContent = idleHint();
+    if (v && watchId === null && myId) { userStoppedLoc = false; start(); }
+  }
+  $('sAutoLoc').addEventListener('change', function () { setAutoLoc($('sAutoLoc').checked); });
 
   // =====================================================
   //  RENNMODUS
