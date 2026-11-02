@@ -213,6 +213,14 @@
   .workpin { width: 28px; height: 28px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); }
   .limitpin { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 3px solid #d11111; color: #111; font: 800 11px/20px system-ui, sans-serif; text-align: center; box-sizing: border-box; box-shadow: 0 1px 4px rgba(0, 0, 0, .45); }
   .limitpin.unk { border-color: #9aa3b2; color: #6b7686; }
+  .modal:not(.collapsed) #smCollapse { display: none; }
+  #userModal { z-index: 1400; }
+  [data-uid] .avatar, [data-uid] .nm, .who[data-uid] { cursor: pointer; }
+  .um-top { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+  .um-name strong { font-size: 1.25rem; }
+  .um-name .hint { margin-top: 2px; }
+  .um-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .um-actions button { flex: 1; margin: 0; }
   .hidden { display: none; }
 </style>
 </head>
@@ -235,6 +243,16 @@
     </div>
     <div id="smStatus" class="sm-status hidden"></div>
     <div id="smBody" class="modal-body"></div>
+  </div>
+</div>
+<div id="userModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="umTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <button id="umBack" class="ghost" type="button">&lsaquo; Zurück</button>
+      <strong id="umTitle">Profil</strong>
+    </div>
+    <div id="umStatus" class="sm-status hidden"></div>
+    <div id="umBody" class="modal-body"></div>
   </div>
 </div>
 <button id="bellBtn" class="bellbtn hidden" type="button" aria-label="Benachrichtigungen">🔔<span id="bellBadge" class="badge hidden"></span></button>
@@ -737,6 +755,11 @@
       var sm = $('smStatus');
       sm.textContent = text; sm.className = 'sm-status' + (kind ? ' ' + kind : '');
     }
+    var um = $('userModal');
+    if (!fromGps && um && !um.classList.contains('hidden')) {
+      var us = $('umStatus');
+      us.textContent = text; us.className = 'sm-status' + (kind ? ' ' + kind : '');
+    }
   }
 
   // ---------- Profile laden (mit Zwischenspeicher) ----------
@@ -1035,7 +1058,7 @@
     items.forEach(function (it) { ul.appendChild(it); });
   }
   function friendRow(f, buttons) {
-    var li = el('li'), info = pInfo(otherId(f));
+    var li = el('li'), info = pInfo(otherId(f)); li.setAttribute('data-uid', otherId(f));
     li.appendChild(avatarNode(info.avatar, info.name, info.color, 32));
     li.appendChild(el('span', 'nm', info.name));
     if (info.label) li.appendChild(el('span', 'ago', info.label));
@@ -1113,6 +1136,7 @@
       var color = row.color || colorFor(row.username);
       var marker = L.marker(ll, { icon: iconFor(color, row.avatar_url), keyboard: false }).addTo(map);
       marker.bindTooltip(el('span', '', row.username), { permanent: true, direction: 'top', offset: [0, -18], className: 'name-tip' });
+      marker.on('click', function () { openProfile(row.user_id); });
       o = others[row.user_id] = { name: row.username, marker: marker, color: color, avatar: row.avatar_url || null };
     } else {
       o.marker.setLatLng(ll);
@@ -1128,7 +1152,7 @@
     fillList(playersEl, ids.map(function (id) {
       var o = others[id], age = now - o.updated;
       o.marker.setOpacity(age > STALE_AFTER_MS ? 0.4 : 1);
-      var li = el('li');
+      var li = el('li'); li.setAttribute('data-uid', id);
       li.appendChild(avatarNode(o.avatar, o.name, o.color, 28));
       li.appendChild(el('span', 'nm', o.name));
       li.appendChild(el('span', 'ago', ago(age)));
@@ -1445,7 +1469,7 @@
     });
     var place = 0;
     fillList($('rdMembers'), list.map(function (m) {
-      var info = pInfo(m.user_id), li = el('li');
+      var info = pInfo(m.user_id), li = el('li'); li.setAttribute('data-uid', m.user_id);
       li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
       li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
       var txt;
@@ -1494,7 +1518,7 @@
     if (!cands.length) { box.classList.add('hidden'); return; }
     box.classList.remove('hidden');
     fillList($('rdInviteList'), cands.map(function (id) {
-      var info = pInfo(id), li = el('li');
+      var info = pInfo(id), li = el('li'); li.setAttribute('data-uid', id);
       li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
       li.appendChild(el('span', 'nm', info.name));
       var b = el('button', '', 'Einladen'); b.type = 'button';
@@ -2810,9 +2834,9 @@
   }
   $('nvMode').addEventListener('change', function () { navModeTouched = true; });
 
-  function renderGarage(list, mine) {
+  function renderGarage(list, mine, target) {
     if (mine) $('garAdd').classList.remove('hidden');
-    fillList(mine ? $('garList') : $('fgList'), list.map(function (v) {
+    fillList(target || (mine ? $('garList') : $('fgList')), list.map(function (v) {
       var li = el('li', 'vcard');
       li.appendChild(thumbNode(v.photo_url));
       var info = el('div', 'vinfo'), head = el('div');
@@ -3098,7 +3122,7 @@
     var rows = boardRows.filter(function (r) { return !cls || r.vehicle_class === cls; })
       .sort(function (a, b) { return a.best_ms - b.best_ms; });
     fillList($('bdBoard'), rows.map(function (r, i) {
-      var info = pInfo(r.user_id), li = el('li', 'wrap');
+      var info = pInfo(r.user_id), li = el('li', 'wrap'); li.setAttribute('data-uid', r.user_id);
       li.appendChild(el('span', 'rank', i === 0 ? '🏆' : (i + 1) + '.'));
       li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
       li.appendChild(el('span', 'nm', info.name + (r.user_id === myId ? ' (du)' : '')));
@@ -3125,7 +3149,7 @@
       });
       return getProfiles(rows.map(function (r) { return r.user_id; })).then(function () {
         fillList($('bdOverallList'), rows.map(function (r, i) {
-          var info = pInfo(r.user_id), li = el('li', 'wrap');
+          var info = pInfo(r.user_id), li = el('li', 'wrap'); li.setAttribute('data-uid', r.user_id);
           li.appendChild(el('span', 'rank', i === 0 && r.wins > 0 ? '🏆' : (i + 1) + '.'));
           li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
           li.appendChild(el('span', 'nm', info.name + (r.user_id === myId ? ' (du)' : '')));
@@ -3211,7 +3235,7 @@
         var rest = ms.filter(function (m) { return m.status === 'dnf'; });
         var place = 0;
         fillList($('hsMembers'), fin.concat(rest).map(function (m) {
-          var info = pInfo(m.user_id), li = el('li', 'wrap');
+          var info = pInfo(m.user_id), li = el('li', 'wrap'); li.setAttribute('data-uid', m.user_id);
           li.appendChild(el('span', 'rank', m.status === 'finished' ? (++place) + '.' : '–'));
           li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
           li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
@@ -3223,7 +3247,7 @@
           return li;
         }), 'Keine Teilnehmer.');
         $('hsHint').textContent = routes.length
-          ? 'Die farbigen Linien auf der Karte zeigen, welchen Weg jeder gefahren ist. Tippe oben im Fenster auf ▾ oder „Karte ansehen“, um die Karte zu sehen.'
+          ? 'Die farbigen Linien auf der Karte zeigen, welchen Weg jeder gefahren ist. Tippe auf „Karte ansehen“, um die Karte zu sehen.'
           : 'Für dieses Rennen ist keine gefahrene Linie gespeichert. Das gibt es erst für Rennen, die mit dieser Version gefahren wurden.';
       });
     });
@@ -3485,7 +3509,9 @@
     if (msgIds[m.id]) return;
     msgIds[m.id] = true; if (m.id > lastMsgId) lastMsgId = m.id;
     var mine = m.sender_id === myId, box = el('div', 'msg ' + (mine ? 'mine' : 'other'));
-    if (!mine && curConv && curConv.kind === 'group') box.appendChild(el('div', 'who', pInfo(m.sender_id).name));
+    if (!mine && curConv && curConv.kind === 'group') {
+      var whoEl = el('div', 'who', pInfo(m.sender_id).name); whoEl.setAttribute('data-uid', m.sender_id); box.appendChild(whoEl);
+    }
     var bub = el('div', 'bub');
     if (m.kind === 'race') {
       var d = m.data || {};
@@ -3681,7 +3707,7 @@
       return getProfiles(ids).then(function () {
         if (curConv !== c) return;
         fillList($('giMembers'), members.map(function (m) {
-          var info = pInfo(m.user_id), li = el('li');
+          var info = pInfo(m.user_id), li = el('li'); li.setAttribute('data-uid', m.user_id);
           li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
           li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
           if (m.role === 'admin') li.appendChild(el('span', 'pill', 'Admin'));
@@ -3691,7 +3717,7 @@
           .filter(function (id) { return ids.indexOf(id) === -1; });
         $('giAddBox').classList.toggle('hidden', !iAmAdmin || !cands.length);
         fillList($('giAdd'), cands.map(function (id) {
-          var info = pInfo(id), li = el('li');
+          var info = pInfo(id), li = el('li'); li.setAttribute('data-uid', id);
           li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
           li.appendChild(el('span', 'nm', info.name));
           var b = el('button', '', 'Hinzufügen'); b.type = 'button';
@@ -3731,7 +3757,7 @@
 
   function setStatsCollapsed(c) {
     $('statsModal').classList.toggle('collapsed', c);
-    $('smCollapse').innerHTML = c ? '&#9652;' : '&#9662;';
+    $('smCollapse').innerHTML = c ? '&#9652; Aufklappen' : '&#9662;';
   }
   function syncStatsModal(t) {
     var inStats = t === 'Stats' || t === 'Boards' || t === 'History';
@@ -3762,6 +3788,125 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !$('statsModal').classList.contains('hidden')) smBack();
   });
+
+  // =====================================================
+  //  PROFILE ANDERER SPIELER (Popup)
+  // =====================================================
+  var umUser = null;
+
+  function relationWith(uid) {
+    if (uid === myId) return { rel: 'me' };
+    var f = friendships.filter(function (x) { return otherId(x) === uid; })[0];
+    if (!f) return { rel: 'none' };
+    if (f.status === 'accepted') return { rel: 'friend', f: f };
+    return { rel: f.requester_id === myId ? 'sent' : 'received', f: f };
+  }
+  function closeProfile() { umUser = null; $('userModal').classList.add('hidden'); $('umStatus').classList.add('hidden'); }
+  function profTile(value, label) {
+    var d = el('div'); d.appendChild(el('div', 'v', String(value))); d.appendChild(el('div', 'l', label)); return d;
+  }
+  function umAfterFriendChange(uid) {
+    db.from('friendships').select('*').then(function (res) {
+      if (!res.error) friendships = res.data || [];
+      loadFriends();
+      if (umUser === uid) openProfile(uid);
+    });
+  }
+
+  function openProfile(uid) {
+    if (!uid) return;
+    umUser = uid;
+    $('userModal').classList.remove('hidden'); $('umStatus').classList.add('hidden');
+    var body = $('umBody'); body.textContent = ''; body.appendChild(el('p', 'hint', 'Lade …'));
+    var relInfo = relationWith(uid), rel = relInfo.rel;
+    Promise.all([
+      getProfiles([uid], true),
+      (rel === 'me' || rel === 'friend') ? db.rpc('player_stats', { p_user: uid }) : Promise.resolve(null),
+      rel === 'friend' ? db.from('vehicles').select('*').eq('user_id', uid).order('created_at', { ascending: true }) : Promise.resolve(null)
+    ]).then(function (rs) {
+      if (umUser !== uid) return;
+      renderProfileView(uid, relInfo, rs[1], rs[2]);
+    }).catch(function (err) {
+      if (umUser !== uid) return;
+      body.textContent = '';
+      body.appendChild(el('p', 'hint', 'Profil konnte nicht geladen werden: ' + (err && err.message ? err.message : 'unbekannter Fehler')));
+    });
+  }
+
+  function renderProfileView(uid, relInfo, statsRes, vehRes) {
+    var rel = relInfo.rel, f = relInfo.f, info = pInfo(uid), body = $('umBody');
+    body.textContent = '';
+    var top = el('div', 'um-top');
+    top.appendChild(avatarNode(info.avatar, info.name, info.color, 72));
+    var nm = el('div', 'um-name');
+    nm.appendChild(el('strong', '', info.name));
+    nm.appendChild(el('div', 'hint', { me: 'Das bist du', friend: 'Freund', sent: 'Freundschaftsanfrage gesendet',
+      received: 'Hat dir eine Freundschaftsanfrage geschickt', none: 'Noch nicht befreundet' }[rel]));
+    if (info.label) nm.appendChild(el('div', 'hint', 'Aktives Fahrzeug: ' + info.label));
+    top.appendChild(nm); body.appendChild(top);
+
+    var acts = el('div', 'um-actions');
+    function btn(label, ghost, fn) {
+      var b = el('button', ghost ? 'ghost' : '', label); b.type = 'button'; b.addEventListener('click', fn); acts.appendChild(b);
+    }
+    if (rel === 'me') btn('Profil bearbeiten', false, function () { closeProfile(); showScreen('Profile'); });
+    if (rel === 'friend') btn('Nachricht schreiben', false, function () { closeProfile(); startDirectChat(uid); });
+    if (rel === 'none') btn('Freundschaftsanfrage senden', false, function () {
+      db.from('friendships').insert({ requester_id: myId, addressee_id: uid }).then(function (r) {
+        if (r.error) { setStatus(r.error.code === '23505' ? 'Es gibt schon eine Anfrage mit dieser Person.' : 'Anfrage fehlgeschlagen: ' + r.error.message, 'err'); return; }
+        setStatus('Anfrage an ' + info.name + ' gesendet.', 'ok'); umAfterFriendChange(uid);
+      });
+    });
+    if (rel === 'sent') btn('Anfrage zurückziehen', true, function () {
+      db.from('friendships').delete().eq('id', f.id).then(function () { umAfterFriendChange(uid); });
+    });
+    if (rel === 'received') {
+      btn('Annehmen', false, function () {
+        db.from('friendships').update({ status: 'accepted' }).eq('id', f.id).then(function (r) {
+          if (r.error) { setStatus('Fehler: ' + r.error.message, 'err'); return; }
+          setStatus('Ihr seid jetzt Freunde.', 'ok'); umAfterFriendChange(uid);
+        });
+      });
+      btn('Ablehnen', true, function () { db.from('friendships').delete().eq('id', f.id).then(function () { umAfterFriendChange(uid); }); });
+    }
+    if (acts.children.length) body.appendChild(acts);
+
+    if (rel === 'me' || rel === 'friend') {
+      var st = statsRes && !statsRes.error && statsRes.data && statsRes.data[0];
+      if (st) {
+        var g1 = el('div', 'stats4');
+        [['Rennen', st.races], ['im Ziel', st.finished], ['Siege', st.wins], ['Podium', st.podiums]].forEach(function (x) { g1.appendChild(profTile(x[1] == null ? 0 : x[1], x[0])); });
+        body.appendChild(g1);
+        var secs = +st.moving_s || 0, g2 = el('div', 'stats'); g2.style.gridTemplateColumns = 'repeat(2, 1fr)';
+        g2.appendChild(profTile(fmtDist(+st.distance_m || 0), 'Strecke gesamt'));
+        g2.appendChild(profTile(secs >= 60 ? fmtDur(secs) : '0 min', 'Fahrzeit'));
+        body.appendChild(g2);
+      } else if (statsRes && statsRes.error) {
+        body.appendChild(el('p', 'hint', 'Statistik nicht verfügbar (SQL-Schritt ausgeführt?): ' + statsRes.error.message));
+      }
+    } else {
+      body.appendChild(el('p', 'hint', 'Statistiken und Garage sind nur für Freunde sichtbar.'));
+    }
+
+    if (rel === 'friend') {
+      body.appendChild(el('h3', '', 'Garage'));
+      var ul = el('ul', 'list'); body.appendChild(ul);
+      renderGarage((vehRes && vehRes.data) || [], false, ul);
+    }
+  }
+
+  $('umBack').addEventListener('click', closeProfile);
+  $('userModal').addEventListener('click', function (e) { if (e.target === $('userModal')) closeProfile(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('userModal').classList.contains('hidden')) closeProfile(); });
+
+  // Antippen von Avatar oder Name in Listen mit data-uid öffnet das Profil
+  function handleUserClick(e) {
+    var a = e.target && e.target.closest ? e.target.closest('.avatar, .nm, .who') : null;
+    if (!a) return;
+    var holder = a.closest('[data-uid]');
+    if (holder) openProfile(holder.getAttribute('data-uid'));
+  }
+  document.addEventListener('click', handleUserClick);
 
   // =====================================================
   //  START
