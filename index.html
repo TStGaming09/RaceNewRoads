@@ -188,6 +188,9 @@
   .composer { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
   .composer input { flex: 1; min-width: 0; }
   .composer button { width: auto; margin: 0; padding: 10px 14px; }
+  .menu a { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; color: var(--ink); text-decoration: none; font-weight: 500; }
+  .menu a:hover { background: var(--soft); }
+  .btnlink { display: block; text-align: center; text-decoration: none; padding: 12px; margin-top: 12px; border-radius: 10px; background: var(--btn-bg); color: var(--btn-fg); font-weight: 600; }
   .hidden { display: none; }
 </style>
 </head>
@@ -210,6 +213,7 @@
   <button type="button" role="menuitem" data-go="Chats"><span>Nachrichten</span><span id="badgeMsgsMenu" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Friends"><span>Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Settings"><span>Einstellungen</span></button>
+  <a class="donate" role="menuitem" href="https://buymeacoffee.com/racenewroads" target="_blank" rel="noopener noreferrer"><span>☕ Projekt unterstützen</span></a>
   <hr>
   <button type="button" role="menuitem" id="logout"><span>Abmelden</span></button>
 </div>
@@ -573,6 +577,12 @@
       <h3>Benachrichtigungen</h3>
       <label class="switch" for="sNotif"><input type="checkbox" id="sNotif"><span>Hinweise auch im Hintergrund-Tab</span></label>
       <p class="hint">Neue Benachrichtigungen erscheinen immer in der Glocke oben. Mit diesem Schalter zeigt dein Browser sie zusätzlich als Hinweis an, wenn die Seite zwar offen, aber nicht im Vordergrund ist. Bei geschlossener App kommen keine Hinweise an, dafür bräuchte es echte Push-Nachrichten, die sind nicht eingebaut. Auf dem iPhone geht es meist nur, wenn die Seite zum Home-Bildschirm hinzugefügt wurde.</p>
+
+      <div class="donate">
+        <h3>Projekt unterstützen</h3>
+        <p class="hint">RaceNewRoads ist ein Hobbyprojekt. Wenn es dir gefällt, kannst du es freiwillig mit einem Kaffee unterstützen. Du bekommst dafür nichts freigeschaltet, alle Funktionen bleiben für alle gleich.</p>
+        <a class="btnlink" href="https://buymeacoffee.com/racenewroads" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
+      </div>
     </div>
   </div>
 </section>
@@ -3315,6 +3325,17 @@
   // =====================================================
   //  START
   // =====================================================
+  // Spendenlink nur im Browser zeigen, nicht in der Play-Store-Hülle (Google erlaubt dort keine externen Spendenlinks)
+  var inPlayApp = false;
+  try {
+    if (document.referrer && document.referrer.indexOf('android-app://') === 0) sessionStorage.setItem('rna-play', '1');
+    inPlayApp = sessionStorage.getItem('rna-play') === '1';
+  } catch (e) { inPlayApp = !!(document.referrer && document.referrer.indexOf('android-app://') === 0); }
+  if (inPlayApp) {
+    var donateEls = document.querySelectorAll('.donate');
+    for (var di = 0; di < donateEls.length; di++) donateEls[di].classList.add('hidden');
+  }
+
   setInterval(updateTimer, 100);
 
   // Einladungslink: ?race=CODE
