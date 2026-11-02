@@ -226,6 +226,10 @@
   /* Profilbild im Menüknopf: exakt in die Mitte, ohne Zeilenhöhe (sonst sitzt ein Bild ca. 2 px zu hoch) */
   .menubtn #whoAvatar { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; }
   #pAvatar { display: flex; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chips .hint { margin: 0; }
+  .chip { width: auto; margin: 0; padding: 9px 14px; border-radius: 99px; background: var(--soft); color: var(--ink); font-weight: 600; border: 0; }
+  .placepin { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 3px solid #0891b2; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); box-sizing: border-box; }
   .hidden { display: none; }
 </style>
 </head>
@@ -405,12 +409,37 @@
           <option value="bike">Fahrrad / E-Bike / Roller</option>
           <option value="foot">Zu Fuß</option>
         </select>
+        <div id="nvQuick">
+          <div class="row between"><strong>Meine Orte</strong><button id="nvPlacesEdit" class="ghost hidden" type="button">Bearbeiten</button></div>
+          <div id="nvFavs" class="chips"></div>
+          <div class="row" style="margin-top:8px">
+            <button id="nvSaveDest" class="ghost" type="button">Ziel speichern</button>
+            <button id="nvSaveHere" class="ghost" type="button">Standort speichern</button>
+          </div>
+          <div id="nvSaveBox" class="hidden">
+            <label for="nvSaveName">Name des Ortes</label>
+            <input id="nvSaveName" type="text" maxlength="30" placeholder="z. B. Zuhause">
+            <label for="nvSaveIcon">Symbol</label>
+            <select id="nvSaveIcon"></select>
+            <div class="row" style="margin-top:8px">
+              <button id="nvSaveOk" type="button">Speichern</button>
+              <button id="nvSaveCancel" class="ghost" type="button">Abbrechen</button>
+            </div>
+          </div>
+          <p class="hint">Deine Orte sind privat. Nur du siehst sie, auch auf der Karte.</p>
+        </div>
+        <h3>Freunde auf der Karte</h3>
+        <ul id="nvFriends" class="list"></ul>
         <label for="nvQuery">Ziel suchen</label>
         <div class="row">
           <input id="nvQuery" type="text" placeholder="Adresse oder Ort" autocomplete="off">
           <button id="nvSearch" type="button">Suchen</button>
         </div>
         <ul id="nvResults" class="list hidden" style="margin-top:8px"></ul>
+        <div id="nvRecentBox" class="hidden">
+          <div class="row between"><strong>Zuletzt gesucht</strong><button id="nvRecentClear" class="ghost" type="button">Leeren</button></div>
+          <ul id="nvRecent" class="list" style="margin-top:8px"></ul>
+        </div>
         <button id="nvPick" class="ghost wide" type="button">Ziel auf der Karte wählen</button>
         <button id="nvFuelNear" class="ghost wide" type="button">Tankstellen in der Nähe suchen</button>
         <button id="nvRaceStart" class="ghost wide hidden" type="button">Zum Start des Rennens</button>
@@ -677,6 +706,7 @@
       <label class="switch" for="sWorks"><input type="checkbox" id="sWorks"><span>Baustellen anzeigen</span></label>
       <label class="switch" for="sSpeeds"><input type="checkbox" id="sSpeeds"><span>Tempolimits auf der Karte anzeigen</span></label>
       <label class="switch" for="sPoints"><input type="checkbox" id="sPoints"><span>Treffen und Events anzeigen</span></label>
+      <label class="switch" for="sPlaces"><input type="checkbox" id="sPlaces"><span>Meine Orte auf der Karte anzeigen</span></label>
       <label class="switch" for="sCams"><input type="checkbox" id="sCams"><span>Blitzerkarte im Stand</span></label>
       <p class="hint">Die Blitzerkarte zeigt feste Blitzer aus OpenStreetMap und erscheint nur, wenn dein Standort läuft und du seit etwa 20 Sekunden stehst. Sobald du schneller als 3 km/h bist, oder wenn die App dein Tempo nicht sicher kennt, verschwindet sie wieder. Die Daten sind unvollständig. Mobile Blitzer und Polizeikontrollen zeigt die App nicht. Die Daten werden pro Kartenkachel zwischengespeichert und höchstens alle 7 Tage neu geladen. Am Steuer darf ein Fahrer keine Blitzer anzeigen oder nutzen (§ 23 Abs. 1c StVO, 75 Euro und 1 Punkt). Nutze die Karte nur zum Vorab-Informieren, nicht während der Fahrt. Die App ersetzt keine Rechtsberatung.</p>
       <p class="hint">Die Daten kommen aus OpenStreetMap und werden für den sichtbaren Kartenausschnitt geladen. Tankstellen erscheinen ab Zoomstufe 11, der Straßenzustand, die Ampeln und die Tempolimits ab 15, Baustellen ab 13. Zoome näher heran, wenn nichts zu sehen ist. Der Straßenzustand zeigt nur, was in OpenStreetMap zu Belag und Qualität eingetragen ist. Aktuelle Schäden oder Schlaglöcher kennt die App nicht. Preise zeigt die App nicht.</p>
@@ -942,7 +972,7 @@
       startOverlays();
       setStatus('Bereit');
       syncClock();
-      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs(); loadConversations(false); subscribeMessages(); loadAdminRole(); loadMapPoints();
+      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs(); loadConversations(false); subscribeMessages(); loadAdminRole(); loadMapPoints(); loadPlaces();
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); loadNotifications(false); loadConversations(false); }, POLL_MS);
       if (pendingCode) { var c = pendingCode; pendingCode = null; joinCode(c); }
@@ -954,7 +984,7 @@
     unfollowRace(); stopNavigation(true);
     unsubscribeNotifs(); notifs = []; unreadCount = 0; notifsLoaded = false; updateNotifBadge();
     unsubscribeMessages(); convs = []; unreadMsgs = 0; updateMsgBadges(); curConv = null; stopThreadPoll();
-    myAdmin = null; updateAdminUI(); mapPoints = [];
+    myAdmin = null; updateAdminUI(); mapPoints = []; myPlaces = []; placeEdit = false;
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
@@ -1205,8 +1235,14 @@
       li.appendChild(avatarNode(o.avatar, o.name, o.color, 28));
       li.appendChild(el('span', 'nm', o.name));
       li.appendChild(el('span', 'ago', ago(age)));
+      if (relationWith(id).rel === 'friend') {
+        var nb = el('button', 'ghost', 'Navi'); nb.type = 'button';
+        nb.addEventListener('click', function (e) { e.stopPropagation(); showScreen('Navi'); quickNav(friendDest(id)); });
+        li.appendChild(nb);
+      }
       return li;
     }), 'Noch niemand online.');
+    renderNaviFriends(false);
   }
   function sweep() {
     var now = Date.now();
@@ -1721,6 +1757,7 @@
   }
 
   function refreshNaviSetup() {
+    renderNaviQuick();
     var blocked = inRunningRace();
     $('nvRaceStart').classList.toggle('hidden', !(raceCur && raceCur.status === 'lobby'));
     if (raceCur && raceCur.status === 'lobby') $('nvRaceStart').textContent = 'Zum Start von „' + raceCur.name + '“';
@@ -1730,8 +1767,9 @@
   }
 
   function updateDestUI() {
-    $('nvDest').textContent = navDest ? 'Ziel: ' + navDest.label : 'Noch kein Ziel gewählt.';
+    $('nvDest').textContent = navDest ? 'Ziel: ' + navDest.label + (navDest.followId ? ' (folgt live)' : '') : 'Noch kein Ziel gewählt.';
     $('nvGo').classList.toggle('hidden', !navDest);
+    $('nvSaveDest').disabled = !navDest || !!navDest.followId;
   }
 
   function setDest(d) {
@@ -1756,7 +1794,8 @@
           li.appendChild(el('span', 'nm', x.display_name));
           li.addEventListener('click', function () {
             ul.classList.add('hidden');
-            setDest({ lat: +x.lat, lng: +x.lon, label: x.display_name });
+            var found = { lat: +x.lat, lng: +x.lon, label: x.display_name };
+            setDest(found); addRecent(found); renderRecent();
           });
           return li;
         }), 'Nichts gefunden.');
@@ -1814,10 +1853,10 @@
       return;
     }
     $('nvGo').disabled = true; setStatus('Route wird berechnet …', 'warn');
-    nav = { dest: navDest, mode: $('nvMode').value, lastReroute: Date.now(), fetching: false };
+    nav = { dest: navDest, mode: $('nvMode').value, lastReroute: Date.now(), lastFollow: Date.now(), fetching: false };
     fetchRoute(myPos, navDest, nav.mode).then(function (route) {
       $('nvGo').disabled = false;
-      applyRoute(route);
+      applyRoute(route); addRecent(nav.dest);
       $('navSetup').classList.add('hidden'); $('navActive').classList.remove('hidden');
       follow = true; map.setView([myPos.lat, myPos.lng], 17);
       setStatus('Navigation läuft', 'ok');
@@ -1832,7 +1871,7 @@
     nav = null; navDest = null;
     navLayer.clearLayers();
     $('navActive').classList.add('hidden'); $('navSetup').classList.remove('hidden'); $('nvFuel').classList.add('hidden');
-    updateDestUI();
+    updateDestUI(); renderNaviQuick();
     if (!silent) setStatus('Navigation beendet.');
   }
   $('nvStop').addEventListener('click', function () { stopNavigation(false); });
@@ -1863,6 +1902,8 @@
     $('nvStepText').textContent = st.text;
     $('nvRemain').textContent = fmtDist(remain);
     $('nvEta').textContent = fmtDur(remain * nav.secPerM);
+
+    navFollowCheck(lat, lng);
 
     if (c.accuracy <= 50) {
       nav.off = distToPolyline(lat, lng, nav.coords) > 60 ? nav.off + 1 : 0;
@@ -2278,7 +2319,7 @@
   var ovInfo = {};
   function updateOvStatus() {
     var lines = [];
-    [['fuel', 'Tankstellen'], ['signals', 'Ampeln'], ['surface', 'Straßenzustand'], ['works', 'Baustellen'], ['speeds', 'Tempolimits'], ['points', 'Treffen und Events']].forEach(function (pair) {
+    [['fuel', 'Tankstellen'], ['signals', 'Ampeln'], ['surface', 'Straßenzustand'], ['works', 'Baustellen'], ['speeds', 'Tempolimits'], ['points', 'Treffen und Events'], ['places', 'Meine Orte']].forEach(function (pair) {
       if (overlaysActive && ovPrefs[pair[0]] && ovInfo[pair[0]]) lines.push(pair[1] + ': ' + ovInfo[pair[0]]);
     });
     if (overlaysActive && camPref && ovInfo.cams) lines.push('Blitzer: ' + ovInfo.cams);
@@ -2746,6 +2787,46 @@
   }
   // <<< TREFFPUNKTE-MODUL ENDE
 
+  // >>> ORTE-MODUL START
+  // Private Orte (z. B. „Zuhause“): nur für den Eigentümer sichtbar, auch auf der Karte.
+  var PLACE_ICONS = { home: '🏠', work: '💼', star: '⭐', pin: '📍' };
+  var PLACE_ICON_NAMES = { home: 'Zuhause', work: 'Arbeit', star: 'Favorit', pin: 'Ort' };
+  var myPlaces = [];
+
+  function placePopup(p) {
+    var box = el('div', 'fuelpop');
+    box.appendChild(el('strong', '', (PLACE_ICONS[p.icon] || '📍') + ' ' + p.name));
+    popupRow(box, 'Adresse', p.address);
+    var go = el('button', '', 'Hierher navigieren'); go.type = 'button';
+    go.addEventListener('click', function () { map.closePopup(); showScreen('Navi'); quickNav({ lat: p.lat, lng: p.lng, label: p.name }); });
+    box.appendChild(go);
+    var del = el('button', '', 'Ort löschen'); del.type = 'button'; del.style.marginTop = '6px';
+    del.addEventListener('click', function () { map.closePopup(); deletePlace(p); });
+    box.appendChild(del);
+    return box;
+  }
+  function makePlacesLayer() {
+    var layer = L.layerGroup(), on = false, sig = '';
+    function render(force) {
+      if (!on) return;
+      var s = myPlaces.map(function (p) { return p.id + p.name + p.icon + p.lat + p.lng; }).join('|');
+      if (!force && s === sig) return;          // Orte ändern sich selten: bei Kartenbewegung nichts neu zeichnen
+      sig = s; layer.clearLayers();
+      myPlaces.forEach(function (p) {
+        var icon = L.divIcon({ html: el('div', 'placepin', PLACE_ICONS[p.icon] || '📍'), className: '', iconSize: [30, 30], iconAnchor: [15, 15] });
+        L.marker([p.lat, p.lng], { icon: icon, keyboard: false, zIndexOffset: -200 })
+          .bindPopup(function () { return placePopup(p); }, { maxWidth: 260 }).addTo(layer);
+      });
+      ovInfo.places = myPlaces.length + ' angezeigt'; updateOvStatus();
+    }
+    return {
+      layer: layer, refresh: function () { render(false); }, invalidate: function () { render(true); },
+      set: function (v) { on = v; if (v) { layer.addTo(map); render(true); } else { map.removeLayer(layer); layer.clearLayers(); sig = ''; } },
+      get on() { return on; }
+    };
+  }
+  // <<< ORTE-MODUL ENDE
+
   var ROAD_CLASSES = '[highway~"^(motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|track|cycleway|path|road)$"]';
   var ov = {
     fuel: makeOverlay({ key: 'fuel', label: 'Tankstellen', minZoom: 11, limit: 300, render: renderFuel, query: function (bb) {
@@ -2760,15 +2841,16 @@
     speeds: makeOverlay({ key: 'speeds', label: 'Tempolimits', minZoom: 15, limit: 800, render: renderSpeeds, query: function (bb) {
       return '[out:json][timeout:25];way["highway"]["maxspeed"]' + bb + ';out tags center 800;'; } }),
     points: makePointsLayer(),
+    places: makePlacesLayer(),
     cams: makeCamLayer()
   };
 
-  var ovPrefs = { fuel: true, signals: true, surface: false, works: false, speeds: false, points: true }, overlaysActive = false, ovTimer = null;
+  var ovPrefs = { fuel: true, signals: true, surface: false, works: false, speeds: false, points: true, places: true }, overlaysActive = false, ovTimer = null;
   try { var savedOv = JSON.parse(localStorage.getItem('rennen-overlays') || 'null'); if (savedOv) ovPrefs = Object.assign(ovPrefs, savedOv); } catch (e) {}
   $('sFuel').checked = ovPrefs.fuel; $('sSignals').checked = ovPrefs.signals; $('sSurface').checked = ovPrefs.surface;
-  $('sWorks').checked = ovPrefs.works; $('sSpeeds').checked = ovPrefs.speeds; $('sPoints').checked = ovPrefs.points;
+  $('sWorks').checked = ovPrefs.works; $('sSpeeds').checked = ovPrefs.speeds; $('sPoints').checked = ovPrefs.points; $('sPlaces').checked = ovPrefs.places;
 
-  function refreshOverlays() { if (overlaysActive) { ov.fuel.refresh(); ov.signals.refresh(); ov.surface.refresh(); ov.works.refresh(); ov.speeds.refresh(); ov.points.refresh(); ov.cams.refresh(); } }
+  function refreshOverlays() { if (overlaysActive) { ov.fuel.refresh(); ov.signals.refresh(); ov.surface.refresh(); ov.works.refresh(); ov.speeds.refresh(); ov.points.refresh(); ov.places.refresh(); ov.cams.refresh(); } }
   function applyOverlays() {
     ov.fuel.set(overlaysActive && ovPrefs.fuel);
     ov.signals.set(overlaysActive && ovPrefs.signals);
@@ -2776,13 +2858,14 @@
     ov.works.set(overlaysActive && ovPrefs.works);
     ov.speeds.set(overlaysActive && ovPrefs.speeds);
     ov.points.set(overlaysActive && ovPrefs.points);
+    ov.places.set(overlaysActive && ovPrefs.places);
     $('condLegend').classList.toggle('hidden', !(overlaysActive && ovPrefs.surface));
     updateCamVisibility();
     updateOvStatus();
   }
   function startOverlays() { overlaysActive = true; applyOverlays(); }
   function stopOverlays() { overlaysActive = false; applyOverlays(); }
-  [['sFuel', 'fuel'], ['sSignals', 'signals'], ['sSurface', 'surface'], ['sWorks', 'works'], ['sSpeeds', 'speeds'], ['sPoints', 'points']].forEach(function (pair) {
+  [['sFuel', 'fuel'], ['sSignals', 'signals'], ['sSurface', 'surface'], ['sWorks', 'works'], ['sSpeeds', 'speeds'], ['sPoints', 'points'], ['sPlaces', 'places']].forEach(function (pair) {
     $(pair[0]).addEventListener('change', function () {
       ovPrefs[pair[1]] = $(pair[0]).checked;
       try { localStorage.setItem('rennen-overlays', JSON.stringify(ovPrefs)); } catch (e) {}
@@ -3985,6 +4068,7 @@
     }
     if (rel === 'me') btn('Profil bearbeiten', false, function () { closeProfile(); showScreen('Profile'); });
     if (rel === 'friend') btn('Nachricht schreiben', false, function () { closeProfile(); startDirectChat(uid); });
+    if (rel === 'friend' && others[uid]) btn('Zu ' + info.name + ' navigieren', false, function () { closeProfile(); showScreen('Navi'); quickNav(friendDest(uid)); });
     if (rel === 'none') btn('Freundschaftsanfrage senden', false, function () {
       db.from('friendships').insert({ requester_id: myId, addressee_id: uid }).then(function (r) {
         if (r.error) { setStatus(r.error.code === '23505' ? 'Es gibt schon eine Anfrage mit dieser Person.' : 'Anfrage fehlgeschlagen: ' + r.error.message, 'err'); return; }
@@ -4206,6 +4290,159 @@
       });
     });
   });
+
+  // =====================================================
+  //  NAVI: SCHNELLZUGRIFF, EIGENE ORTE, FREUNDE
+  // =====================================================
+  var placeEdit = false, pendingSave = null, navFriendsTs = 0;
+  fillSelect($('nvSaveIcon'), PLACE_ICON_NAMES);
+
+  function loadPlaces() {
+    if (!myId) return Promise.resolve();
+    return db.from('saved_places').select('*').order('created_at', { ascending: true }).then(function (res) {
+      if (res.error) { ovInfo.places = 'Fehler: ' + res.error.message + ' (SQL-Schritt ausgeführt?)'; updateOvStatus(); return; }
+      myPlaces = res.data || [];
+      ov.places.invalidate();
+      renderNaviQuick();
+    });
+  }
+
+  // ----- Navigation direkt starten -----
+  function quickNav(d) {
+    if (inRunningRace()) { setStatus('Während eines Rennens ist die Navigation gesperrt.', 'warn'); return; }
+    if (nav) {
+      if (!confirm('Die laufende Navigation beenden und zu „' + d.label + '“ navigieren?')) return;
+      stopNavigation(true);
+    }
+    setDest(d);
+    $('nvGo').click();
+  }
+
+  // ----- Freunde auf der Karte -----
+  function friendDest(id) {
+    var o = others[id], ll = o.marker.getLatLng();
+    return { lat: ll.lat, lng: ll.lng, label: o.name, followId: id };
+  }
+  function renderNaviFriends(force) {
+    if (currentScreen !== 'Navi') return;
+    if (!force && Date.now() - navFriendsTs < 1000) return;
+    navFriendsTs = Date.now();
+    var now = Date.now();
+    var ids = Object.keys(others).filter(function (id) { return relationWith(id).rel === 'friend'; });
+    function d(id) { var ll = others[id].marker.getLatLng(); return myPos ? dist(myPos.lat, myPos.lng, ll.lat, ll.lng) : 0; }
+    ids.sort(function (a, b) { return myPos ? d(a) - d(b) : others[a].name.localeCompare(others[b].name); });
+    fillList($('nvFriends'), ids.map(function (id) {
+      var o = others[id], li = el('li'); li.setAttribute('data-uid', id);
+      li.appendChild(avatarNode(o.avatar, o.name, o.color, 28));
+      li.appendChild(el('span', 'nm', o.name));
+      li.appendChild(el('span', 'ago', (myPos ? fmtDist(d(id)) + ' · ' : '') + ago(now - o.updated)));
+      var b = el('button', '', 'Navi'); b.type = 'button';
+      b.addEventListener('click', function () { quickNav(friendDest(id)); });
+      li.appendChild(b);
+      return li;
+    }), watchId === null ? 'Starte den Standort auf der Startseite, um Freunde auf der Karte zu sehen.' : 'Gerade ist kein Freund mit Standort online.');
+  }
+
+  // Ziel folgt dem Freund: bewegt er sich mehr als 80 m, wird die Route neu berechnet
+  function navFollowCheck(lat, lng) {
+    if (!nav || !nav.dest || !nav.dest.followId || nav.fetching || Date.now() - nav.lastFollow < 15000) return;
+    nav.lastFollow = Date.now();
+    var fo = others[nav.dest.followId];
+    if (!fo) return;
+    var ll = fo.marker.getLatLng();
+    if (dist(ll.lat, ll.lng, nav.dest.lat, nav.dest.lng) <= 80) return;
+    var cur = nav;
+    cur.dest = { lat: ll.lat, lng: ll.lng, label: cur.dest.label, followId: cur.dest.followId };
+    cur.fetching = true; cur.lastReroute = Date.now();
+    fetchRoute({ lat: lat, lng: lng }, cur.dest, cur.mode).then(function (route) {
+      if (nav === cur) { applyRoute(route); setStatus(cur.dest.label + ' hat sich bewegt, die Route wurde angepasst.', 'ok'); }
+    }).catch(function () { setStatus('Route zum Freund konnte nicht aktualisiert werden.', 'warn'); })
+      .then(function () { cur.fetching = false; });
+  }
+
+  // ----- Zuletzt gesucht (nur auf diesem Gerät) -----
+  function recentKey() { return 'rna-recent-' + myId; }
+  function getRecent() { try { return JSON.parse(localStorage.getItem(recentKey()) || '[]'); } catch (e) { return []; } }
+  function setRecent(list) { try { localStorage.setItem(recentKey(), JSON.stringify(list)); } catch (e) {} }
+  function shortLabel(s) { return String(s).split(',').slice(0, 2).join(',').trim(); }
+  function addRecent(d) {
+    if (!d || d.followId || !myId) return;
+    if (myPlaces.some(function (p) { return dist(p.lat, p.lng, d.lat, d.lng) < 30; })) return;   // gespeicherte Orte stehen schon oben
+    var list = getRecent().filter(function (r) { return dist(r.lat, r.lng, d.lat, d.lng) >= 30; });
+    list.unshift({ lat: d.lat, lng: d.lng, label: String(d.label || 'Ziel').slice(0, 120) });
+    setRecent(list.slice(0, 8));
+  }
+  function renderRecent() {
+    var list = getRecent();
+    $('nvRecentBox').classList.toggle('hidden', !list.length);
+    fillList($('nvRecent'), list.map(function (r) {
+      var li = el('li', 'click');
+      li.appendChild(el('span', 'nm', shortLabel(r.label)));
+      li.addEventListener('click', function () { quickNav({ lat: r.lat, lng: r.lng, label: r.label }); });
+      return li;
+    }), '');
+  }
+  $('nvRecentClear').addEventListener('click', function () { setRecent([]); renderRecent(); });
+
+  // ----- Meine Orte -----
+  function renderPlaceChips() {
+    var box = $('nvFavs'); box.textContent = '';
+    if (!myPlaces.length) box.appendChild(el('span', 'hint', 'Noch keine Orte. Speichere unten dein Ziel oder deinen Standort, zum Beispiel als „Zuhause“.'));
+    myPlaces.forEach(function (p) {
+      var b = el('button', 'chip', (placeEdit ? '✕ ' : (PLACE_ICONS[p.icon] || '📍') + ' ') + p.name); b.type = 'button';
+      b.addEventListener('click', function () { if (placeEdit) deletePlace(p); else quickNav({ lat: p.lat, lng: p.lng, label: p.name }); });
+      box.appendChild(b);
+    });
+    $('nvPlacesEdit').textContent = placeEdit ? 'Fertig' : 'Bearbeiten';
+    $('nvPlacesEdit').classList.toggle('hidden', !myPlaces.length);
+  }
+  function renderNaviQuick() { renderPlaceChips(); renderRecent(); renderNaviFriends(true); }
+  $('nvPlacesEdit').addEventListener('click', function () { placeEdit = !placeEdit; renderPlaceChips(); });
+
+  function deletePlace(p) {
+    if (!confirm('„' + p.name + '“ aus „Meine Orte“ löschen?')) return;
+    db.from('saved_places').delete().eq('id', p.id).then(function (res) {
+      if (res.error) { setStatus('Löschen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      setStatus('Ort gelöscht.', 'ok'); loadPlaces();
+    });
+  }
+  function openSaveBox(lat, lng, address, suggestion) {
+    pendingSave = { lat: lat, lng: lng, address: address || null };
+    var hasHome = myPlaces.some(function (p) { return p.name.toLowerCase() === 'zuhause'; });
+    $('nvSaveName').value = hasHome ? (suggestion || '') : 'Zuhause';
+    $('nvSaveIcon').value = hasHome ? 'pin' : 'home';
+    $('nvSaveBox').classList.remove('hidden'); $('nvSaveName').focus();
+  }
+  $('nvSaveDest').addEventListener('click', function () {
+    if (!navDest) { setStatus('Wähle zuerst ein Ziel.', 'warn'); return; }
+    if (navDest.followId) { setStatus('Die Position eines Freundes lässt sich nicht speichern.', 'warn'); return; }
+    openSaveBox(navDest.lat, navDest.lng, navDest.label, shortLabel(navDest.label).slice(0, 30));
+  });
+  $('nvSaveHere').addEventListener('click', function () {
+    if (!myPos) { setStatus('Noch keine GPS-Position. Starte zuerst den Standort (Startseite).', 'warn'); return; }
+    openSaveBox(myPos.lat, myPos.lng, null, '');
+  });
+  $('nvSaveCancel').addEventListener('click', function () { pendingSave = null; $('nvSaveBox').classList.add('hidden'); });
+  function savePlace() {
+    var name = $('nvSaveName').value.trim();
+    if (!pendingSave) return;
+    if (!name) { setStatus('Bitte einen Namen eingeben.', 'warn'); return; }
+    $('nvSaveOk').disabled = true;
+    db.from('saved_places').insert({
+      user_id: myId, name: name.slice(0, 30), lat: pendingSave.lat, lng: pendingSave.lng,
+      address: pendingSave.address ? String(pendingSave.address).slice(0, 200) : null, icon: $('nvSaveIcon').value
+    }).then(function (res) {
+      $('nvSaveOk').disabled = false;
+      if (res.error) {
+        var m = res.error.code === '23505' ? 'Diesen Namen gibt es schon.'
+          : /row-level security/i.test(res.error.message) ? 'Du kannst höchstens 30 Orte speichern.' : res.error.message;
+        setStatus('Speichern fehlgeschlagen: ' + m, 'err'); return;
+      }
+      pendingSave = null; $('nvSaveBox').classList.add('hidden');
+      setStatus('„' + name + '“ gespeichert.', 'ok'); loadPlaces();
+    });
+  }
+  $('nvSaveOk').addEventListener('click', savePlace);
 
   // =====================================================
   //  START
