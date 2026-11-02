@@ -224,6 +224,9 @@
   input[type=datetime-local], input[type=url] { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; color: var(--ink); background: var(--field); }
   input[type=datetime-local]:focus-visible, input[type=url]:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
   .pointpin { width: 32px; height: 32px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .55)); }
+  /* Profilbild im Menüknopf: exakt in die Mitte, ohne Zeilenhöhe (sonst sitzt ein Bild ca. 2 px zu hoch) */
+  .menubtn #whoAvatar { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; }
+  #pAvatar { display: flex; }
   .hidden { display: none; }
 </style>
 </head>
