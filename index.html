@@ -370,12 +370,10 @@
       </div>
 
       <div id="raceCreate" class="hidden">
-        <label for="rcMode">Startart</label>
-        <select id="rcMode">
+        <select id="rcMode" class="hidden" aria-hidden="true" tabindex="-1">
           <option value="fixed">Gemeinsamer Startpunkt</option>
           <option value="free">Jeder startet an seinem Standort</option>
         </select>
-        <p class="hint" id="rcModeHint"></p>
         <div id="rcTrackBox">
           <label for="rcTrack">Strecke</label>
           <select id="rcTrack"><option value="">Neue Strecke (Start und Ziel selbst setzen)</option></select>
@@ -391,8 +389,12 @@
           <p class="hint" id="rcStartInfo">Start: noch nicht gesetzt</p>
           <div class="row">
             <button id="rcPickStart" class="ghost" type="button">Start auf Karte</button>
-            <button id="rcMyStart" class="ghost" type="button">Mein Standort</button>
+            <button id="rcMyStart" class="ghost" type="button">Ohne Startkreis: jeder am eigenen Standort</button>
           </div>
+        </div>
+        <div id="rcFreeBox" class="hidden">
+          <p class="hint" id="rcModeHint"></p>
+          <div class="row"><button id="rcBackToStart" class="ghost" type="button">Doch einen gemeinsamen Startpunkt setzen</button></div>
         </div>
         <p class="hint" id="rcFinishInfo">Ziel: noch nicht gesetzt</p>
         <div class="row"><button id="rcPickFinish" class="ghost" type="button">Ziel auf Karte</button></div>
@@ -1500,18 +1502,20 @@
   $('rcPickFinish').addEventListener('click', function () {
     pickOnMap('Tippe auf der Karte auf den Zielpunkt', function (ll) { draft.finish = { lat: ll.lat, lng: ll.lng }; drawDraft(); });
   });
-  $('rcMyStart').addEventListener('click', function () {
-    if (!myPos) { setStatus('Noch keine GPS-Position. Starte zuerst den Standort (Reiter Karte).', 'warn'); return; }
-    draft.start = { lat: myPos.lat, lng: myPos.lng }; drawDraft();
-  });
+  // „Ohne Startkreis“: es gibt keinen Startpunkt, jeder startet beim Countdown dort, wo er steht
+  function chooseFreeStart() { $('rcMode').value = 'free'; applyMode(); }
+  function chooseFixedStart() { $('rcMode').value = 'fixed'; applyMode(); }
+  $('rcMyStart').addEventListener('click', chooseFreeStart);
+  $('rcBackToStart').addEventListener('click', chooseFixedStart);
   function rcFree() { return $('rcMode').value === 'free'; }
   // Bei freiem Start gibt es nur das gemeinsame Ziel; Strecken (mit Rangliste) brauchen einen festen Start
   function applyMode() {
     var free = rcFree();
     $('rcStartBox').classList.toggle('hidden', free);
+    $('rcFreeBox').classList.toggle('hidden', !free);
     $('rcTrackBox').classList.toggle('hidden', free);
     $('rcRadiusLabel').textContent = free ? 'Größe des Zielkreises' : 'Größe von Start- und Zielkreis';
-    $('rcModeHint').textContent = free ? 'Alle starten gleichzeitig dort, wo sie gerade stehen. Pflicht ist nur das gemeinsame Ziel. Wer weiter weg ist, hat einen längeren Weg.' : '';
+    $('rcModeHint').textContent = free ? 'Kein Startkreis: Alle starten beim Countdown gleichzeitig dort, wo sie gerade stehen. Pflicht ist nur das gemeinsame Ziel. Wer weiter weg ist, hat einen längeren Weg.' : '';
     if (free) {
       draft.start = null; $('rcTrack').value = '';
       ['rcPickStart', 'rcPickFinish', 'rcMyStart', 'rcRadius'].forEach(function (id) { $(id).disabled = false; });
@@ -1533,7 +1537,11 @@
       p_flat: draft.finish.lat, p_flng: draft.finish.lng, p_radius: rad, p_track: free ? null : ($('rcTrack').value || null)
     }).then(function (res) {
       $('rcCreate').disabled = false;
-      if (res.error) { setStatus('Erstellen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+      if (res.error) {
+        var em = res.error.message || '';
+        if (free && /start_lat|start_lng|null value/i.test(em)) em = 'Für Rennen ohne Startkreis fehlt in Supabase noch ein Schritt (SQL „Rennen ohne festen Start“). Technische Meldung: ' + em;
+        setStatus('Erstellen fehlgeschlagen: ' + em, 'err'); return;
+      }
       var r = Array.isArray(res.data) ? res.data[0] : res.data;
       setStatus('Rennen erstellt. Code: ' + r.code, 'ok');
       if (pendingShareConv) {
