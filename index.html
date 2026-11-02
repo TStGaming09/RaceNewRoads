@@ -78,7 +78,7 @@
   .menu .badge { position: static; }
   .menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
   .locbtn { position: absolute; z-index: 1000; left: 10px; top: calc(84px + env(safe-area-inset-top, 0px)); width: 34px; height: 34px; margin: 0; padding: 0; border-radius: 4px; background: #fff; color: #14213d; font-size: 18px; box-shadow: 0 1px 5px rgba(0, 0, 0, .65); }
-  body.picking .menubtn, body.picking .menu, body.picking .locbtn, body.picking .bellbtn { display: none; }
+  body.picking .menubtn, body.picking .menu, body.picking .locbtn { display: none; }
   .panel.collapsed #mainView, .panel.collapsed #authView { display: none; }
 
   .avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; overflow: hidden; color: #fff; font-weight: 700; }
@@ -168,8 +168,7 @@
   .vbtns { display: flex; flex-direction: column; gap: 6px; }
   .pill.on { background: var(--ok); color: #fff; margin-left: 6px; }
   .rank { font-weight: 700; width: 26px; text-align: center; flex: none; font-variant-numeric: tabular-nums; }
-  .bellbtn { position: absolute; z-index: 1200; top: calc(12px + env(safe-area-inset-top, 0px)); right: 70px; width: 48px; height: 48px; margin: 0; padding: 0; border-radius: 50%; border: 3px solid #fff; background: var(--paper); color: var(--ink); font-size: 1.25rem; box-shadow: 0 2px 10px rgba(0, 0, 0, .35); display: flex; align-items: center; justify-content: center; }
-  .bellbtn .badge { top: -7px; right: -7px; }
+  .menubtn .badge { top: -8px; right: -8px; border: 2px solid #fff; box-sizing: border-box; }
   .udot { width: 9px; height: 9px; border-radius: 50%; background: var(--me); flex: none; }
   .list li .acts { flex-basis: 100%; display: flex; gap: 8px; margin-top: 6px; }
   .list li .acts button { flex: 1; padding: 8px 12px; }
@@ -207,7 +206,7 @@
   .modal.collapsed { background: transparent; pointer-events: none; }
   .modal.collapsed .modal-card { bottom: auto; pointer-events: auto; }
   .modal.collapsed .modal-tabs, .modal.collapsed .modal-body, .modal.collapsed .sm-status { display: none; }
-  body.modal-open .panel, body.modal-open .menubtn, body.modal-open .bellbtn, body.modal-open .menu { display: none; }
+  body.modal-open .panel, body.modal-open .menubtn, body.modal-open .menu { display: none; }
   .screenhead { position: sticky; top: 0; z-index: 5; background: var(--paper); padding: 10px 0; margin-top: 0; }
   .campin2 { width: 30px; height: 30px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); }
   .workpin { width: 28px; height: 28px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); }
@@ -261,12 +260,12 @@
     <div id="umBody" class="modal-body"></div>
   </div>
 </div>
-<button id="bellBtn" class="bellbtn hidden" type="button" aria-label="Benachrichtigungen">🔔<span id="bellBadge" class="badge hidden"></span></button>
 <button id="menuBtn" class="menubtn hidden" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menü">
-  <span id="whoAvatar"></span><span id="menuDot" class="dotbadge hidden"></span>
+  <span id="whoAvatar"></span><span id="menuBadge" class="badge hidden"></span>
 </button>
 <div id="menu" class="menu hidden" role="menu">
   <div class="menu-head" id="who"></div>
+  <button type="button" role="menuitem" data-go="Notifications"><span>Benachrichtigungen</span><span id="badgeNotifs" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Profile"><span>Profil</span></button>
   <button type="button" role="menuitem" data-go="Stats"><span>Statistiken</span></button>
   <button type="button" role="menuitem" data-go="Chats"><span>Nachrichten</span><span id="badgeMsgsMenu" class="badge hidden"></span></button>
@@ -915,7 +914,7 @@
   function showAuth() {
     mainView.classList.add('hidden');
     authView.classList.remove('hidden');
-    $('menuBtn').classList.add('hidden'); $('bellBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden'); stopOverlays();
+    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden'); stopOverlays();
     passIn.value = '';
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     setMode(mode);
@@ -938,7 +937,7 @@
       $('nvMode').value = 'car';
       authView.classList.add('hidden');
       mainView.classList.remove('hidden');
-      $('menuBtn').classList.remove('hidden'); $('bellBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
+      $('menuBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
       showScreen('Home');
       startOverlays();
       setStatus('Bereit');
@@ -1930,7 +1929,6 @@
   function updateBadges() {
     function set(id, n) { var e = $(id); e.textContent = n; e.classList.toggle('hidden', !n); }
     set('badgeRace', inviteCount); set('badgeFriends', incomingCount);
-    $('menuDot').classList.toggle('hidden', !incomingCount);
   }
   function renderHome() {
     var b = $('homeActive');
@@ -3418,9 +3416,10 @@
     return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
   }
   function updateNotifBadge() {
-    var b = $('bellBadge');
-    b.textContent = unreadCount > 99 ? '99+' : unreadCount;
-    b.classList.toggle('hidden', !unreadCount);
+    var txt = unreadCount > 99 ? '99+' : String(unreadCount);
+    ['menuBadge', 'badgeNotifs'].forEach(function (id) {   // Zahl am Profilbild und beim Menüpunkt „Benachrichtigungen“
+      var b = $(id); b.textContent = txt; b.classList.toggle('hidden', !unreadCount);
+    });
     document.title = (unreadCount ? '(' + unreadCount + ') ' : '') + baseTitle;
   }
   function countUnread() { unreadCount = notifs.filter(function (n) { return !n.read_at; }).length; updateNotifBadge(); }
@@ -3492,7 +3491,6 @@
       notifs = []; countUnread(); renderNotifs();
     });
   });
-  $('bellBtn').addEventListener('click', function (e) { e.stopPropagation(); closeMenu(); showScreen('Notifications'); });
 
   function notifActions(n) {
     var d = n.data || {}, box = null;
