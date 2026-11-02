@@ -244,7 +244,6 @@
 <div id="menu" class="menu hidden" role="menu">
   <div class="menu-head" id="who"></div>
   <button type="button" role="menuitem" data-go="Profile"><span>Profil</span></button>
-  <button type="button" role="menuitem" data-go="Garage"><span>Garage</span></button>
   <button type="button" role="menuitem" data-go="Stats"><span>Statistiken</span></button>
   <button type="button" role="menuitem" data-go="Chats"><span>Nachrichten</span><span id="badgeMsgsMenu" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Friends"><span>Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
@@ -422,6 +421,7 @@
 
     <!-- Profil -->
     <div id="tabProfile" class="hidden">
+      <div id="profTop">
       <div class="avatar-edit">
         <span id="pAvatar"></span>
         <div class="btns">
@@ -436,17 +436,52 @@
       <input id="pName" type="text" maxlength="20">
       <label for="pColor">Deine Farbe auf der Karte</label>
       <input id="pColor" type="color" value="#1d4ed8">
-      <label for="pVehicle">Womit fährst du hauptsächlich?</label>
-      <select id="pVehicle"></select>
-      <div id="carRow" class="hidden">
-        <label for="pCar">Autokategorie</label>
-        <select id="pCar"></select>
-      </div>
       <button id="pSave" type="button">Profil speichern</button>
+      </div>
+      <div id="profGarage">
+      <div id="garListBox">
+        <h3 style="margin-top:20px">Meine Garage</h3>
+        <button id="garAdd" type="button">Fahrzeug hinzufügen</button>
+        <ul id="garList" class="list" style="margin-top:12px"></ul>
+        <p class="hint">Dein aktives Fahrzeug wird bei jedem Rennen mit dem Ergebnis gespeichert. Ohne Fahrzeug in der Garage wird keines gespeichert. Bilder sind über ihren Link öffentlich lesbar. Verdecke deshalb Kennzeichen.</p>
+      </div>
+      <div id="garForm" class="hidden">
+        <div class="avatar-edit">
+          <span id="gfPreview"></span>
+          <div class="btns">
+            <button id="gfPick" class="ghost" type="button">Foto wählen</button>
+            <button id="gfRemovePic" class="ghost" type="button">Foto entfernen</button>
+          </div>
+          <input id="gfFile" type="file" accept="image/*" class="hidden">
+        </div>
+        <label for="gfNick">Bezeichnung (optional)</label>
+        <input id="gfNick" type="text" maxlength="40" placeholder="z. B. Der Blaue">
+        <label for="gfKind">Fahrzeugart</label>
+        <select id="gfKind"></select>
+        <div id="gfCarRow" class="hidden"><label for="gfCar">Autokategorie</label><select id="gfCar"></select></div>
+        <div class="grid2">
+          <div><label for="gfMake">Marke</label><input id="gfMake" type="text" maxlength="40"></div>
+          <div><label for="gfModel">Modell</label><input id="gfModel" type="text" maxlength="60"></div>
+          <div><label for="gfYear">Baujahr</label><input id="gfYear" type="number" inputmode="numeric" min="1900" max="2100"></div>
+          <div><label for="gfFuel">Antrieb</label><select id="gfFuel"><option value="">–</option></select></div>
+          <div><label for="gfPs">Leistung (PS)</label><input id="gfPs" type="number" inputmode="numeric" min="0" max="5000"></div>
+          <div><label for="gfKw">Leistung (kW)</label><input id="gfKw" type="text" disabled></div>
+          <div><label for="gfCc">Hubraum (cm³)</label><input id="gfCc" type="number" inputmode="numeric" min="0" max="20000"></div>
+          <div><label for="gfKg">Gewicht (kg)</label><input id="gfKg" type="number" inputmode="numeric" min="0" max="20000"></div>
+        </div>
+        <label for="gfNotes">Notizen, Tuning, Besonderheiten</label>
+        <textarea id="gfNotes" maxlength="500"></textarea>
+        <button id="gfSave" type="button">Speichern</button>
+        <button id="gfCancel" class="ghost wide" type="button">Abbrechen</button>
+        <button id="gfDelete" class="danger hidden" type="button">Fahrzeug löschen</button>
+      </div>
+      </div>
+      <div id="profBottom">
       <h3>Passwort ändern</h3>
       <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
       <input id="pNewPass" type="password" autocomplete="new-password">
       <button id="pPassSave" type="button">Passwort ändern</button>
+      </div>
     </div>
 
     <!-- Nachrichten und Gruppen -->
@@ -494,43 +529,9 @@
       <ul id="ntList" class="list" style="margin-top:10px"></ul>
     </div>
 
-    <!-- Garage -->
-    <div id="tabGarage" class="hidden">
-      <div id="garListBox">
-        <button id="garAdd" type="button">Fahrzeug hinzufügen</button>
-        <ul id="garList" class="list" style="margin-top:12px"></ul>
-        <p class="hint">Dein aktives Fahrzeug wird bei jedem Rennen mit dem Ergebnis gespeichert. Bilder sind über ihren Link öffentlich lesbar. Verdecke deshalb Kennzeichen.</p>
-      </div>
-      <div id="garForm" class="hidden">
-        <div class="avatar-edit">
-          <span id="gfPreview"></span>
-          <div class="btns">
-            <button id="gfPick" class="ghost" type="button">Foto wählen</button>
-            <button id="gfRemovePic" class="ghost" type="button">Foto entfernen</button>
-          </div>
-          <input id="gfFile" type="file" accept="image/*" class="hidden">
-        </div>
-        <label for="gfNick">Bezeichnung (optional)</label>
-        <input id="gfNick" type="text" maxlength="40" placeholder="z. B. Der Blaue">
-        <label for="gfKind">Fahrzeugart</label>
-        <select id="gfKind"></select>
-        <div id="gfCarRow" class="hidden"><label for="gfCar">Autokategorie</label><select id="gfCar"></select></div>
-        <div class="grid2">
-          <div><label for="gfMake">Marke</label><input id="gfMake" type="text" maxlength="40"></div>
-          <div><label for="gfModel">Modell</label><input id="gfModel" type="text" maxlength="60"></div>
-          <div><label for="gfYear">Baujahr</label><input id="gfYear" type="number" inputmode="numeric" min="1900" max="2100"></div>
-          <div><label for="gfFuel">Antrieb</label><select id="gfFuel"><option value="">–</option></select></div>
-          <div><label for="gfPs">Leistung (PS)</label><input id="gfPs" type="number" inputmode="numeric" min="0" max="5000"></div>
-          <div><label for="gfKw">Leistung (kW)</label><input id="gfKw" type="text" disabled></div>
-          <div><label for="gfCc">Hubraum (cm³)</label><input id="gfCc" type="number" inputmode="numeric" min="0" max="20000"></div>
-          <div><label for="gfKg">Gewicht (kg)</label><input id="gfKg" type="number" inputmode="numeric" min="0" max="20000"></div>
-        </div>
-        <label for="gfNotes">Notizen, Tuning, Besonderheiten</label>
-        <textarea id="gfNotes" maxlength="500"></textarea>
-        <button id="gfSave" type="button">Speichern</button>
-        <button id="gfCancel" class="ghost wide" type="button">Abbrechen</button>
-        <button id="gfDelete" class="danger hidden" type="button">Fahrzeug löschen</button>
-      </div>
+    <!-- Garage eines Freundes (nur ansehen) -->
+    <div id="tabFriendGarage" class="hidden">
+      <ul id="fgList" class="list" style="margin-top:12px"></ul>
     </div>
 
     <!-- Ranglisten -->
@@ -742,8 +743,16 @@
   function getProfiles(ids, force) {
     var missing = ids.filter(function (id, i) { return ids.indexOf(id) === i && (force || !profCache[id]); });
     if (!missing.length) return Promise.resolve();
-    return db.from('profiles').select('id,username,avatar_url,color,vehicle,car_category').in('id', missing).then(function (res) {
-      (res.data || []).forEach(function (p) { profCache[p.id] = p; });
+    return db.from('profiles').select('id,username,avatar_url,color,active_vehicle_id').in('id', missing).then(function (res) {
+      var rows = res.data || [], vids = [];
+      rows.forEach(function (p) { profCache[p.id] = p; if (p.active_vehicle_id) vids.push(p.active_vehicle_id); });
+      if (!vids.length) return;
+      // Fahrzeuge von Freunden sind lesbar; bei anderen bleibt die Beschriftung leer
+      return db.from('vehicles').select('id,kind,nickname,make,model').in('id', vids).then(function (r2) {
+        var byId = {};
+        (r2.data || []).forEach(function (v) { byId[v.id] = v; });
+        rows.forEach(function (p) { var v = byId[p.active_vehicle_id]; if (v) p.vehicleLabel = vehicleShortLabel(v); });
+      });
     });
   }
   function pInfo(id) {
@@ -751,10 +760,7 @@
     return p ? { name: p.username, avatar: p.avatar_url, color: p.color || '#667', label: vehicleLabel(p) }
              : { name: '…', avatar: null, color: '#667', label: '' };
   }
-  function vehicleLabel(p) {
-    if (p.vehicle === 'auto' && p.car_category && CARS[p.car_category]) return CARS[p.car_category];
-    return VEHICLES[p.vehicle] || '';
-  }
+  function vehicleLabel(p) { return p.vehicleLabel || ''; }
 
   // ---------- Profilbilder und Marker ----------
   function safeAvatar(url) { return (typeof url === 'string' && url.indexOf(AVATAR_PREFIX) === 0) ? url : null; }
@@ -857,7 +863,7 @@
     db.from('profiles').select('username,color,vehicle,car_category,avatar_url,active_vehicle_id').eq('id', myId).single().then(function (res) {
       if (res.error || !res.data) { setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err'); return; }
       applyProfile(res.data);
-      $('nvMode').value = NAV_MODE_FOR[myVehicle] || 'bike';
+      $('nvMode').value = 'car';
       authView.classList.add('hidden');
       mainView.classList.remove('hidden');
       $('menuBtn').classList.remove('hidden'); $('bellBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
@@ -890,22 +896,16 @@
 
   // ---------- Profil ----------
   function fillSelect(sel, m) { Object.keys(m).forEach(function (k) { var o = document.createElement('option'); o.value = k; o.textContent = m[k]; sel.appendChild(o); }); }
-  fillSelect($('pVehicle'), VEHICLES);
-  fillSelect($('pCar'), CARS);
-  function toggleCarRow() { $('carRow').classList.toggle('hidden', $('pVehicle').value !== 'auto'); }
-  $('pVehicle').addEventListener('change', toggleCarRow);
 
   function fillProfile() {
     $('pEmail').value = myEmail; $('pName').value = myName; $('pColor').value = myColor;
-    $('pVehicle').value = myVehicle; $('pCar').value = myCar || 'kompakt';
-    toggleCarRow(); renderProfileAvatar();
+    renderProfileAvatar();
   }
 
   $('pSave').addEventListener('click', function () {
     var name = $('pName').value.trim();
     if (name.length < 2 || name.length > 20) { setStatus('Der Spielername braucht 2 bis 20 Zeichen.', 'warn'); return; }
-    var vehicle = $('pVehicle').value;
-    var row = { username: name, color: $('pColor').value, vehicle: vehicle, car_category: vehicle === 'auto' ? $('pCar').value : null };
+    var row = { username: name, color: $('pColor').value };
     db.from('profiles').update(row).eq('id', myId).then(function (res) {
       if (res.error) { setStatus(res.error.code === '23505' ? 'Dieser Spielername ist schon vergeben.' : 'Speichern fehlgeschlagen: ' + res.error.message, 'err'); return; }
       row.avatar_url = myAvatar; row.active_vehicle_id = myActiveVehicle;
@@ -1057,7 +1057,7 @@
       ]);
     }), 'Keine offenen Anfragen.');
     fillList($('listFriends'), accepted.map(function (f) {
-      return friendRow(f, [{ label: 'Chat', ghost: true, run: function () { startDirectChat(otherId(f)); } }, { label: 'Garage', ghost: true, run: function () { showScreen('Garage'); openGarage(otherId(f)); } }, { label: 'Entfernen', ghost: true, run: function () { if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id); } }]);
+      return friendRow(f, [{ label: 'Chat', ghost: true, run: function () { startDirectChat(otherId(f)); } }, { label: 'Garage', ghost: true, run: function () { openFriendGarage(otherId(f)); } }, { label: 'Entfernen', ghost: true, run: function () { if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id); } }]);
     }), 'Noch keine Freunde. Such oben nach dem Spielernamen.');
     fillList($('listOutgoing'), outgoing.map(function (f) {
       return friendRow(f, [{ label: 'Zurückziehen', ghost: true, run: function () { removeFriendship(f.id); } }]);
@@ -1810,8 +1810,8 @@
   // =====================================================
   var currentScreen = 'Home', raceView = 'List';
   var incomingCount = 0, inviteCount = 0, raceDist = 0;
-  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'Garage', 'Stats', 'Boards', 'History', 'Notifications', 'Chats', 'Settings'];
-  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', Garage: 'Garage', Stats: 'Statistiken', Boards: 'Ranglisten', History: 'Rennhistorie', Notifications: 'Benachrichtigungen', Chats: 'Nachrichten', Settings: 'Einstellungen' };
+  var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'FriendGarage', 'Stats', 'Boards', 'History', 'Notifications', 'Chats', 'Settings'];
+  var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', FriendGarage: 'Garage', Stats: 'Statistiken', Boards: 'Ranglisten', History: 'Rennhistorie', Notifications: 'Benachrichtigungen', Chats: 'Nachrichten', Settings: 'Einstellungen' };
 
   function showScreen(t) {
     currentScreen = t;
@@ -1822,13 +1822,12 @@
     $('panel').classList.remove('collapsed'); $('collapseBtn').innerHTML = '&#9662;';
     if (t === 'Home') renderHome();
     if (t === 'Friends') loadFriends();
-    if (t === 'Profile') fillProfile();
+    if (t === 'Profile') { fillProfile(); openOwnGarage(); }
     if (t === 'Stats') loadStats();
     if (t === 'Race') loadMyRaces(true);
     if (t === 'Navi') refreshNaviSetup();
     if (t !== 'History') histLayer.clearLayers();
     if (t !== 'Boards') trackLayer.clearLayers();
-    if (t === 'Garage') openGarage(myId);
     if (t === 'Boards') boardsOpen();
     if (t === 'History') histOpen();
     if (t === 'Notifications') loadNotifications(true);
@@ -1841,7 +1840,7 @@
     if (currentScreen === 'Race' && raceView !== 'List') raceBack();
     else if (currentScreen === 'Boards' && boardView === 'Track') showBoardTab('Tracks');
     else if (currentScreen === 'History' && histView === 'Detail') histOpen();
-    else if (currentScreen === 'Garage' && garView === 'Form') garBack();
+    else if (currentScreen === 'Profile' && garView === 'Form') garBack();
     else if (currentScreen === 'Chats' && chView !== 'List') chBack();
     else showScreen('Home');
   });
@@ -2791,8 +2790,7 @@
       var name = [v.make, v.model].filter(Boolean).join(' ') || v.nickname || KINDS[v.kind];
       return { label: (name + (v.power_ps ? ' · ' + v.power_ps + ' PS' : '')).slice(0, 80), cls: v.kind };
     }
-    var lbl = (myVehicle === 'auto' && myCar && CARS[myCar]) ? CARS[myCar] : (VEHICLES[myVehicle] || '');
-    return { label: lbl, cls: myVehicle };
+    return { label: null, cls: null };   // ohne Fahrzeug in der Garage wird keines gespeichert
   }
 
   function thumbNode(url) {
@@ -2802,9 +2800,19 @@
     return t;
   }
 
+  // Kurzname für die Beschriftung in der Freundesliste
+  function vehicleShortLabel(v) { return [v.make, v.model].filter(Boolean).join(' ') || v.nickname || KINDS[v.kind] || ''; }
+  var navModeTouched = false;
+  function applyNavDefault() {   // Fahrzeugart der Garage bestimmt die Voreinstellung im Navi
+    if (navModeTouched) return;
+    var v = myVehicles.filter(function (x) { return x.id === myActiveVehicle; })[0] || myVehicles[0];
+    if (v) $('nvMode').value = NAV_MODE_FOR[v.kind] || 'car';
+  }
+  $('nvMode').addEventListener('change', function () { navModeTouched = true; });
+
   function renderGarage(list, mine) {
-    $('garAdd').classList.toggle('hidden', !mine);
-    fillList($('garList'), list.map(function (v) {
+    if (mine) $('garAdd').classList.remove('hidden');
+    fillList(mine ? $('garList') : $('fgList'), list.map(function (v) {
       var li = el('li', 'vcard');
       li.appendChild(thumbNode(v.photo_url));
       var info = el('div', 'vinfo'), head = el('div');
@@ -2835,21 +2843,38 @@
     return db.from('vehicles').select('*').eq('user_id', myId).order('created_at', { ascending: true }).then(function (res) {
       if (res.error) { setStatus('Garage laden fehlgeschlagen: ' + res.error.message, 'err'); return; }
       myVehicles = res.data || [];
-      if (garUser === myId && currentScreen === 'Garage' && garView === 'List') renderGarage(myVehicles, true);
+      applyNavDefault();
+      if (currentScreen === 'Profile' && garView === 'List') renderGarage(myVehicles, true);
     });
   }
-  function openGarage(uid) {
-    garUser = uid; garView = 'List';
+  function showProfileParts(show) {
+    $('profTop').classList.toggle('hidden', !show);
+    $('profBottom').classList.toggle('hidden', !show);
+  }
+  // eigene Garage im Profil
+  function openOwnGarage() {
+    garView = 'List';
     $('garForm').classList.add('hidden'); $('garListBox').classList.remove('hidden');
+    showProfileParts(true);
+    renderGarage(myVehicles, true); loadMyGarage();
+  }
+  // Garage eines Freunden (nur ansehen)
+  function openFriendGarage(uid) {
+    showScreen('FriendGarage');
+    garUser = uid;
+    $('fgList').textContent = '';
     $('screenTitle').textContent = 'Garage';
-    if (uid === myId) { renderGarage(myVehicles, true); loadMyGarage(); return; }
-    $('garAdd').classList.add('hidden');
-    getProfiles([uid]).then(function () { if (garUser === uid) $('screenTitle').textContent = 'Garage von ' + pInfo(uid).name; });
+    getProfiles([uid]).then(function () {
+      if (garUser === uid && currentScreen === 'FriendGarage') $('screenTitle').textContent = 'Garage von ' + pInfo(uid).name;
+    });
     db.from('vehicles').select('*').eq('user_id', uid).order('created_at', { ascending: true }).then(function (res) {
       if (garUser === uid) renderGarage(res.data || [], false);
     });
   }
-  function garBack() { garView = 'List'; $('garForm').classList.add('hidden'); $('garListBox').classList.remove('hidden'); renderGarage(myVehicles, true); }
+  function garBack() {
+    garView = 'List'; $('garForm').classList.add('hidden'); $('garListBox').classList.remove('hidden');
+    showProfileParts(true); renderGarage(myVehicles, true);
+  }
 
   function setActiveVehicle(id) {
     db.rpc('set_active_vehicle', { p_id: id }).then(function (res) {
@@ -2882,6 +2907,7 @@
     $('gfDelete').classList.toggle('hidden', !v);
     toggleGarCar(); updateKw(); renderGarPreview(v ? safeGarage(v.photo_url) : null);
     garView = 'Form'; $('garForm').classList.remove('hidden'); $('garListBox').classList.add('hidden');
+    showProfileParts(false); $('panel').scrollTop = 0;
   }
   $('garAdd').addEventListener('click', function () { garEdit(null); });
   $('gfCancel').addEventListener('click', garBack);
