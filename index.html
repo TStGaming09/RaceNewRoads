@@ -129,7 +129,7 @@
   .pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .name-tip { background: var(--paper); color: var(--ink); border: 0; border-radius: 6px; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; padding: 2px 8px; }
   .name-tip::before { display: none; }
-  .limitbox { position: absolute; z-index: 1000; left: 10px; top: calc(130px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .limitbox { position: absolute; z-index: 1000; left: 10px; top: calc(170px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .limitsign { width: 60px; height: 60px; border-radius: 50%; background: #fff; border: 7px solid #d11; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #111; box-shadow: 0 1px 6px rgba(0, 0, 0, .5); font-variant-numeric: tabular-nums; }
   .limitsign.unknown, .limitsign.none { border-color: #9aa3b2; color: #6b7686; font-weight: 600; }
   .limitsign.over { animation: limitblink .7s steps(2) infinite; }
@@ -218,8 +218,8 @@
   .um-top { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
   .um-name strong { font-size: 1.25rem; }
   .um-name .hint { margin-top: 2px; }
-  .um-actions { display: flex; gap: 8px; margin-top: 14px; }
-  .um-actions button { flex: 1; margin: 0; }
+  .um-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .um-actions button { flex: 1 1 140px; margin: 0; }
   input[type=datetime-local], input[type=url] { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; color: var(--ink); background: var(--field); }
   input[type=datetime-local]:focus-visible, input[type=url]:focus-visible { outline: 3px solid var(--me); outline-offset: 1px; }
   .pointpin { width: 32px; height: 32px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .55)); }
@@ -231,11 +231,38 @@
   .chip { width: auto; margin: 0; padding: 9px 14px; border-radius: 99px; background: var(--soft); color: var(--ink); font-weight: 600; border: 0; }
   .placepin { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 3px solid #0891b2; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); box-sizing: border-box; }
   #map { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  /* ---- 3D-Ansicht: Karte wird gekippt und so gedreht, dass „vor dir“ oben liegt ---- */
+  #mapWrap { position: absolute; inset: 0; --sky: #aac3de; --k: 1.305; }
+  :root[data-theme="dark"] #mapWrap { --sky: #121a29; }
+  #view3dBtn { top: calc(124px + env(safe-area-inset-top, 0px)); font-size: 13px; font-weight: 700; }
+  #zoom3d { position: absolute; z-index: 1000; left: 10px; top: calc(10px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; gap: 2px; }
+  .mapbtn { width: 34px; height: 34px; margin: 0; padding: 0; border-radius: 4px; background: #fff; color: #14213d; font-size: 20px; line-height: 1; box-shadow: 0 1px 5px rgba(0, 0, 0, .65); }
+  #fog3d, #attr3d { display: none; position: absolute; pointer-events: none; }
+  #attr3d { z-index: 500; top: calc(6px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); padding: 2px 8px; border-radius: 99px; background: rgba(255, 255, 255, .8); font-size: 11px; white-space: nowrap; pointer-events: auto; }
+  #attr3d a { color: #14213d; }
+  #mapWrap.mode3d { overflow: hidden; perspective: 900px; perspective-origin: 50% var(--fy, 70%); background: linear-gradient(var(--sky), var(--sky)); }
+  #mapWrap.mode3d #map { inset: auto; width: 2000px; height: 2000px; left: calc(50% - 1000px); top: calc(var(--fy, 70%) - 1000px);
+    transform-origin: 50% 50%; transform: rotateX(40deg) rotateZ(var(--nb, 0deg)); transition: transform .9s linear; }
+  #mapWrap.mode3d #fog3d { display: block; z-index: 400; left: 0; right: 0; top: 0; height: max(0px, calc(var(--fy, 70%) - 300px)); background: linear-gradient(to bottom, var(--sky) 0%, transparent 100%); }
+  #mapWrap.mode3d #attr3d { display: block; }
+  #mapWrap.mode3d .leaflet-control-container { display: none; }
+  /* Symbole bleiben aufrecht und lesbar: gegen die Drehung und die Neigung gegensteuern */
+  #mapWrap.mode3d .pin, #mapWrap.mode3d .fuelpin, #mapWrap.mode3d .tl, #mapWrap.mode3d .campin2, #mapWrap.mode3d .workpin,
+  #mapWrap.mode3d .limitpin, #mapWrap.mode3d .pointpin, #mapWrap.mode3d .placepin, #mapWrap.mode3d .name-tip span {
+    transform: rotate(var(--b, 0deg)) scaleY(var(--k)); transition: transform .9s linear; }
+  #mapWrap.mode3d .name-tip { background: transparent; box-shadow: none; border: 0; padding: 0; }
+  #mapWrap.mode3d .name-tip span { display: inline-block; background: var(--paper); color: var(--ink); padding: 2px 8px; border-radius: 6px; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; }
+  .rcol { width: 14px; height: 14px; border-radius: 4px; flex: none; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .3); box-sizing: content-box; }
+  .rcol.off { opacity: .3; }
   .hidden { display: none; }
 </style>
 </head>
 <body>
-<div id="map" role="application" aria-label="Karte"></div>
+<div id="mapWrap">
+  <div id="map" role="application" aria-label="Karte"></div>
+  <div id="fog3d"></div>
+  <div id="attr3d"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap-Mitwirkende</a></div>
+</div>
 
 <div id="pickBar"><span id="pickMsg"></span><button id="pickCancel" class="ghost" type="button">Abbrechen</button></div>
 
@@ -280,6 +307,11 @@
   <a class="donate" role="menuitem" href="https://buymeacoffee.com/racenewroads" target="_blank" rel="noopener noreferrer"><span>☕ Projekt unterstützen</span></a>
   <hr>
   <button type="button" role="menuitem" id="logout"><span>Abmelden</span></button>
+</div>
+<button id="view3dBtn" class="locbtn hidden" type="button" aria-label="3D-Ansicht ein- oder ausschalten">3D</button>
+<div id="zoom3d" class="hidden">
+  <button id="zin3d" class="mapbtn" type="button" aria-label="Vergrößern">+</button>
+  <button id="zout3d" class="mapbtn" type="button" aria-label="Verkleinern">&minus;</button>
 </div>
 <button id="locBtn" class="locbtn hidden" type="button" aria-label="Auf meinen Standort zentrieren">&#9678;</button>
 <div id="limitBox" class="limitbox hidden" aria-label="Tempolimit und aktuelles Tempo">
@@ -370,6 +402,10 @@
       </div>
 
       <div id="raceCreate" class="hidden">
+        <div id="rcDuelBox" class="hidden">
+          <p class="hint" id="rcDuelInfo"></p>
+          <div class="row"><button id="rcDuelCancel" class="ghost" type="button">Einladung entfernen</button></div>
+        </div>
         <select id="rcMode" class="hidden" aria-hidden="true" tabindex="-1">
           <option value="fixed">Gemeinsamer Startpunkt</option>
           <option value="free">Jeder startet an seinem Standort</option>
@@ -962,7 +998,7 @@
   function showAuth() {
     mainView.classList.add('hidden');
     authView.classList.remove('hidden');
-    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden'); stopOverlays();
+    $('menuBtn').classList.add('hidden'); $('menu').classList.add('hidden'); $('locBtn').classList.add('hidden'); $('view3dBtn').classList.add('hidden'); set3D(false); $('collapseBtn').classList.add('hidden'); $('limitBox').classList.add('hidden'); stopOverlays();
     passIn.value = '';
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     setMode(mode);
@@ -985,7 +1021,7 @@
       $('nvMode').value = 'car';
       authView.classList.add('hidden');
       mainView.classList.remove('hidden');
-      $('menuBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
+      $('menuBtn').classList.remove('hidden'); $('locBtn').classList.remove('hidden'); $('view3dBtn').classList.remove('hidden'); $('collapseBtn').classList.remove('hidden');
       showScreen('Home');
       startOverlays();
       setStatus('Bereit');
@@ -1011,7 +1047,7 @@
 
   // ---------- Eigene Karte wählen (Antippen) ----------
   var pickCb = null;
-  function pickOnMap(msg, cb) { pickCb = cb; $('pickMsg').textContent = msg; document.body.classList.add('picking'); }
+  function pickOnMap(msg, cb) { if (mode3d) set3D(false); pickCb = cb; $('pickMsg').textContent = msg; document.body.classList.add('picking'); }
   function endPick() { pickCb = null; document.body.classList.remove('picking'); }
   map.on('click', function (e) { if (!pickCb) return; var cb = pickCb; endPick(); cb(e.latlng); });
   $('pickCancel').addEventListener('click', endPick);
@@ -1312,13 +1348,14 @@
       me.setLatLng(ll); accuracy.setLatLng(ll).setRadius(c.accuracy);
     }
     trail.addLatLng(ll);
-    if (follow) map.panTo(ll);
+    if (follow || mode3d) map.panTo(ll);
     speedEl.textContent = (c.speed != null && !isNaN(c.speed)) ? (c.speed * 3.6).toFixed(1) : '–';
     accEl.textContent = Math.round(c.accuracy);
     if (c.accuracy <= 20) setStatus('Live als „' + myName + '“', 'ok', true);
     else setStatus('GPS ungenau – am besten draußen testen', 'warn', true);
     trackRide(c, tDev);
     limitOnPosition(c, tDev);
+    update3D(c);
     camTick(c);
     sendPosition(c);
     raceOnPosition(c, tDev);
@@ -1425,8 +1462,9 @@
     if (hasStart) addZone(raceLayer, { lat: r.start_lat, lng: r.start_lng }, r.radius, '#15803d', 'Start');
     addZone(raceLayer, { lat: r.finish_lat, lng: r.finish_lng }, r.radius, '#b91c1c', 'Ziel');
     if (fit) {
-      follow = false;
-      if (hasStart) map.fitBounds(L.latLngBounds([[r.start_lat, r.start_lng], [r.finish_lat, r.finish_lng]]).pad(0.4));
+      if (!mode3d) follow = false;
+      if (mode3d) { /* in der 3D-Ansicht bleibt die Karte bei dir */ }
+      else if (hasStart) map.fitBounds(L.latLngBounds([[r.start_lat, r.start_lng], [r.finish_lat, r.finish_lng]]).pad(0.4));
       else if (myPos) map.fitBounds(L.latLngBounds([[myPos.lat, myPos.lng], [r.finish_lat, r.finish_lng]]).pad(0.4));
       else map.setView([r.finish_lat, r.finish_lng], 15);
     }
@@ -1544,6 +1582,13 @@
       }
       var r = Array.isArray(res.data) ? res.data[0] : res.data;
       setStatus('Rennen erstellt. Code: ' + r.code, 'ok');
+      if (pendingDuelUser) {
+        var duelId = pendingDuelUser, duelName = pInfo(duelId).name;
+        pendingDuelUser = null; updateDuelBox();
+        db.from('race_members').insert({ race_id: r.id, user_id: duelId }).then(function (r3) {
+          setStatus(r3.error ? 'Einladung an ' + duelName + ' fehlgeschlagen: ' + r3.error.message : duelName + ' wurde zum Duell eingeladen.', r3.error ? 'err' : 'ok');
+        });
+      }
       if (pendingShareConv) {
         db.rpc('share_race', { p_conv: pendingShareConv, p_race: r.id }).then(function (r2) {
           setStatus(r2.error ? 'Teilen in der Gruppe fehlgeschlagen: ' + r2.error.message : 'Rennen in der Gruppe geteilt, alle Mitglieder sind eingeladen.', r2.error ? 'err' : 'ok');
@@ -1554,6 +1599,25 @@
     });
   }
   $('rcCreate').addEventListener('click', createRace);
+
+  // ----- Direktes Rennen (Duell) mit einem Freund -----
+  var pendingDuelUser = null;
+  function updateDuelBox() {
+    $('rcDuelBox').classList.toggle('hidden', !pendingDuelUser);
+    if (pendingDuelUser) $('rcDuelInfo').textContent = 'Duell mit ' + pInfo(pendingDuelUser).name + ': Die Einladung geht automatisch raus, sobald du das Rennen erstellst.';
+  }
+  // Formular vorbereiten (jeder startet am eigenen Standort) und sofort das Ziel auf der Karte abfragen
+  function startDuel(uid) {
+    var name = pInfo(uid).name;
+    pendingShareConv = null;
+    showScreen('Race'); prepareCreate(null);
+    pendingDuelUser = uid;
+    $('rcName').value = ('Duell: ' + myName + ' gegen ' + name).slice(0, 40);
+    $('rcMode').value = 'free'; applyMode();
+    updateDuelBox();
+    pickOnMap('Tippe auf der Karte auf das Ziel des Duells mit ' + name, function (ll) { draft.finish = { lat: ll.lat, lng: ll.lng }; drawDraft(); });
+  }
+  $('rcDuelCancel').addEventListener('click', function () { pendingDuelUser = null; updateDuelBox(); });
 
   // ----- Beitreten -----
   function joinCode(code) {
@@ -1574,7 +1638,7 @@
   function startRacePoll() { stopRacePoll(); racePoll = setInterval(refreshRace, RACE_POLL_MS); }
   function stopRacePoll() { if (racePoll) clearInterval(racePoll); racePoll = null; }
   function unfollowRace() {
-    stopRacePoll(); raceCur = null; raceMembers = []; raceLayerFor = null; raceLayer.clearLayers();
+    stopRacePoll(); raceCur = null; raceMembers = []; raceLayerFor = null; raceLayer.clearLayers(); clearRaceRoutes();
     refreshNaviSetup(); renderHome();
   }
 
@@ -1583,7 +1647,8 @@
       if (res.error || !res.data) { setStatus('Rennen nicht gefunden.', 'err'); return; }
       unfollowRace();
       raceCur = res.data; raceMembers = [];
-      seenOutside = false; lastFix = null; goFired = false; raceFinishing = false; finishTries = 0; raceDist = 0; routePts = []; routeLast = null;
+      seenOutside = false; lastFix = null; goFired = false; raceFinishing = false; finishTries = 0; raceDist = 0;
+      routePts = loadStoredRoute(id); routeLast = routePts.length ? routePts[routePts.length - 1] : null; routeStored = routePts.length;
       actionSig = ''; inviteSig = '';
       draftLayer.clearLayers();
       drawRace(raceCur, true);
@@ -1611,7 +1676,7 @@
       return getProfiles(raceMembers.map(function (m) { return m.user_id; })).then(function () {
         if (changed || raceLayerFor !== id) drawRace(r, false);
         renderRaceDetail(); renderHome();
-        if (r.status === 'finished') { stopRacePoll(); loadMyRaces(false); }
+        if (r.status === 'finished') { stopRacePoll(); loadMyRaces(false); onRaceFinished(r); }
         if (watchId !== null) loadAll();
       });
     });
@@ -1632,6 +1697,7 @@
     fillList($('rdMembers'), list.map(function (m) {
       var info = pInfo(m.user_id), li = el('li'); li.setAttribute('data-uid', m.user_id);
       li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+      if (r.status === 'finished' && routesData[m.user_id]) li.appendChild(routeSwatch(m.user_id));
       li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
       var txt;
       if (m.status === 'finished') { place++; txt = place + '. ' + fmtMs(m.result_ms); }
@@ -1729,7 +1795,7 @@
     });
   }
   function raceBack() {
-    if (raceView === 'Create') { draftLayer.clearLayers(); pendingShareConv = null; showRaceView('List'); return; }
+    if (raceView === 'Create') { draftLayer.clearLayers(); pendingShareConv = null; pendingDuelUser = null; showRaceView('List'); return; }
     if (raceCur && raceCur.status === 'finished') unfollowRace();
     showRaceView('List'); loadMyRaces(true);
   }
@@ -1748,7 +1814,7 @@
     if (!raceCur || $('tabRace').classList.contains('hidden') || $('raceDetail').classList.contains('hidden')) return;
     var r = raceCur, mine = myMember(), now = Date.now() + serverOffset, tm = $('rdTimer'), info = '';
     tm.classList.remove('go');
-    if (mine && mine.status === 'finished') { tm.textContent = fmtMs(mine.result_ms); tm.classList.add('go'); info = 'Im Ziel!'; }
+    if (mine && mine.status === 'finished') { tm.textContent = fmtMs(mine.result_ms); tm.classList.add('go'); info = r.status === 'finished' ? routesHint() : 'Im Ziel!'; }
     else if (r.status === 'running' && r.starts_at) {
       var starts = new Date(r.starts_at).getTime();
       if (now < starts) tm.textContent = 'Start in ' + Math.ceil((starts - now) / 1000);
@@ -1770,7 +1836,7 @@
         var df = dist(myPos.lat, myPos.lng, r.finish_lat, r.finish_lng);
         info = 'Luftlinie zum Ziel: ' + fmtDist(Math.max(0, df - r.radius));
       }
-    } else if (r.status === 'finished' && !info) info = 'Das Rennen ist beendet.';
+    } else if (r.status === 'finished' && !info) info = routesHint();
     $('rdInfo').textContent = info;
   }
 
@@ -1857,7 +1923,7 @@
     navDest = d;
     navLayer.clearLayers();
     L.marker([d.lat, d.lng], { keyboard: false }).addTo(navLayer);
-    map.panTo([d.lat, d.lng]); follow = false;
+    if (!mode3d) { map.panTo([d.lat, d.lng]); follow = false; }
     updateDestUI();
   }
 
@@ -2026,7 +2092,7 @@
     if (t === 'Boards') boardsOpen();
     if (t === 'History') histOpen();
     if (t === 'Notifications') loadNotifications(true);
-    if (t !== 'Race') pendingShareConv = null;
+    if (t !== 'Race') { pendingShareConv = null; pendingDuelUser = null; }
     if (t !== 'Chats') { curConv = null; stopThreadPoll(); }
     if (t === 'Chats') chatsOpen();
     if (t === 'Admin') adminOpen();
@@ -3067,6 +3133,7 @@
   function num(id) { var v = parseInt($(id).value, 10); return isNaN(v) ? null : v; }
   function classLabel(c) { return VEHICLES[c] || KINDS[c] || c || ''; }
   function fitWithPanel(b) {
+    if (mode3d) set3D(false);       // Übersichten (Strecken, Historie) brauchen die normale Karte
     follow = false;
     var modal = document.body.classList.contains('modal-open');
     map.fitBounds(b, { paddingTopLeft: [30, modal ? 90 : 70], paddingBottomRight: [30, modal ? 30 : $('panel').offsetHeight + 20], maxZoom: 17 });
@@ -3329,6 +3396,7 @@
   function prepareCreate(trackId) {
     draft = { start: null, finish: null }; $('rcName').value = '';
     $('rcMode').value = 'fixed'; applyMode();
+    pendingDuelUser = null; updateDuelBox();
     ['rcPickStart', 'rcPickFinish', 'rcMyStart', 'rcRadius'].forEach(function (id) { $(id).disabled = false; });
     drawDraft(); showRaceView('Create');
     loadTrackOptions().then(function () {
@@ -3342,6 +3410,7 @@
     if (routePts.length >= 4000) return;
     if (!routePts.length) { routePts.push([+prevLat.toFixed(5), +prevLng.toFixed(5)]); routeLast = [prevLat, prevLng]; }
     if (dist(routeLast[0], routeLast[1], lat, lng) >= 10) { routePts.push([+lat.toFixed(5), +lng.toFixed(5)]); routeLast = [lat, lng]; }
+    if (routePts.length - routeStored >= 10) persistRoute();
   }
   function thinRoute(pts, max) {
     if (pts.length <= max) return pts;
@@ -3349,11 +3418,105 @@
     for (var i = 0; i < max; i++) out.push(pts[Math.round(i * step)]);
     return out;
   }
+  // Route lokal zwischenspeichern: überlebt ein Neuladen der Seite mitten im Rennen
+  var routeSaved = {}, routeStored = 0;
+  function routeKey(raceId) { return 'rna-route-' + myId + '-' + raceId; }
+  function persistRoute() {
+    if (!raceCur) return;
+    routeStored = routePts.length;
+    try { localStorage.setItem(routeKey(raceCur.id), JSON.stringify(routePts)); } catch (e) {}
+  }
+  function loadStoredRoute(raceId) {
+    try { var a = JSON.parse(localStorage.getItem(routeKey(raceId)) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function clearStoredRoute(raceId) { try { localStorage.removeItem(routeKey(raceId)); } catch (e) {} }
+
+  // pro Rennen nur einmal hochladen; bei Fehler darf es erneut versucht werden
   function saveRoute(raceId) {
-    if (routePts.length < 2) return Promise.resolve();
+    if (routeSaved[raceId] || routePts.length < 2) return Promise.resolve();
+    routeSaved[raceId] = true;
     return db.from('race_routes').upsert({ race_id: raceId, user_id: myId, points: thinRoute(routePts, 800) }).then(function (res) {
-      if (res.error) setStatus('Gefahrene Linie konnte nicht gespeichert werden: ' + res.error.message, 'warn');
+      if (res.error) { routeSaved[raceId] = false; setStatus('Gefahrene Linie konnte nicht gespeichert werden: ' + res.error.message, 'warn'); return; }
+      clearStoredRoute(raceId);
     });
+  }
+
+  // ----- Routen aller Fahrer nach dem Rennen auf der Karte -----
+  var routesLayer = L.layerGroup().addTo(map), routesData = {}, routeHidden = {}, routesFor = null;
+  var routeTimers = [], routesFitted = false, routesDone = false, ROUTE_RETRY_MS = [0, 3000, 8000, 20000, 45000];
+  var histLines = {};
+
+  function clearRaceRoutes() {
+    routeTimers.forEach(clearTimeout); routeTimers = [];
+    routesLayer.clearLayers(); routesData = {}; routeHidden = {}; routesFor = null; routesFitted = false; routesDone = false;
+  }
+  function routesHint() {
+    var base = 'Das Rennen ist beendet. ';
+    if (Object.keys(routesData).length) return base + 'Die Linien auf der Karte zeigen die gefahrenen Routen, tippe auf ein Farbfeld zum Ein- oder Ausblenden. Sie sind auch in der Rennhistorie gespeichert.';
+    return base + (routesDone ? 'Für dieses Rennen sind keine Routen gespeichert.' : 'Die Routen werden geladen …');
+  }
+  function drawRoutes() {
+    routesLayer.clearLayers();
+    Object.keys(routesData).forEach(function (uid) {
+      if (routeHidden[uid]) return;
+      var info = pInfo(uid), mine = uid === myId, pts = routesData[uid];
+      var m = raceMembers.filter(function (x) { return x.user_id === uid; })[0];
+      var label = info.name + (m && m.status === 'finished' ? ' · ' + fmtMs(m.result_ms) : (m ? ' · aufgegeben' : ''));
+      routesLayer.addLayer(L.polyline(pts, { color: info.color, weight: mine ? 6 : 4, opacity: mine ? 0.95 : 0.8 }).bindTooltip(label, { sticky: true }));
+      routesLayer.addLayer(L.circleMarker(pts[0], { radius: 5, color: '#ffffff', weight: 2, fillColor: info.color, fillOpacity: 1, interactive: false }));
+    });
+  }
+  function fitRoutes() {
+    var pts = [];
+    Object.keys(routesData).forEach(function (u) { routesData[u].forEach(function (pt) { pts.push(pt); }); });
+    if (raceCur) pts.push([raceCur.finish_lat, raceCur.finish_lng]);
+    if (pts.length) fitWithPanel(L.latLngBounds(pts));
+  }
+  function routeSwatch(uid) {
+    var s = el('span', 'rcol' + (routeHidden[uid] ? ' off' : ''));
+    s.style.background = pInfo(uid).color; s.title = 'Route ein- oder ausblenden';
+    s.addEventListener('click', function (e) { e.stopPropagation(); routeHidden[uid] = !routeHidden[uid]; drawRoutes(); renderRaceDetail(); });
+    return s;
+  }
+  // Der Letzte ist oft noch nicht hochgeladen, wenn die Ersten schauen: ein paar Mal nachfragen
+  function showRaceRoutes(raceId) {
+    if (routesFor === raceId) return;
+    clearRaceRoutes(); routesFor = raceId;
+    ROUTE_RETRY_MS.forEach(function (ms, i) {
+      routeTimers.push(setTimeout(function () { loadRaceRoutes(raceId, i === ROUTE_RETRY_MS.length - 1); }, ms));
+    });
+  }
+  function loadRaceRoutes(raceId, isLast) {
+    if (routesFor !== raceId) return;
+    db.from('race_routes').select('user_id,points').eq('race_id', raceId).then(function (res) {
+      if (routesFor !== raceId) return;
+      if (res.error) { if (isLast) { routesDone = true; renderRaceDetail(); } return; }
+      var had = Object.keys(routesData).length;
+      (res.data || []).forEach(function (r) { if (r.points && r.points.length >= 2) routesData[r.user_id] = r.points; });
+      var now = Object.keys(routesData).length;
+      if (now !== had) {
+        drawRoutes();
+        if (!routesFitted) { routesFitted = true; fitRoutes(); setStatus('Routen aller Fahrer eingeblendet.', 'ok'); }
+        renderRaceDetail();
+      }
+      var expected = raceMembers.filter(function (m) { return m.status === 'finished' || m.status === 'dnf'; }).length;
+      if (expected > 0 && now >= expected) { routeTimers.forEach(clearTimeout); routeTimers = []; routesDone = true; renderRaceDetail(); }
+      else if (isLast) { routesDone = true; renderRaceDetail(); }
+    });
+  }
+  // Rennen beendet: eigene Route sichern (auch wenn der Ersteller das Rennen beendet hat) und alle Routen zeigen
+  function onRaceFinished(r) {
+    if (myMember() && routePts.length >= 2 && !routeSaved[r.id]) saveRoute(r.id);
+    showRaceRoutes(r.id);
+  }
+  function histSwatch(uid) {
+    var line = histLines[uid], s = el('span', 'rcol');
+    s.style.background = pInfo(uid).color; s.title = 'Linie ein- oder ausblenden';
+    s.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (histLayer.hasLayer(line)) { histLayer.removeLayer(line); s.className = 'rcol off'; } else { histLayer.addLayer(line); s.className = 'rcol'; }
+    });
+    return s;
   }
 
   // ---------- Ranglisten ----------
@@ -3524,11 +3687,13 @@
         var bounds = L.latLngBounds([[race.finish_lat, race.finish_lng]]);
         if (hasStart) { bounds.extend([race.start_lat, race.start_lng]); addZone(histLayer, { lat: race.start_lat, lng: race.start_lng }, race.radius, '#15803d', 'Start'); }
         addZone(histLayer, { lat: race.finish_lat, lng: race.finish_lng }, race.radius, '#b91c1c', 'Ziel');
+        histLines = {};
         routes.forEach(function (r) {
           if (!r.points || r.points.length < 2) return;
           var info = pInfo(r.user_id), mine = r.user_id === myId;
           var line = L.polyline(r.points, { color: info.color, weight: mine ? 6 : 4, opacity: mine ? 0.95 : 0.75 }).addTo(histLayer);
           line.bindTooltip(info.name, { sticky: true });
+          histLines[r.user_id] = line;
           bounds.extend(line.getBounds());
         });
         fitWithPanel(bounds);
@@ -3539,6 +3704,7 @@
           var info = pInfo(m.user_id), li = el('li', 'wrap'); li.setAttribute('data-uid', m.user_id);
           li.appendChild(el('span', 'rank', m.status === 'finished' ? (++place) + '.' : '–'));
           li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+          if (histLines[m.user_id]) li.appendChild(histSwatch(m.user_id));
           li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
           li.appendChild(el('span', 'ago', m.status === 'finished' ? fmtMs(m.result_ms) : 'aufgegeben'));
           var sub = [];
@@ -3548,7 +3714,7 @@
           return li;
         }), 'Keine Teilnehmer.');
         $('hsHint').textContent = routes.length
-          ? 'Die farbigen Linien auf der Karte zeigen, welchen Weg jeder gefahren ist. Tippe auf „Karte ansehen“, um die Karte zu sehen.'
+          ? 'Die farbigen Linien auf der Karte zeigen, welchen Weg jeder gefahren ist. Tippe auf ein Farbfeld, um eine Linie ein- oder auszublenden, und auf „Karte ansehen“, um die Karte zu sehen.'
           : 'Für dieses Rennen ist keine gefahrene Linie gespeichert. Das gibt es erst für Rennen, die mit dieser Version gefahren wurden.';
       });
     });
@@ -4152,6 +4318,7 @@
     }
     if (rel === 'me') btn('Profil bearbeiten', false, function () { closeProfile(); showScreen('Profile'); });
     if (rel === 'friend') btn('Nachricht schreiben', false, function () { closeProfile(); startDirectChat(uid); });
+    if (rel === 'friend') btn('Rennen mit ' + info.name + ' starten', false, function () { closeProfile(); startDuel(uid); });
     if (rel === 'friend' && others[uid]) btn('Zu ' + info.name + ' navigieren', false, function () { closeProfile(); showScreen('Navi'); quickNav(friendDest(uid)); });
     if (rel === 'none') btn('Freundschaftsanfrage senden', false, function () {
       db.from('friendships').insert({ requester_id: myId, addressee_id: uid }).then(function (r) {
@@ -4586,6 +4753,7 @@
 
   function openMapMenu(ll) {
     if (!myId || pickCb || document.body.classList.contains('picking') || document.body.classList.contains('modal-open')) return;
+    if (mode3d) { setStatus('Zum Auswählen eines Ortes bitte kurz in die 2D-Ansicht wechseln (Knopf „2D“).', 'warn'); return; }
     if (!$('userModal').classList.contains('hidden')) return;
     if (Date.now() - lastMenuAt < 800) return;      // Handy: Long-Press und contextmenu feuern beide
     lastMenuAt = Date.now();
@@ -4618,6 +4786,80 @@
     map.on('movestart zoomstart', cancel);
     map.on('contextmenu', function (e) { openMapMenu(e.latlng); });    // Rechtsklick am Computer
   })();
+
+  // =====================================================
+  //  3D-ANSICHT: vor dir ist oben, die Karte ist geneigt
+  // =====================================================
+  var mode3d = false, rotCont = 0, hdgPrev = null;
+  var TILT_3D = 40, wrap3d = $('mapWrap');
+
+  function norm360(a) { return ((a % 360) + 360) % 360; }
+  function angleDelta(from, to) { return ((to - from + 540) % 360) - 180; }   // kürzester Weg, -180 bis 180
+  function bearingBetween(lat1, lng1, lat2, lng2) {
+    var r = Math.PI / 180, dl = (lng2 - lng1) * r;
+    var y = Math.sin(dl) * Math.cos(lat2 * r);
+    var x = Math.cos(lat1 * r) * Math.sin(lat2 * r) - Math.sin(lat1 * r) * Math.cos(lat2 * r) * Math.cos(dl);
+    return norm360(Math.atan2(y, x) / r);
+  }
+  // fortlaufender Winkel, damit die Karte nie „rückwärts herum“ dreht
+  function setRotation(targetDeg) {
+    rotCont += angleDelta(norm360(rotCont), norm360(targetDeg));
+    wrap3d.style.setProperty('--b', rotCont.toFixed(1) + 'deg');
+    wrap3d.style.setProperty('--nb', (-rotCont).toFixed(1) + 'deg');
+  }
+  // Blickrichtung: GPS-Richtung bei Fahrt; ohne Geschwindigkeitsangabe aus den letzten Positionen; im Stand bleibt sie
+  function update3D(c) {
+    if (!mode3d) return;
+    var target = null, moved = hdgPrev ? dist(hdgPrev.lat, hdgPrev.lng, c.latitude, c.longitude) : 0;
+    var hasSpeed = c.speed != null && !isNaN(c.speed);
+    if (hasSpeed && c.speed > 1.5 && c.heading != null && !isNaN(c.heading)) target = c.heading;
+    else if (!hasSpeed && hdgPrev && moved > 8) target = bearingBetween(hdgPrev.lat, hdgPrev.lng, c.latitude, c.longitude);
+    if (!hdgPrev || moved > 8) hdgPrev = { lat: c.latitude, lng: c.longitude };
+    if (target != null) setRotation(target);
+  }
+
+  // Der Fixpunkt (du) liegt über dem Panel, damit du dich selbst siehst
+  function layout3D() {
+    if (!mode3d) return;
+    var H = window.innerHeight, y = H * 0.75, b = document.body.classList;
+    var pr = $('panel').getBoundingClientRect();
+    if (!b.contains('modal-open') && !b.contains('picking') && pr.height > 0 && pr.top < H) y = Math.min(y, pr.top - 60);
+    y = Math.max(H * 0.40, y);
+    wrap3d.style.setProperty('--fy', Math.round(y) + 'px');
+  }
+  window.addEventListener('resize', layout3D);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layout3D).observe($('panel'));
+
+  var HANDLERS_3D = ['dragging', 'touchZoom', 'doubleClickZoom', 'scrollWheelZoom', 'boxZoom', 'keyboard'];
+  function set3D(on) {
+    if (on === mode3d) return;
+    mode3d = on;
+    wrap3d.classList.toggle('mode3d', on);
+    $('view3dBtn').textContent = on ? '2D' : '3D';
+    $('zoom3d').classList.toggle('hidden', !on);
+    HANDLERS_3D.forEach(function (h) { if (map[h]) map[h][on ? 'disable' : 'enable'](); });   // Verschieben/Zoomen per Finger passt nicht zur geneigten Karte
+    if (on) {
+      follow = true; map.closePopup(); closeMapMenu();
+      wrap3d.style.setProperty('--k', (1 / Math.cos(TILT_3D * Math.PI / 180)).toFixed(3));
+      layout3D();
+      if (!myPos && watchId === null) { start(); setStatus('Der Standort wird gestartet, damit die 3D-Ansicht dir folgen kann.', 'ok'); }
+    } else {
+      rotCont = 0; hdgPrev = null;
+      wrap3d.style.setProperty('--b', '0deg'); wrap3d.style.setProperty('--nb', '0deg');
+    }
+    setTimeout(function () {
+      map.invalidateSize({ animate: false });          // Behälter hat jetzt eine andere Größe
+      if (on) {
+        var z = Math.max(map.getZoom(), 17);
+        if (myPos) map.setView([myPos.lat, myPos.lng], z, { animate: false }); else map.setZoom(z, { animate: false });
+      }
+      refreshOverlays();
+    }, 60);
+  }
+  $('view3dBtn').addEventListener('click', function () { set3D(!mode3d); });
+  $('zin3d').addEventListener('click', function () { if (map.getZoom() < 19) map.zoomIn(); });
+  $('zout3d').addEventListener('click', function () { if (map.getZoom() > 15) map.zoomOut(); });
+  map.on('popupopen', function () { if (mode3d) set3D(false); });   // Fenster sind in der geneigten Karte nicht lesbar
 
   // =====================================================
   //  START
