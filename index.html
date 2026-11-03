@@ -626,7 +626,10 @@
     <!-- Administration -->
     <div id="tabAdmin" class="hidden">
       <div id="adList">
-        <h3 style="margin-top:12px">Treffen und Events</h3>
+        <h3 style="margin-top:12px">Rennen</h3>
+        <label class="switch" for="adHidePlayers"><input type="checkbox" id="adHidePlayers"><span>Spieler im laufenden Rennen auf der Karte ausblenden</span></label>
+        <p class="hint">Gilt für alle. Solange ein Rennen läuft (ab dem Countdown bis zum Ende), sehen sich die Teilnehmer dieses Rennens nicht auf der Karte. In der Lobby und nach dem Rennen ist alles wie sonst. Freunde, die nicht mitfahren, bleiben sichtbar.</p>
+        <h3>Treffen und Events</h3>
         <button id="adNew" type="button">Neuen Punkt hinzufügen</button>
         <ul id="adPoints" class="list" style="margin-top:12px"></ul>
         <p class="hint">Punkte erscheinen für alle auf der Karte, bis sie abgelaufen sind. Du kannst nur deine eigenen Punkte ändern, der Inhaber alle.</p>
@@ -1027,9 +1030,9 @@
       setStatus('Bereit');
       autoStartLocation();
       syncClock();
-      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs(); loadConversations(false); subscribeMessages(); loadAdminRole(); loadMapPoints(); loadPlaces();
+      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs(); loadConversations(false); subscribeMessages(); loadAdminRole(); loadMapPoints(); loadPlaces(); loadAppSettings();
       if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); loadNotifications(false); loadConversations(false); }, POLL_MS);
+      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); loadNotifications(false); loadConversations(false); loadAppSettings(); }, POLL_MS);
       if (pendingCode) { var c = pendingCode; pendingCode = null; joinCode(c); }
     });
   }
@@ -1040,7 +1043,7 @@
     unfollowRace(); stopNavigation(true);
     unsubscribeNotifs(); notifs = []; unreadCount = 0; notifsLoaded = false; updateNotifBadge();
     unsubscribeMessages(); convs = []; unreadMsgs = 0; updateMsgBadges(); curConv = null; stopThreadPoll();
-    myAdmin = null; updateAdminUI(); mapPoints = []; myPlaces = []; placeEdit = false;
+    myAdmin = null; updateAdminUI(); mapPoints = []; myPlaces = []; placeEdit = false; appSettings = { hide_players_in_race: false };
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
@@ -1266,6 +1269,7 @@
   // ---------- Karte: andere Spieler ----------
   function upsertOther(row) {
     if (!row || !row.user_id || row.user_id === myId) return;
+    if (competitorHidden(row.user_id)) { removeOther(row.user_id); return; }   // Rennen läuft und Admins haben das Ausblenden eingeschaltet
     var ll = [row.lat, row.lng], o = others[row.user_id];
     if (!o) {
       var color = row.color || colorFor(row.username);
@@ -1308,7 +1312,10 @@
   function loadAll() {
     return db.from('positions').select('*').then(function (res) {
       if (res.error) { setStatus('Datenbank-Fehler: ' + res.error.message, 'err'); return; }
-      res.data.forEach(upsertOther); renderPlayers();
+      var seen = {};
+      res.data.forEach(function (r) { seen[r.user_id] = true; upsertOther(r); });
+      Object.keys(others).forEach(function (id) { if (!seen[id]) removeOther(id); });   // verschwunden oder jetzt ausgeblendet
+      renderPlayers();
     });
   }
   function subscribe() {
@@ -1383,7 +1390,7 @@
     setStatus('Suche Position …', 'warn');
     follow = !raceCur;
     loadAll().then(subscribe);
-    tick = setInterval(sweep, 5000);
+    tick = setInterval(function () { sweep(); reconcileTick++; if (reconcileTick % 3 === 0) loadAll(); }, 5000);   // alle 15 s mit der Datenbank abgleichen
     watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
   }
 
@@ -1675,6 +1682,7 @@
       raceCur = r; raceMembers = rs[1].data || [];
       return getProfiles(raceMembers.map(function (m) { return m.user_id; })).then(function () {
         if (changed || raceLayerFor !== id) drawRace(r, false);
+        applyHideRule();
         renderRaceDetail(); renderHome();
         if (r.status === 'finished') { stopRacePoll(); loadMyRaces(false); onRaceFinished(r); }
         if (watchId !== null) loadAll();
@@ -1835,6 +1843,7 @@
       } else if (r.status === 'running') {
         var df = dist(myPos.lat, myPos.lng, r.finish_lat, r.finish_lng);
         info = 'Luftlinie zum Ziel: ' + fmtDist(Math.max(0, df - r.radius));
+        if (appSettings.hide_players_in_race) info += ' Die anderen Fahrer sind auf der Karte ausgeblendet.';
       }
     } else if (r.status === 'finished' && !info) info = routesHint();
     $('rdInfo').textContent = info;
@@ -4421,6 +4430,8 @@
     adView = 'List';
     $('adForm').classList.add('hidden'); $('adList').classList.remove('hidden');
     $('adOwnerBox').classList.toggle('hidden', myAdmin !== 'owner');
+    $('adHidePlayers').checked = !!appSettings.hide_players_in_race;
+    loadAppSettings();
     renderAdminPoints();
     loadMapPoints();
     if (myAdmin === 'owner') loadAdminList();
@@ -4860,6 +4871,50 @@
   $('zin3d').addEventListener('click', function () { if (map.getZoom() < 19) map.zoomIn(); });
   $('zout3d').addEventListener('click', function () { if (map.getZoom() > 15) map.zoomOut(); });
   map.on('popupopen', function () { if (mode3d) set3D(false); });   // Fenster sind in der geneigten Karte nicht lesbar
+
+  // =====================================================
+  //  GLOBALE EINSTELLUNG (nur Administratoren): Spieler im laufenden Rennen ausblenden
+  // =====================================================
+  var appSettings = { hide_players_in_race: false }, reconcileTick = 0;
+
+  function loadAppSettings() {
+    if (!myId) return Promise.resolve();
+    return db.from('app_settings').select('key,value').then(function (res) {
+      if (res.error) return;                               // SQL-Schritt fehlt: Standard bleibt „nicht ausblenden“
+      var s = { hide_players_in_race: false };
+      (res.data || []).forEach(function (r) { if (r.key === 'hide_players_in_race') s.hide_players_in_race = r.value === true; });
+      var changed = s.hide_players_in_race !== appSettings.hide_players_in_race;
+      appSettings = s;
+      $('adHidePlayers').checked = s.hide_players_in_race;
+      if (changed) { applyHideRule(); if (watchId !== null) loadAll(); }
+    });
+  }
+
+  // Wer gehört zu den „Mitfahrern“, die jetzt unsichtbar sein sollen? Nur Teilnehmer des laufenden Rennens, in dem ich selbst fahre.
+  function competitorHidden(uid) {
+    if (!appSettings.hide_players_in_race || !raceCur || raceCur.status !== 'running') return false;
+    var mine = myMember();
+    if (!mine || (mine.status !== 'joined' && mine.status !== 'finished')) return false;
+    return raceMembers.some(function (m) { return m.user_id === uid && (m.status === 'joined' || m.status === 'finished'); });
+  }
+  function applyHideRule() {
+    var changed = false;
+    Object.keys(others).forEach(function (id) { if (competitorHidden(id)) { removeOther(id); changed = true; } });
+    if (changed) renderPlayers();
+  }
+
+  function setAppSetting(key, value, onFail) {
+    return db.rpc('set_app_setting', { p_key: key, p_value: value }).then(function (res) {
+      if (res.error) { setStatus('Einstellung nicht gespeichert: ' + adminErr(res.error), 'err'); if (onFail) onFail(); return; }
+      appSettings[key] = value;
+      applyHideRule(); if (watchId !== null) loadAll();
+      setStatus(value ? 'Spieler werden in laufenden Rennen für alle ausgeblendet.' : 'Spieler bleiben in laufenden Rennen für alle sichtbar.', 'ok');
+    });
+  }
+  $('adHidePlayers').addEventListener('change', function () {
+    var box = $('adHidePlayers'), v = box.checked;
+    setAppSetting('hide_players_in_race', v, function () { box.checked = !v; });
+  });
 
   // =====================================================
   //  START
