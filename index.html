@@ -81,8 +81,9 @@
   body.picking .menubtn, body.picking .menu, body.picking .locbtn { display: none; }
   .panel.collapsed #mainView, .panel.collapsed #authView { display: none; }
 
-  .avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; overflow: hidden; color: #fff; font-weight: 700; }
-  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; position: relative; color: #fff; font-weight: 700; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
+  .avatar::after { position: absolute; right: -.3em; bottom: -.3em; font-size: 1.15em; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .55)); }   /* 🏎️ erscheint nur, wenn per Regel ein Inhalt gesetzt ist */
   .avatar-edit { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
   .avatar-edit .btns { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 
@@ -125,8 +126,9 @@
   .navdist { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .navtext { font-size: 1.05rem; margin-top: 2px; }
 
-  .pin { border-radius: 50%; border: 3px solid #fff; overflow: hidden; box-sizing: border-box; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
-  .pin img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pin { position: relative; border-radius: 50%; border: 3px solid #fff; box-sizing: border-box; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+  .pin img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; }
+  .racecar { position: absolute; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); pointer-events: none; }
   .name-tip { background: var(--paper); color: var(--ink); border: 0; border-radius: 6px; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; padding: 2px 8px; }
   .name-tip::before { display: none; }
   .limitbox { position: absolute; z-index: 1000; left: 10px; top: calc(170px + env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -248,7 +250,7 @@
   #mapWrap.mode3d .leaflet-control-container { display: none; }
   /* Symbole bleiben aufrecht und lesbar: gegen die Drehung und die Neigung gegensteuern */
   #mapWrap.mode3d .pin, #mapWrap.mode3d .fuelpin, #mapWrap.mode3d .tl, #mapWrap.mode3d .campin2, #mapWrap.mode3d .workpin,
-  #mapWrap.mode3d .limitpin, #mapWrap.mode3d .pointpin, #mapWrap.mode3d .placepin, #mapWrap.mode3d .name-tip span {
+  #mapWrap.mode3d .limitpin, #mapWrap.mode3d .pointpin, #mapWrap.mode3d .placepin, #mapWrap.mode3d .flagpin, #mapWrap.mode3d .name-tip span {
     transform: rotate(var(--b, 0deg)) scaleY(var(--k)); transition: transform .9s linear; }
   #mapWrap.mode3d .name-tip { background: transparent; box-shadow: none; border: 0; padding: 0; }
   #mapWrap.mode3d .name-tip span { display: inline-block; background: var(--paper); color: var(--ink); padding: 2px 8px; border-radius: 6px; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; }
@@ -279,6 +281,9 @@
     body.navclean:not(.is3d) .limitbox { top: auto; }
     #navHud { max-width: 440px; }
   }
+  .flagicon { background: none; border: 0; }
+  .flagpin { width: 40px; height: 44px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .55)); }
+  #mapWrap.mode3d .flagpin { transform-origin: 6px 43px; }      /* in 3D steht die Flagge auf dem Zielpunkt */
   .hidden { display: none; }
 </style>
 </head>
@@ -985,12 +990,17 @@
     else d.textContent = (name || '?').charAt(0).toUpperCase();
     return d;
   }
-  function iconFor(color, url) {
+  function iconFor(color, url, racing) {
     var safe = safeAvatar(url), size = safe ? 40 : 22;
     var pin = el('div', 'pin');
     pin.style.width = pin.style.height = size + 'px';
     pin.style.background = color;
     if (safe) { pin.style.borderColor = color; var img = document.createElement('img'); img.src = safe; img.alt = ''; pin.appendChild(img); }
+    if (racing) {       // 🏎️ am Profilbild: fährt gerade ein Rennen
+      var car = el('span', 'racecar', '🏎️'), fs = Math.round(size * 0.45 + 4);
+      car.style.fontSize = fs + 'px'; car.style.right = car.style.bottom = (-Math.round(fs * 0.5)) + 'px';
+      pin.appendChild(car);
+    }
     return L.divIcon({ html: pin, className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2] });
   }
   function renderWho() {
@@ -1065,7 +1075,7 @@
     myVehicle = p.vehicle || 'fahrrad'; myCar = p.car_category || null; myActiveVehicle = p.active_vehicle_id || null;
     trail.setStyle({ color: myColor });
     if (accuracy) accuracy.setStyle({ color: myColor });
-    if (me) me.setIcon(iconFor(myColor, myAvatar));
+    if (me) me.setIcon(iconFor(myColor, myAvatar, !!racingIds[myId]));
     renderWho(); renderProfileAvatar();
   }
 
@@ -1084,9 +1094,9 @@
       autoStartLocation();
       showStoredIncoming();
       syncClock();
-      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs(); loadConversations(false); subscribeMessages(); loadAdminRole(); loadMapPoints(); loadPlaces(); loadAppSettings();
+      loadFriends(); loadMyRaces(false); loadMyGarage(); loadNotifications(false); subscribeNotifs(); loadConversations(false); subscribeMessages(); loadAdminRole(); loadMapPoints(); loadPlaces(); loadAppSettings(); loadRacing();
       if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); loadNotifications(false); loadConversations(false); loadAppSettings(); }, POLL_MS);
+      pollTimer = setInterval(function () { loadFriends(); loadMyRaces(false); loadNotifications(false); loadConversations(false); loadAppSettings(); loadRacing(); }, POLL_MS);
       if (pendingCode) { var c = pendingCode; pendingCode = null; joinCode(c); }
     });
   }
@@ -1097,7 +1107,7 @@
     unfollowRace(); stopNavigation(true);
     unsubscribeNotifs(); notifs = []; unreadCount = 0; notifsLoaded = false; updateNotifBadge();
     unsubscribeMessages(); convs = []; unreadMsgs = 0; updateMsgBadges(); curConv = null; stopThreadPoll();
-    myAdmin = null; updateAdminUI(); mapPoints = []; myPlaces = []; placeEdit = false; appSettings = { hide_players_in_race: false };
+    myAdmin = null; updateAdminUI(); mapPoints = []; myPlaces = []; placeEdit = false; appSettings = { hide_players_in_race: false }; racingServer = {}; applyRacing();
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
@@ -1206,7 +1216,7 @@
     return db.from('profiles').update({ avatar_url: url }).eq('id', myId).then(function (res) {
       if (res.error) throw new Error(res.error.message);
       myAvatar = safeAvatar(url);
-      if (me) me.setIcon(iconFor(myColor, myAvatar));
+      if (me) me.setIcon(iconFor(myColor, myAvatar, !!racingIds[myId]));
       renderWho(); renderProfileAvatar();
     });
   }
@@ -1327,13 +1337,13 @@
     var ll = [row.lat, row.lng], o = others[row.user_id];
     if (!o) {
       var color = row.color || colorFor(row.username);
-      var marker = L.marker(ll, { icon: iconFor(color, row.avatar_url), keyboard: false }).addTo(map);
+      var marker = L.marker(ll, { icon: iconFor(color, row.avatar_url, !!racingIds[row.user_id]), keyboard: false }).addTo(map);
       marker.bindTooltip(el('span', '', row.username), { permanent: true, direction: 'top', offset: [0, -18], className: 'name-tip' });
       marker.on('click', function () { openProfile(row.user_id); });
       o = others[row.user_id] = { name: row.username, marker: marker, color: color, avatar: row.avatar_url || null };
     } else {
       o.marker.setLatLng(ll);
-      if ((row.avatar_url || null) !== o.avatar) { o.avatar = row.avatar_url || null; o.marker.setIcon(iconFor(o.color, o.avatar)); }
+      if ((row.avatar_url || null) !== o.avatar) { o.avatar = row.avatar_url || null; o.marker.setIcon(iconFor(o.color, o.avatar, !!racingIds[row.user_id])); }
     }
     o.updated = new Date(row.updated_at).getTime();
     renderPlayers();
@@ -1402,7 +1412,7 @@
     var tDev = Math.abs(pos.timestamp - Date.now()) < 5000 ? pos.timestamp : Date.now();
     myPos = { lat: c.latitude, lng: c.longitude, acc: c.accuracy, t: tDev };
     if (!me) {
-      me = L.marker(ll, { icon: iconFor(myColor, myAvatar), zIndexOffset: 1000, keyboard: false }).addTo(map);
+      me = L.marker(ll, { icon: iconFor(myColor, myAvatar, !!racingIds[myId]), zIndexOffset: 1000, keyboard: false }).addTo(map);
       accuracy = L.circle(ll, { radius: c.accuracy, color: myColor, weight: 1, fillOpacity: 0.12 }).addTo(map);
       if (!raceCur) map.setView(ll, 17);
     } else {
@@ -1512,7 +1522,24 @@
     ['List', 'Create', 'Detail'].forEach(function (n) { $('race' + n).classList.toggle('hidden', n !== v); });
   }
 
+  // Zielflagge: schwarz-weiß kariert, der Fußpunkt der Stange liegt auf dem Zielpunkt
+  function flagIcon() {
+    var cells = '', r, c;
+    for (r = 0; r < 3; r++) for (c = 0; c < 4; c++) if ((r + c) % 2 === 0) cells += '<rect x="' + (9 + c * 7) + '" y="' + (6 + r * 7) + '" width="7" height="7" fill="#111"/>';
+    var svg = '<svg viewBox="0 0 40 44" width="40" height="44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<rect x="4" y="3" width="4" height="40" rx="1.5" fill="#111" stroke="#fff" stroke-width="1.2"/>' +
+      '<rect x="7.5" y="4.5" width="31" height="24" fill="#fff"/>' + cells +
+      '<rect x="8.5" y="5.5" width="29" height="22" fill="none" stroke="#111" stroke-width="1.5"/>' +
+      '<circle cx="6" cy="42.5" r="2.5" fill="#111" stroke="#fff" stroke-width="1"/></svg>';
+    return L.divIcon({ className: 'flagicon', html: '<div class="flagpin">' + svg + '</div>', iconSize: [40, 44], iconAnchor: [6, 43] });
+  }
   function addZone(layer, p, radius, color, label) {
+    if (label === 'Ziel') {      // Ziel: Flagge statt Beschriftung, Kreis neutral gestrichelt (auf hellen und dunklen Karten lesbar)
+      L.circle([p.lat, p.lng], { radius: radius, color: '#ffffff', weight: 6, opacity: 0.9, fill: false, interactive: false }).addTo(layer);
+      L.circle([p.lat, p.lng], { radius: radius, color: '#111827', weight: 3, dashArray: '10 8', fillColor: '#ffffff', fillOpacity: 0.18 }).addTo(layer);
+      L.marker([p.lat, p.lng], { icon: flagIcon(), interactive: false, keyboard: false, zIndexOffset: 500 }).addTo(layer);
+      return;
+    }
     var c = L.circle([p.lat, p.lng], { radius: radius, color: color, weight: 2, fillColor: color, fillOpacity: 0.2 });
     c.bindTooltip(label, { permanent: true, direction: 'center', className: 'name-tip' });
     c.addTo(layer);
@@ -1700,6 +1727,7 @@
   function stopRacePoll() { if (racePoll) clearInterval(racePoll); racePoll = null; }
   function unfollowRace() {
     stopRacePoll(); raceCur = null; raceMembers = []; raceLayerFor = null; raceLayer.clearLayers(); clearRaceRoutes();
+    applyRacing(); loadRacing();
     refreshNaviSetup(); renderHome();
   }
 
@@ -1737,6 +1765,7 @@
       return getProfiles(raceMembers.map(function (m) { return m.user_id; })).then(function () {
         if (changed || raceLayerFor !== id) drawRace(r, false);
         applyHideRule();
+        applyRacing(); if (changed) loadRacing();
         renderRaceDetail(); renderHome();
         if (r.status === 'finished') { stopRacePoll(); loadMyRaces(false); onRaceFinished(r); }
         if (watchId !== null) loadAll();
@@ -1986,7 +2015,7 @@
   function setDest(d) {
     navDest = d;
     navLayer.clearLayers();
-    L.marker([d.lat, d.lng], { keyboard: false }).addTo(navLayer);
+    L.marker([d.lat, d.lng], { icon: flagIcon(), keyboard: false, interactive: false }).addTo(navLayer);
     if (!mode3d) { map.panTo([d.lat, d.lng]); follow = false; }
     updateDestUI();
   }
@@ -2053,7 +2082,7 @@
     navLayer.clearLayers();
     L.polyline(route.coords, { color: '#ffffff', weight: 11, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer);   // Rand: hebt die Route ab
     L.polyline(route.coords, { color: '#0284c7', weight: 7, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer);
-    L.marker([nav.dest.lat, nav.dest.lng], { keyboard: false }).addTo(navLayer);
+    L.marker([nav.dest.lat, nav.dest.lng], { icon: flagIcon(), keyboard: false, interactive: false }).addTo(navLayer);
   }
 
   $('nvGo').addEventListener('click', function () {
@@ -4009,6 +4038,7 @@
   function renderConvList() {
     fillList($('chConvs'), convs.map(function (c) {
       var li = el('li', 'click wrap'), info = c.kind === 'direct' ? pInfo(c.other_user) : null;
+      if (c.kind === 'direct') li.setAttribute('data-race-uid', c.other_user);
       li.appendChild(info ? avatarNode(info.avatar, info.name, info.color, 36) : groupAvatar(36));
       var nm = el('span', 'nm', convTitle(c)); if (c.unread) nm.style.fontWeight = '800';
       li.appendChild(nm);
@@ -4381,7 +4411,7 @@
   function renderProfileView(uid, relInfo, statsRes, vehRes) {
     var rel = relInfo.rel, f = relInfo.f, info = pInfo(uid), body = $('umBody');
     body.textContent = '';
-    var top = el('div', 'um-top');
+    var top = el('div', 'um-top'); top.setAttribute('data-race-uid', uid);
     top.appendChild(avatarNode(info.avatar, info.name, info.color, 72));
     var nm = el('div', 'um-name');
     nm.appendChild(el('strong', '', info.name));
@@ -5151,6 +5181,51 @@
     navModeChanged();
   });
   $('hudEnd').addEventListener('click', function () { if (confirm('Navigation beenden?')) stopNavigation(false); });
+
+  // =====================================================
+  //  RENNAUTO 🏎️ am Profilbild: wer gerade in einem Rennen ist (Lobby oder laufend)
+  // =====================================================
+  var racingServer = {}, racingIds = {}, UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  var racingStyleEl = document.createElement('style');
+  document.head.appendChild(racingStyleEl);
+
+  // Datenbank (ich, Freunde, Mitfahrer) plus das, was die App vom geöffneten Rennen selbst weiß
+  function computeRacing() {
+    var ids = {}, k;
+    for (k in racingServer) ids[k] = true;
+    if (raceCur && (raceCur.status === 'lobby' || raceCur.status === 'running')) {
+      raceMembers.forEach(function (m) { if (m.status === 'joined' || m.status === 'finished') ids[m.user_id] = true; });
+    }
+    return ids;
+  }
+  function applyRacing() {
+    var next = computeRacing(), changed = [];
+    Object.keys(next).forEach(function (id) { if (!racingIds[id]) changed.push(id); });
+    Object.keys(racingIds).forEach(function (id) { if (!next[id]) changed.push(id); });
+    racingIds = next;
+    // Listen: eine Stilregel je Spieler genügt, sie wirkt auch auf schon gezeichnete Zeilen
+    var css = '';
+    Object.keys(racingIds).forEach(function (id) {
+      if (!UUID_RE.test(id)) return;                     // nur echte IDs in Selektoren
+      css += '[data-uid="' + id + '"] .avatar::after,[data-race-uid="' + id + '"] .avatar::after{content:"🏎️";}';
+    });
+    if (myId && racingIds[myId]) css += '#whoAvatar .avatar::after,#pAvatar .avatar::after{content:"🏎️";}';
+    racingStyleEl.textContent = css;
+    // Karte: nur die Symbole der Spieler neu zeichnen, bei denen sich etwas geändert hat
+    changed.forEach(function (id) {
+      if (id === myId) { if (me) me.setIcon(iconFor(myColor, myAvatar, !!racingIds[id])); }
+      else if (others[id]) others[id].marker.setIcon(iconFor(others[id].color, others[id].avatar, !!racingIds[id]));
+    });
+  }
+  function loadRacing() {
+    if (!myId) return Promise.resolve();
+    return db.rpc('racing_users').then(function (res) {
+      if (res.error) { applyRacing(); return; }            // SQL-Schritt fehlt: nur das Rennen, das die App selbst kennt
+      var m = {};
+      (res.data || []).forEach(function (r) { var id = typeof r === 'string' ? r : (r && r.racing_users); if (id) m[id] = true; });
+      racingServer = m; applyRacing();
+    });
+  }
 
   // =====================================================
   //  START
