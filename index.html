@@ -254,10 +254,39 @@
   #mapWrap.mode3d .name-tip span { display: inline-block; background: var(--paper); color: var(--ink); padding: 2px 8px; border-radius: 6px; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-weight: 600; }
   .rcol { width: 14px; height: 14px; border-radius: 4px; flex: none; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .3); box-sizing: content-box; }
   .rcol.off { opacity: .3; }
+  /* ---- Fahransicht: großer Abbiegehinweis oben, ruhige Karte ---- */
+  #navHud { position: absolute; z-index: 1000; left: 56px; right: 72px; top: calc(10px + env(safe-area-inset-top, 0px)); max-width: 520px;
+    background: #14213d; color: #fff; border-radius: 14px; padding: 8px 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, .45); }
+  #navHud .hudmain { display: flex; align-items: center; gap: 10px; }
+  #hudArrow { font-size: 34px; line-height: 1; width: 38px; text-align: center; flex: none; }
+  #hudDist { font-size: 30px; font-weight: 800; line-height: 1; white-space: nowrap; flex: none; }
+  #hudText { font-size: 17px; font-weight: 600; line-height: 1.2; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  #navHud .hudsub { display: flex; align-items: center; gap: 14px; margin-top: 6px; font-size: 13px; color: #cbd5e1; }
+  #navHud .hudsub span { white-space: nowrap; }
+  #hudEnd { margin: 0 0 0 auto; padding: 4px 12px; font-size: 12px; border-radius: 8px; background: rgba(255, 255, 255, .14); color: #fff; }
+  body.picking #navHud, body.modal-open #navHud { display: none; }
+  body.hudon #navActive .navcard, body.hudon #navActive .stats { display: none; }     /* steht schon oben */
+  body.hudon #attr3d { top: auto; bottom: calc(4px + env(safe-area-inset-bottom, 0px)); left: 4px; transform: none; }
+  body.navclean .leaflet-control-zoom, body.navclean .name-tip, body.navclean .leaflet-tooltip { display: none; }
+  body.navclean:not(.is3d) .locbtn { top: calc(12px + env(safe-area-inset-top, 0px)); }
+  body.navclean:not(.is3d) #view3dBtn { top: calc(52px + env(safe-area-inset-top, 0px)); }
+  body.navclean:not(.is3d) .limitbox { top: calc(96px + env(safe-area-inset-top, 0px)); }
+  body.navclean .leaflet-tile-pane { filter: saturate(.6) contrast(.92); }
+  :root[data-theme="dark"] body.navclean .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.82) saturate(.55); }
+  /* Querformat mit wenig Höhe: tempo und Limit unten links, HUD schmaler */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .limitbox { top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+    body.navclean:not(.is3d) .limitbox { top: auto; }
+    #navHud { max-width: 440px; }
+  }
   .hidden { display: none; }
 </style>
 </head>
 <body>
+<div id="navHud" class="hidden" role="status" aria-live="polite">
+  <div class="hudmain"><div id="hudArrow">↑</div><div id="hudDist">–</div><div id="hudText"></div></div>
+  <div class="hudsub"><span id="hudRemain">–</span><span id="hudEta">–</span><button id="hudEnd" type="button" aria-label="Navigation beenden">Beenden</button></div>
+</div>
 <div id="mapWrap">
   <div id="map" role="application" aria-label="Karte"></div>
   <div id="fog3d"></div>
@@ -771,6 +800,10 @@
       <h3>Standort</h3>
       <label class="switch" for="sAutoLoc"><input type="checkbox" id="sAutoLoc"><span>Standort beim Öffnen automatisch starten</span></label>
       <p class="hint">Solange dein Standort läuft, sehen ihn deine Freunde und die Teilnehmer deiner Rennen auf der Karte, sonst niemand. Beim ersten Mal fragt dein Browser oder Handy nach der Erlaubnis. Ständiges GPS kostet Akku. Wenn du ausschaltest, startest du den Standort wieder selbst auf der Startseite. Das gilt ab dem nächsten Öffnen. Mit „Standort stoppen“ kannst du jederzeit pausieren.</p>
+
+      <h3>Navigation</h3>
+      <label class="switch" for="sNavClean"><input type="checkbox" id="sNavClean"><span>Beim Navigieren nur das Nötigste anzeigen</span></label>
+      <p class="hint">Während der Navigation erscheint oben ein großer Abbiegehinweis. Dafür werden Zusatzebenen (Ampeln, Straßenzustand, Baustellen, Tankstellen, Orte), deine gefahrene Spur, Namensschilder und die Zoom-Tasten ausgeblendet, und die Karte wird ruhiger. Das Panel unten klappt von selbst ein. Pinch-Zoom und der Knopf zum Zentrieren bleiben.</p>
 
       <h3>Tempolimit</h3>
       <label class="switch" for="sWarn"><input type="checkbox" id="sWarn"><span>Überschreitungs-Warnung</span></label>
@@ -2018,7 +2051,8 @@
     nav.idx = route.steps.length > 1 ? 1 : 0;
     nav.off = 0;
     navLayer.clearLayers();
-    L.polyline(route.coords, { color: '#0284c7', weight: 6, opacity: 0.85 }).addTo(navLayer);
+    L.polyline(route.coords, { color: '#ffffff', weight: 11, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer);   // Rand: hebt die Route ab
+    L.polyline(route.coords, { color: '#0284c7', weight: 7, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer);
     L.marker([nav.dest.lat, nav.dest.lng], { keyboard: false }).addTo(navLayer);
   }
 
@@ -2036,6 +2070,7 @@
       $('nvGo').disabled = false;
       applyRoute(route); addRecent(nav.dest);
       $('navSetup').classList.add('hidden'); $('navActive').classList.remove('hidden');
+      navModeChanged();
       follow = true; map.setView([myPos.lat, myPos.lng], 17);
       setStatus('Navigation läuft', 'ok');
       navOnPosition({ latitude: myPos.lat, longitude: myPos.lng, accuracy: myPos.acc });
@@ -2047,6 +2082,7 @@
 
   function stopNavigation(silent) {
     nav = null; navDest = null;
+    navModeChanged();
     navLayer.clearLayers();
     $('navActive').classList.add('hidden'); $('navSetup').classList.remove('hidden'); $('nvFuel').classList.add('hidden');
     updateDestUI(); renderNaviQuick();
@@ -2080,6 +2116,7 @@
     $('nvStepText').textContent = st.text;
     $('nvRemain').textContent = fmtDist(remain);
     $('nvEta').textContent = fmtDur(remain * nav.secPerM);
+    syncHud();
 
     navFollowCheck(lat, lng);
 
@@ -2175,6 +2212,7 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
 
   $('collapseBtn').addEventListener('click', function () {
+    autoCollapsed = false;       // von Hand eingeklappt oder geöffnet: nicht mehr automatisch ändern
     var c = $('panel').classList.toggle('collapsed');
     $('collapseBtn').innerHTML = c ? '&#9652;' : '&#9662;';
   });
@@ -3029,15 +3067,16 @@
   $('sWorks').checked = ovPrefs.works; $('sSpeeds').checked = ovPrefs.speeds; $('sPoints').checked = ovPrefs.points; $('sPlaces').checked = ovPrefs.places;
 
   function refreshOverlays() { if (overlaysActive) { ov.fuel.refresh(); ov.signals.refresh(); ov.surface.refresh(); ov.works.refresh(); ov.speeds.refresh(); ov.points.refresh(); ov.places.refresh(); ov.cams.refresh(); } }
+  function ovOn(key) { return overlaysActive && !!ovPrefs[key] && !(nav && navClean); }   // beim Navigieren (aufgeräumt) aus
   function applyOverlays() {
-    ov.fuel.set(overlaysActive && ovPrefs.fuel);
-    ov.signals.set(overlaysActive && ovPrefs.signals);
-    ov.surface.set(overlaysActive && ovPrefs.surface);
-    ov.works.set(overlaysActive && ovPrefs.works);
-    ov.speeds.set(overlaysActive && ovPrefs.speeds);
-    ov.points.set(overlaysActive && ovPrefs.points);
-    ov.places.set(overlaysActive && ovPrefs.places);
-    $('condLegend').classList.toggle('hidden', !(overlaysActive && ovPrefs.surface));
+    ov.fuel.set(ovOn('fuel'));
+    ov.signals.set(ovOn('signals'));
+    ov.surface.set(ovOn('surface'));
+    ov.works.set(ovOn('works'));
+    ov.speeds.set(ovOn('speeds'));
+    ov.points.set(ovOn('points'));
+    ov.places.set(ovOn('places'));
+    $('condLegend').classList.toggle('hidden', !ovOn('surface'));
     updateCamVisibility();
     updateOvStatus();
   }
@@ -4876,6 +4915,7 @@
     if (on === mode3d) return;
     mode3d = on;
     wrap3d.classList.toggle('mode3d', on);
+    document.body.classList.toggle('is3d', on);
     $('view3dBtn').textContent = on ? '2D' : '3D';
     $('zoom3d').classList.toggle('hidden', !on);
     HANDLERS_3D.forEach(function (h) { if (map[h]) map[h][on ? 'disable' : 'enable'](); });   // Verschieben/Zoomen per Finger passt nicht zur geneigten Karte
@@ -5069,6 +5109,48 @@
   }
   window.addEventListener('hashchange', takeIncomingFromUrl);
   takeIncomingFromUrl();
+
+  // =====================================================
+  //  FAHRANSICHT: großer Abbiegehinweis, ruhige Karte
+  // =====================================================
+  var navClean = true, autoCollapsed = false;
+  try { navClean = localStorage.getItem('rennen-navclean') !== '0'; } catch (e) {}
+  $('sNavClean').checked = navClean;
+
+  function maneuverArrow(text) {
+    var s = String(text || '').toLowerCase();
+    if (/wenden/.test(s)) return '↶';
+    if (/kreisverkehr|kreisel/.test(s)) return '⟳';
+    if (/ziel erreicht/.test(s)) return '⚑';
+    if (/links/.test(s)) return '↰';
+    if (/rechts/.test(s)) return '↱';
+    return '↑';
+  }
+  function syncHud() {
+    $('hudDist').textContent = $('nvStepDist').textContent;
+    $('hudText').textContent = $('nvStepText').textContent;
+    $('hudArrow').textContent = maneuverArrow($('nvStepText').textContent);
+    $('hudRemain').textContent = 'Rest ' + $('nvRemain').textContent;
+    $('hudEta').textContent = 'Ankunft in ' + $('nvEta').textContent;
+  }
+  // wird bei Start und Ende der Navigation und beim Umschalten der Einstellung aufgerufen
+  function navModeChanged() {
+    var on = !!nav, clean = on && navClean, b = document.body.classList;
+    b.toggle('hudon', on); b.toggle('navclean', clean);
+    $('navHud').classList.toggle('hidden', !on);
+    trail.setStyle({ opacity: clean ? 0 : 0.7 });             // gefahrene Spur würde mit der Route verschwimmen
+    applyOverlays();
+    if (on) syncHud();
+    var panel = $('panel');
+    if (clean && !panel.classList.contains('collapsed')) { panel.classList.add('collapsed'); $('collapseBtn').innerHTML = '&#9652;'; autoCollapsed = true; }
+    if (!clean && autoCollapsed) { panel.classList.remove('collapsed'); $('collapseBtn').innerHTML = '&#9662;'; autoCollapsed = false; }
+  }
+  $('sNavClean').addEventListener('change', function () {
+    navClean = $('sNavClean').checked;
+    try { localStorage.setItem('rennen-navclean', navClean ? '1' : '0'); } catch (e) {}
+    navModeChanged();
+  });
+  $('hudEnd').addEventListener('click', function () { if (confirm('Navigation beenden?')) stopNavigation(false); });
 
   // =====================================================
   //  START
