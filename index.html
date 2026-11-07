@@ -293,6 +293,14 @@
   #flagEdgeDist { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; padding: 1px 7px; border-radius: 99px; background: #111; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; }
   #flagEdgeDist:empty { display: none; }
   #flagEdge.labtop #flagEdgeDist { top: auto; bottom: 100%; margin: 0 0 3px; }     /* zeigt der Pfeil nach unten, steht die Entfernung oben */
+  /* ---- die nächsten Freunde am Bildschirmrand ---- */
+  .frEdge { position: fixed; z-index: 845; width: 40px; height: 40px; margin: -20px 0 0 -20px; cursor: pointer; }
+  .frEdge .frArrow { position: absolute; inset: 0; }
+  .frEdge .frArrow::before { content: ''; position: absolute; left: 50%; top: -11px; margin-left: -7px; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 12px solid var(--fc, #fff); filter: drop-shadow(0 0 1.5px #000) drop-shadow(0 1px 2px rgba(0, 0, 0, .7)); }
+  .frEdge .frBadge { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--fc, #fff); background: #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .55); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .frEdge .frBadge .avatar { width: 100% !important; height: 100% !important; border-radius: 50%; }
+  .frEdge .frDist { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; padding: 1px 6px; border-radius: 99px; background: #111; color: #fff; font-size: 10px; font-weight: 700; white-space: nowrap; }
+  .frEdge.labtop .frDist { top: auto; bottom: 100%; margin: 0 0 3px; }
   .hidden { display: none; }
 </style>
 </head>
@@ -302,6 +310,7 @@
   <div id="flagEdgeBadge"><span id="flagEdgeSvg"></span></div>
   <div id="flagEdgeDist"></div>
 </div>
+<div id="frEdges"></div>
 <div id="navHud" class="hidden" role="status" aria-live="polite">
   <div class="hudmain"><div id="hudArrow">↑</div><div id="hudDist">–</div><div id="hudText"></div></div>
   <div class="hudsub"><span id="hudRemain">–</span><span id="hudEta">–</span><button id="hudEnd" type="button" aria-label="Navigation beenden">Beenden</button></div>
@@ -820,6 +829,14 @@
       <h3>Standort</h3>
       <label class="switch" for="sAutoLoc"><input type="checkbox" id="sAutoLoc"><span>Standort beim Öffnen automatisch starten</span></label>
       <p class="hint">Solange dein Standort läuft, sehen ihn deine Freunde und die Teilnehmer deiner Rennen auf der Karte, sonst niemand. Beim ersten Mal fragt dein Browser oder Handy nach der Erlaubnis. Ständiges GPS kostet Akku. Wenn du ausschaltest, startest du den Standort wieder selbst auf der Startseite. Das gilt ab dem nächsten Öffnen. Mit „Standort stoppen“ kannst du jederzeit pausieren.</p>
+
+      <h3>Freunde am Bildschirmrand</h3>
+      <label class="switch" for="sFrEdge"><input type="checkbox" id="sFrEdge"><span>Nächste Freunde am Rand anzeigen</span></label>
+      <div class="row" id="sFrRow" style="align-items:flex-end">
+        <div style="flex:1"><label for="sFrCount">Anzahl</label><select id="sFrCount"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option></select></div>
+        <div style="flex:1"><label for="sFrRadius">Umkreis</label><select id="sFrRadius"><option value="1000">1 km</option><option value="2000">2 km</option><option value="5000">5 km</option><option value="10000">10 km</option><option value="25000">25 km</option><option value="50000">50 km</option><option value="0">unbegrenzt</option></select></div>
+      </div>
+      <p class="hint">Ist ein Freund online, aber gerade nicht im Bild, zeigt ein Pfeil mit seinem Bild und der Entfernung am Rand, wo er ist. Es erscheinen nur die nächsten Freunde innerhalb des Umkreises. Antippen zeigt dich und den Freund zusammen auf der Karte. Gilt nur für dieses Gerät.</p>
 
       <h3>Navigation</h3>
       <label class="switch" for="sNavClean"><input type="checkbox" id="sNavClean"><span>Beim Navigieren nur das Nötigste anzeigen</span></label>
@@ -5321,6 +5338,7 @@
     return { x: ox + dx * s, y: oy + dy * s, angle: Math.atan2(dy, dx) * 180 / Math.PI + 90 };
   }
   function updateFlagEdge() {
+    updateFriendEdges();
     var box = $('flagEdge'), b = document.body.classList, target = myId ? currentFlagTarget() : null;
     if (!target || b.contains('modal-open') || b.contains('picking')) { box.classList.add('hidden'); return; }
     var rect = visibleRect(), g = flagGeometry(target, rect);
@@ -5341,6 +5359,75 @@
   window.addEventListener('resize', scheduleFlagEdge);
   setInterval(updateFlagEdge, 1000);            // fängt Panel, Rennen, Navigation und 3D-Wechsel auf
   setInterval(function () { if (mode3d) scheduleFlagEdge(); }, 120);   // in 3D dreht die Karte weich nach – Pfeil läuft mit
+
+  // =====================================================
+  //  NÄCHSTE FREUNDE AM BILDSCHIRMRAND
+  // =====================================================
+  var frPref = { on: true, count: 3, radius: 5000 };
+  try { var sfp = JSON.parse(localStorage.getItem('rennen-fredge') || 'null'); if (sfp) frPref = Object.assign(frPref, sfp); } catch (e) {}
+  var frEdgeEls = {};      // uid -> Element
+  function saveFrPref() { try { localStorage.setItem('rennen-fredge', JSON.stringify(frPref)); } catch (e) {} }
+  function syncFrUI() {
+    $('sFrEdge').checked = !!frPref.on; $('sFrCount').value = String(frPref.count); $('sFrRadius').value = String(frPref.radius);
+    $('sFrRow').classList.toggle('hidden', !frPref.on);
+  }
+  syncFrUI();
+  $('sFrEdge').addEventListener('change', function () { frPref.on = $('sFrEdge').checked; saveFrPref(); syncFrUI(); updateFriendEdges(); });
+  $('sFrCount').addEventListener('change', function () { frPref.count = parseInt($('sFrCount').value, 10) || 3; saveFrPref(); updateFriendEdges(); });
+  $('sFrRadius').addEventListener('change', function () { frPref.radius = parseInt($('sFrRadius').value, 10) || 0; saveFrPref(); updateFriendEdges(); });
+
+  function frEdgeEl(id, o) {
+    var e = frEdgeEls[id];
+    if (!e) {
+      e = el('div', 'frEdge'); e.setAttribute('role', 'button'); e.tabIndex = 0;
+      e.appendChild(el('div', 'frArrow'));
+      var badge = el('div', 'frBadge'); e.appendChild(badge);
+      e.appendChild(el('div', 'frDist'));
+      e.addEventListener('click', function () {
+        var oo = others[id]; if (!oo) return;
+        var ll = oo.marker.getLatLng();
+        if (mode3d) set3D(false);
+        follow = false;
+        fitWithPanel(L.latLngBounds(myPos ? [[myPos.lat, myPos.lng], [ll.lat, ll.lng]] : [[ll.lat, ll.lng]]));
+      });
+      $('frEdges').appendChild(e); frEdgeEls[id] = e;
+    }
+    if (e._av !== (o.avatar || '') + '|' + o.color) {          // Bild oder Farbe neu
+      e._av = (o.avatar || '') + '|' + o.color;
+      var b = e.querySelector('.frBadge'); b.innerHTML = ''; b.appendChild(avatarNode(o.avatar, o.name, o.color, 34));
+      e.style.setProperty('--fc', o.color);
+    }
+    e.setAttribute('aria-label', o.name + ' auf der Karte zeigen');
+    return e;
+  }
+  function updateFriendEdges() {
+    var b = document.body.classList, show = {};
+    if (frPref.on && myId && myPos && !b.contains('modal-open') && !b.contains('picking')) {
+      var now = Date.now(), rect = visibleRect();
+      var list = Object.keys(others).filter(function (id) {
+        var o = others[id];
+        return relationWith(id).rel === 'friend' && now - o.updated <= STALE_AFTER_MS;     // nur wer gerade online ist
+      }).map(function (id) {
+        var ll = others[id].marker.getLatLng();
+        return { id: id, ll: ll, d: dist(myPos.lat, myPos.lng, ll.lat, ll.lng) };
+      }).filter(function (x) { return !frPref.radius || x.d <= frPref.radius; })
+        .sort(function (a, c) { return a.d - c.d; })
+        .slice(0, frPref.count);
+      list.forEach(function (x) {
+        var g = flagGeometry({ lat: x.ll.lat, lng: x.ll.lng }, rect);
+        if (g.visible) return;                                       // ist im Bild, Marker reicht
+        var pos = edgePosition(rect, g.dx, g.dy, g.ox, g.oy), e = frEdgeEl(x.id, others[x.id]);
+        e.style.left = Math.round(pos.x) + 'px'; e.style.top = Math.round(pos.y) + 'px';
+        e.querySelector('.frArrow').style.transform = 'rotate(' + pos.angle.toFixed(1) + 'deg)';
+        e.classList.toggle('labtop', pos.angle > 120 && pos.angle < 240);
+        e.querySelector('.frDist').textContent = others[x.id].name + ' · ' + fmtDist(x.d);
+        show[x.id] = true;
+      });
+    }
+    Object.keys(frEdgeEls).forEach(function (id) {
+      if (!show[id]) { frEdgeEls[id].remove(); delete frEdgeEls[id]; }
+    });
+  }
   // Tipp: Karte so einstellen, dass du und das Ziel zu sehen sind
   $('flagEdge').addEventListener('click', function () {
     var t = currentFlagTarget(); if (!t) return;
@@ -5350,7 +5437,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-07-5';
+  var APP_VERSION = '2026-11-07-6';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
