@@ -284,10 +284,24 @@
   .flagicon { background: none; border: 0; }
   .flagpin { width: 40px; height: 44px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .55)); }
   #mapWrap.mode3d .flagpin { transform-origin: 6px 43px; }      /* in 3D steht die Flagge auf dem Zielpunkt */
+  /* ---- Zielflagge am Bildschirmrand, wenn das Ziel nicht im Bild ist ---- */
+  #flagEdge { position: fixed; z-index: 850; width: 48px; height: 48px; margin: -24px 0 0 -24px; cursor: pointer; }
+  #flagEdgeBadge { position: absolute; inset: 0; border-radius: 50%; background: #fff; border: 2px solid #111; box-shadow: 0 2px 8px rgba(0, 0, 0, .55); display: flex; align-items: center; justify-content: center; }
+  #flagEdgeBadge svg { width: 28px; height: 31px; display: block; }
+  #flagEdgeArrow { position: absolute; inset: 0; }
+  #flagEdgeArrow::before { content: ''; position: absolute; left: 50%; top: -13px; margin-left: -8px; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid #fff; filter: drop-shadow(0 0 1.5px #000) drop-shadow(0 1px 2px rgba(0, 0, 0, .7)); }
+  #flagEdgeDist { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 3px; padding: 1px 7px; border-radius: 99px; background: #111; color: #fff; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  #flagEdgeDist:empty { display: none; }
+  #flagEdge.labtop #flagEdgeDist { top: auto; bottom: 100%; margin: 0 0 3px; }     /* zeigt der Pfeil nach unten, steht die Entfernung oben */
   .hidden { display: none; }
 </style>
 </head>
 <body>
+<div id="flagEdge" class="hidden" role="button" tabindex="0" aria-label="Zielflagge anzeigen">
+  <div id="flagEdgeArrow"></div>
+  <div id="flagEdgeBadge"><span id="flagEdgeSvg"></span></div>
+  <div id="flagEdgeDist"></div>
+</div>
 <div id="navHud" class="hidden" role="status" aria-live="polite">
   <div class="hudmain"><div id="hudArrow">↑</div><div id="hudDist">–</div><div id="hudText"></div></div>
   <div class="hudsub"><span id="hudRemain">–</span><span id="hudEta">–</span><button id="hudEnd" type="button" aria-label="Navigation beenden">Beenden</button></div>
@@ -369,6 +383,7 @@
   <!-- Anmeldung -->
   <div id="authView" class="hidden">
     <h2 class="brand">RaceNewRoads</h2>
+    <div class="hint" id="loginVersion"></div>
     <div class="tabs" role="tablist">
       <button id="tabLogin" role="tab" aria-selected="true" type="button">Anmelden</button>
       <button id="tabSignup" role="tab" aria-selected="false" type="button">Registrieren</button>
@@ -830,6 +845,11 @@
       <h3>Benachrichtigungen</h3>
       <label class="switch" for="sNotif"><input type="checkbox" id="sNotif"><span>Hinweise auch im Hintergrund-Tab</span></label>
       <p class="hint">Neue Benachrichtigungen erscheinen immer in der Glocke oben. Mit diesem Schalter zeigt dein Browser sie zusätzlich als Hinweis an, wenn die Seite zwar offen, aber nicht im Vordergrund ist. Bei geschlossener App kommen keine Hinweise an, dafür bräuchte es echte Push-Nachrichten, die sind nicht eingebaut. Auf dem iPhone geht es meist nur, wenn die Seite zum Home-Bildschirm hinzugefügt wurde.</p>
+
+      <h3>Über die App</h3>
+      <p class="hint">Version: <strong id="appVersion"></strong></p>
+      <button id="reloadApp" class="ghost wide" type="button">Neueste Version laden</button>
+      <p class="hint">Fehlt etwas, das es schon geben müsste? Dann läuft bei dir vermutlich noch eine ältere Version aus dem Zwischenspeicher. Der Knopf holt die aktuelle Datei vom Server und lädt die Seite neu. Er sagt dir auch, wenn du schon die neueste hast.</p>
 
       <div class="donate">
         <h3>Projekt unterstützen</h3>
@@ -1427,6 +1447,7 @@
     trackRide(c, tDev);
     limitOnPosition(c, tDev);
     update3D(c);
+    scheduleFlagEdge();
     camTick(c);
     sendPosition(c);
     raceOnPosition(c, tDev);
@@ -1523,7 +1544,7 @@
   }
 
   // Zielflagge: schwarz-weiß kariert, der Fußpunkt der Stange liegt auf dem Zielpunkt
-  function flagIcon() {
+  function flagSvg() {
     var cells = '', r, c;
     for (r = 0; r < 3; r++) for (c = 0; c < 4; c++) if ((r + c) % 2 === 0) cells += '<rect x="' + (9 + c * 7) + '" y="' + (6 + r * 7) + '" width="7" height="7" fill="#111"/>';
     var svg = '<svg viewBox="0 0 40 44" width="40" height="44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
@@ -1531,7 +1552,10 @@
       '<rect x="7.5" y="4.5" width="31" height="24" fill="#fff"/>' + cells +
       '<rect x="8.5" y="5.5" width="29" height="22" fill="none" stroke="#111" stroke-width="1.5"/>' +
       '<circle cx="6" cy="42.5" r="2.5" fill="#111" stroke="#fff" stroke-width="1"/></svg>';
-    return L.divIcon({ className: 'flagicon', html: '<div class="flagpin">' + svg + '</div>', iconSize: [40, 44], iconAnchor: [6, 43] });
+    return svg;
+  }
+  function flagIcon() {
+    return L.divIcon({ className: 'flagicon', html: '<div class="flagpin">' + flagSvg() + '</div>', iconSize: [40, 44], iconAnchor: [6, 43] });
   }
   function addZone(layer, p, radius, color, label) {
     if (label === 'Ziel') {      // Ziel: Flagge statt Beschriftung, Kreis neutral gestrichelt (auf hellen und dunklen Karten lesbar)
@@ -5226,6 +5250,106 @@
       racingServer = m; applyRacing();
     });
   }
+
+  // =====================================================
+  //  ZIELFLAGGE AM BILDSCHIRMRAND
+  // =====================================================
+  var EDGE = { l: 52, r: 12, t: 64, b: 12 }, PERSP_3D = 900, flagEdgeQueued = false;
+  $('flagEdgeSvg').innerHTML = flagSvg();
+
+  // Welches Ziel soll angezeigt werden? Rennziel (Lobby oder laufend, wenn ich mitfahre), sonst das Navi-Ziel
+  function currentFlagTarget() {
+    if (raceCur && (raceCur.status === 'lobby' || raceCur.status === 'running')) {
+      var mm = myMember();
+      if (mm && mm.status === 'joined') return { lat: raceCur.finish_lat, lng: raceCur.finish_lng };
+    }
+    var d = (nav && nav.dest) || navDest;
+    if (d && !d.followId) return { lat: d.lat, lng: d.lng };
+    return null;
+  }
+  // der Teil des Bildschirms, in dem die Karte wirklich zu sehen ist (ohne Panel, Hinweis oben und Knopfspalte)
+  function visibleRect() {
+    var W = window.innerWidth, H = window.innerHeight, top = EDGE.t, bottom = H - EDGE.b;
+    var hud = $('navHud');
+    if (!hud.classList.contains('hidden')) top = Math.max(top, Math.round(hud.getBoundingClientRect().bottom) + 6);
+    var pr = $('panel').getBoundingClientRect();
+    if (pr.height > 0 && pr.top < H) bottom = Math.min(bottom, Math.round(pr.top) - 6);
+    return { l: EDGE.l, t: top, r: W - EDGE.r, b: Math.max(bottom, top + 120) };
+  }
+  // liegt das Ziel im Bild, und in welcher Richtung (dx, dy) vom Bildmittelpunkt aus liegt es sonst?
+  function flagGeometry(target, rect) {
+    var pt = map.latLngToContainerPoint([target.lat, target.lng]);
+    var cx = (rect.l + rect.r) / 2, cy = (rect.t + rect.b) / 2;
+    if (!mode3d) {
+      return { visible: pt.x >= rect.l && pt.x <= rect.r && pt.y >= rect.t && pt.y <= rect.b, dx: pt.x - cx, dy: pt.y - cy };
+    }
+    // 3D: Karte ist gedreht (CSS rotateZ) und gekippt (rotateX mit Perspektive)
+    var size = map.getSize(), vx = pt.x - size.x / 2, vy = pt.y - size.y / 2;
+    var a = (-rotCont) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+    var xr = vx * ca - vy * sa, yr = vx * sa + vy * ca;
+    var th = TILT_3D * Math.PI / 180, den = Math.max(PERSP_3D - yr * Math.sin(th), 50), s = PERSP_3D / den;
+    var fy = parseFloat(wrap3d.style.getPropertyValue('--fy')) || window.innerHeight * 0.7;
+    var sx = window.innerWidth / 2 + xr * s, sy = fy + yr * Math.cos(th) * s;
+    var inside = Math.abs(vx) <= size.x / 2 && Math.abs(vy) <= size.y / 2 && sx >= rect.l && sx <= rect.r && sy >= rect.t && sy <= rect.b;
+    return { visible: inside, dx: xr, dy: yr * Math.cos(th) };   // Richtung ohne Perspektive, damit auch weit entfernte Ziele stimmen
+  }
+  // Schnittpunkt des Strahls vom Bildmittelpunkt in Richtung (dx, dy) mit dem Rand; Winkel 0 = Pfeil nach oben
+  function edgePosition(rect, dx, dy) {
+    var m = { l: rect.l + 26, r: rect.r - 26, t: rect.t + 30, b: rect.b - 40 };
+    var cx = (rect.l + rect.r) / 2, cy = (rect.t + rect.b) / 2;
+    if (m.l >= m.r || m.t >= m.b) return { x: cx, y: cy, angle: 0 };
+    if (dx === 0 && dy === 0) dy = -1;
+    var sx = dx > 0 ? (m.r - cx) / dx : dx < 0 ? (m.l - cx) / dx : Infinity;
+    var sy = dy > 0 ? (m.b - cy) / dy : dy < 0 ? (m.t - cy) / dy : Infinity;
+    var s = Math.min(sx, sy);
+    return { x: cx + dx * s, y: cy + dy * s, angle: Math.atan2(dy, dx) * 180 / Math.PI + 90 };
+  }
+  function updateFlagEdge() {
+    var box = $('flagEdge'), b = document.body.classList, target = myId ? currentFlagTarget() : null;
+    if (!target || b.contains('modal-open') || b.contains('picking')) { box.classList.add('hidden'); return; }
+    var rect = visibleRect(), g = flagGeometry(target, rect);
+    if (g.visible) { box.classList.add('hidden'); return; }
+    var pos = edgePosition(rect, g.dx, g.dy);
+    box.style.left = Math.round(pos.x) + 'px'; box.style.top = Math.round(pos.y) + 'px';
+    $('flagEdgeArrow').style.transform = 'rotate(' + pos.angle.toFixed(1) + 'deg)';
+    box.classList.toggle('labtop', pos.angle > 120 && pos.angle < 240);
+    $('flagEdgeDist').textContent = myPos ? fmtDist(dist(myPos.lat, myPos.lng, target.lat, target.lng)) : '';
+    box.classList.remove('hidden');
+  }
+  function scheduleFlagEdge() {
+    if (flagEdgeQueued) return;
+    flagEdgeQueued = true;
+    requestAnimationFrame(function () { flagEdgeQueued = false; updateFlagEdge(); });
+  }
+  map.on('move zoom resize', scheduleFlagEdge);
+  window.addEventListener('resize', scheduleFlagEdge);
+  setInterval(updateFlagEdge, 1000);            // fängt Panel, Rennen, Navigation und 3D-Wechsel auf
+  // Tipp: Karte so einstellen, dass du und das Ziel zu sehen sind
+  $('flagEdge').addEventListener('click', function () {
+    var t = currentFlagTarget(); if (!t) return;
+    fitWithPanel(L.latLngBounds(myPos ? [[myPos.lat, myPos.lng], [t.lat, t.lng]] : [[t.lat, t.lng]]));
+  });
+
+  // =====================================================
+  //  VERSION und „Neueste Version laden“
+  // =====================================================
+  var APP_VERSION = '2026-11-07-4';
+  $('appVersion').textContent = APP_VERSION;
+  $('loginVersion').textContent = 'Version ' + APP_VERSION;
+  function reloadLatest() {
+    var btn = $('reloadApp'); btn.disabled = true;
+    // cache: 'reload' umgeht den Zwischenspeicher des Browsers und erneuert ihn; danach lädt die normale Seite die neue Datei
+    fetch(location.origin + location.pathname, { cache: 'reload' })
+      .then(function (r) { return r.text(); })
+      .then(function (txt) {
+        var m = /APP_VERSION = '([^']+)'/.exec(txt);
+        if (m && m[1] === APP_VERSION) { btn.disabled = false; setStatus('Du hast schon die neueste Version (' + APP_VERSION + ').', 'ok'); return; }
+        setStatus('Neue Version ' + (m ? m[1] : '(ältere Datei auf dem Server)') + ' gefunden, die Seite lädt neu …', 'ok');
+        setTimeout(function () { location.reload(); }, 400);
+      })
+      .catch(function () { btn.disabled = false; setStatus('Keine Verbindung zum Server. Bitte später erneut versuchen.', 'warn'); });
+  }
+  $('reloadApp').addEventListener('click', reloadLatest);
 
   // =====================================================
   //  START
