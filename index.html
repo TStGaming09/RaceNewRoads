@@ -6,6 +6,14 @@
 <title>RaceNewRoads</title>
 <meta name="application-name" content="RaceNewRoads">
 <meta name="apple-mobile-web-app-title" content="RaceNewRoads">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
@@ -5715,7 +5723,13 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-07-8';
+  // Installierbare App (PWA): Service Worker anmelden
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    var regSw = function () { navigator.serviceWorker.register('sw.js').catch(function () {}); };
+    if (document.readyState === 'complete') regSw(); else window.addEventListener('load', regSw);
+  }
+
+  var APP_VERSION = '2026-11-07-9';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
