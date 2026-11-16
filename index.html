@@ -2065,31 +2065,44 @@
     updateDestUI();
   }
 
+  // Ergebnisse immer nach Nähe: Treffer aus der Umgebung zuerst, Adresssuche zuerst im Umkreis, erst dann weltweit
+  function nomiSearch(q, c, bounded) {
+    var url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=de&q=' + encodeURIComponent(q) +
+      '&viewbox=' + [c.lng - 0.5, c.lat + 0.35, c.lng + 0.5, c.lat - 0.35].map(function (x) { return x.toFixed(4); }).join(',') + (bounded ? '&bounded=1' : '');
+    return fetch(url).then(function (r) { return r.json(); });
+  }
   $('nvSearch').addEventListener('click', function () {
     var q = $('nvQuery').value.trim();
     if (!q || searchBusy) return;
     searchBusy = true; setStatus('Suche …', 'warn');
-    var npat = namePat(q);
-    if (npat && !poiBusy) poiNear(nameFilters(npat), q, 'Ziel', 20000, true);      // Marken wie McDonald's: Treffer in der Nähe zuerst
-    fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=de&q=' + encodeURIComponent(q))
-      .then(function (r) { return r.json(); })
-      .then(function (list) {
-        var ul = $('nvResults');
-        ul.classList.remove('hidden');
-        fillList(ul, list.map(function (x) {
-          var li = el('li', 'click');
-          li.appendChild(el('span', 'nm', x.display_name));
-          li.addEventListener('click', function () {
-            ul.classList.add('hidden');
-            var found = { lat: +x.lat, lng: +x.lon, label: x.display_name };
-            setDest(found); addRecent(found); renderRecent();
-          });
-          return li;
-        }), 'Nichts gefunden.');
-        setStatus(list.length ? 'Wähle ein Ergebnis.' : 'Nichts gefunden.', list.length ? '' : 'warn');
-      })
-      .catch(function () { setStatus('Suche fehlgeschlagen. Später nochmal versuchen.', 'err'); })
-      .then(function () { setTimeout(function () { searchBusy = false; }, 1200); });
+    var c = poiCenter(), npat = namePat(q);
+    var near = npat ? poiOverpass('around:25000,' + (+c.lat).toFixed(5) + ',' + (+c.lng).toFixed(5), nameFilters(npat)).then(function (j) {
+      return uniqPoi((j.elements || []).map(function (e) { return poiItem(e, q); })).map(function (it) {
+        it.d = dist(c.lat, c.lng, it.lat, it.lng); return it;
+      }).sort(function (x, y) { return x.d - y.d; }).slice(0, 5);
+    }).catch(function () { return []; }) : Promise.resolve([]);
+    var addr = nomiSearch(q, c, true).then(function (l) { return l.length ? l : nomiSearch(q, c, false); }).catch(function () { return null; });
+    Promise.all([near, addr]).then(function (res) {
+      var items = res[0].map(function (it) { return { lat: it.lat, lng: it.lng, label: it.name + (it.extra ? ', ' + it.extra : ''), d: it.d, poi: true }; });
+      if (res[1]) res[1].forEach(function (x) { items.push({ lat: +x.lat, lng: +x.lon, label: x.display_name, d: dist(c.lat, c.lng, +x.lat, +x.lon) }); });
+      if (!items.length && res[1] === null) { setStatus('Suche fehlgeschlagen. Später nochmal versuchen.', 'err'); return; }
+      // Treffer aus der Umgebung vorn (nach Entfernung), Adressen danach ebenfalls nach Entfernung
+      var pois = items.filter(function (x) { return x.poi; }), rest = items.filter(function (x) { return !x.poi; }).sort(function (x, y) { return x.d - y.d; });
+      items = pois.concat(rest);
+      var ul = $('nvResults');
+      ul.classList.remove('hidden');
+      fillList(ul, items.map(function (x) {
+        var li = el('li', 'click');
+        li.appendChild(el('span', 'nm', x.label + ' · ' + fmtDist(x.d)));
+        li.addEventListener('click', function () {
+          ul.classList.add('hidden');
+          var found = { lat: x.lat, lng: x.lng, label: x.label };
+          setDest(found); addRecent(found); renderRecent();
+        });
+        return li;
+      }), 'Nichts gefunden.');
+      setStatus(items.length ? 'Wähle ein Ergebnis (nächste zuerst).' : 'Nichts gefunden.', items.length ? '' : 'warn');
+    }).then(function () { setTimeout(function () { searchBusy = false; }, 1200); });
   });
   $('nvQuery').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('nvSearch').click(); });
 
@@ -2113,7 +2126,7 @@
   }
   function nameFilters(pat) { return ['["name"~"' + pat + '",i][!"highway"]', '["brand"~"' + pat + '",i][!"highway"]']; }
   function poiOverpass(area, filters) {
-    var q = '[out:json][timeout:20];(' + filters.map(function (f) { return 'nwr(' + area + ')' + f + ';'; }).join('') + ');out center tags 150;';
+    var q = '[out:json][timeout:20];(' + filters.map(function (f) { return 'nwr(' + area + ')' + f + ';'; }).join('') + ');out tags center 150;';
     return overpass(q, { prio: 3 });
   }
   function poiItem(e, defName) {
@@ -2154,17 +2167,20 @@
     if (poiBusy) return;
     var c = poiCenter(), hint = $('nvPoiHint'), ul = $('nvPoiList');
     poiBusy = true; if (!quietEmpty) ul.classList.add('hidden');
-    if (!quietEmpty) hint.textContent = what + ' werden gesucht …' + (myPos ? '' : ' (um die Kartenmitte, dein Standort ist noch unbekannt)');
+    var guardT = setTimeout(function () { poiBusy = false; }, 60000);
+    if (!quietEmpty) { hint.textContent = what + ' werden gesucht …' + (myPos ? '' : ' (um die Kartenmitte, dein Standort ist noch unbekannt)'); setStatus('Suche ' + what + ' …', 'warn'); try { hint.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
     poiOverpass('around:' + radius + ',' + (+c.lat).toFixed(5) + ',' + (+c.lng).toFixed(5), filters).then(function (j) {
       var items = uniqPoi((j.elements || []).map(function (e) { return poiItem(e, defName); })).map(function (it) {
         it.d = dist(c.lat, c.lng, it.lat, it.lng); return it;
       }).sort(function (x, y) { return x.d - y.d; }).slice(0, 12);
-      if (!items.length) { if (!quietEmpty) { hint.textContent = 'Nichts gefunden im Umkreis von ' + (radius / 1000) + ' km.'; ul.classList.add('hidden'); } return; }
+      if (!items.length) { if (!quietEmpty) { hint.textContent = 'Nichts gefunden im Umkreis von ' + (radius / 1000) + ' km.'; setStatus('Nichts gefunden im Umkreis von ' + (radius / 1000) + ' km.', 'warn'); ul.classList.add('hidden'); } return; }
       hint.textContent = '„' + what + '“ in der Nähe (Luftlinie). Tippe auf einen als Ziel.';
+      setStatus(items.length + ' Treffer: ' + what, 'ok');
       showPoiList(ul, items, function (it) { return fmtDist(it.d); }, function (it) { pickPoiDest(it, ul, hint); });
+      try { ul.scrollIntoView({ block: 'nearest' }); } catch (e) {}
     }).catch(function (err) {
-      if (!quietEmpty) hint.textContent = 'Suche fehlgeschlagen: ' + friendlyErr(err) + '. Später nochmal versuchen.';
-    }).then(function () { poiBusy = false; });
+      if (!quietEmpty) { hint.textContent = 'Suche fehlgeschlagen: ' + friendlyErr(err) + '. Später nochmal versuchen.'; setStatus('Sonderziel-Suche fehlgeschlagen: ' + friendlyErr(err), 'err'); }
+    }).then(function () { clearTimeout(guardT); poiBusy = false; });
   }
 
   // (2) entlang der Route (nur während der Navigation)
@@ -5554,7 +5570,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-16-5';
+  var APP_VERSION = '2026-11-16-6';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
