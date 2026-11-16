@@ -265,6 +265,47 @@
   #hudText { font-size: 17px; font-weight: 600; line-height: 1.2; flex: 1; min-width: 0; overflow-wrap: anywhere; }
   #navHud .hudsub { display: flex; align-items: center; gap: 14px; margin-top: 6px; font-size: 13px; color: #cbd5e1; }
   #navHud .hudsub span { white-space: nowrap; }
+  /* ---- Navigation im Stil moderner Navi-Apps: grüner Hinweis oben, Leiste mit Ankunft unten ---- */
+  #navHud { background: #14653a; }
+  #navHud .hudsub { display: none; }
+  #navHud { left: 12px; right: 64px; top: calc(10px + env(safe-area-inset-top, 0px)); }
+  #hudDist { font-size: 26px; } #hudText { font-size: 15px; }
+  body.hudon.is3d #navHud, body.hudon #navHud { left: 56px; }
+  #navRouteCard #nvGo { flex: 1; background: #2563eb; color: #fff; margin: 0; }
+  #hudThen { margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 255, 255, .28); font-size: 14px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
+  #hudThen.hidden { display: none; }
+  #navBar { position: absolute; z-index: 1000; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); max-width: 440px; margin: 0 auto;
+    background: var(--paper); color: var(--ink); border-radius: 18px; box-shadow: 0 6px 24px rgba(0, 0, 0, .32); padding: 12px 14px; }
+  #navBar.hidden { display: none; }
+  .nbmain { display: flex; align-items: center; gap: 12px; }
+  .nbinfo { flex: 1; text-align: center; min-width: 0; }
+  .nbeta { font-size: 1.7rem; font-weight: 800; color: #15803d; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .nbsub { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .nbround { width: 44px; height: 44px; border-radius: 50%; padding: 0; margin: 0; font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; flex: none; background: var(--soft); color: var(--ink); }
+  .nbround.red { background: #fde2e2; color: #d11; }
+  .nbround.wideround { width: 48px; height: 48px; }
+  .nbbtns { display: flex; gap: 8px; margin-top: 10px; }
+  .nbbtns button { flex: 1; margin: 0; font-size: .9rem; padding: 9px 8px; }
+  body.hudon:not(.navpanel) #panel { display: none; }
+  body.picking #navBar, body.modal-open #navBar { display: none; }
+  @media not all and (orientation: landscape) and (max-height: 520px) {
+    body.hudon .limitbox, body.hudon.navclean:not(.is3d) .limitbox { top: auto; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
+  }
+  .nvhead { margin: 0 0 8px; font-size: 1.25rem; }
+  .routecard { background: var(--soft); border-radius: 14px; padding: 12px; margin-top: 10px; }
+  .routecard.hidden { display: none; }
+  .rcdest { display: flex; align-items: center; gap: 10px; }
+  .rcname { font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .modetabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .modetabs button { margin: 0; padding: 8px 4px; border-radius: 12px; background: var(--paper); color: var(--ink); display: flex; flex-direction: column; align-items: center; gap: 1px; box-shadow: inset 0 0 0 1px rgba(128, 128, 128, .3); }
+  .modetabs button.on { background: #2563eb; color: #fff; box-shadow: none; }
+  .modetabs .mi { font-size: 18px; line-height: 1; }
+  .modetabs b { font-size: .95rem; font-variant-numeric: tabular-nums; }
+  .modetabs small { font-size: .7rem; opacity: .8; }
+  .rcsum { margin-top: 10px; font-weight: 700; font-size: 1.05rem; }
+  #navSetup.hasdest #nvDiscover, #navSetup.hasdest #nvDest { display: none; }
+  details.more { margin-top: 12px; }
+  details.more summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
   #hudEnd { margin: 0 0 0 auto; padding: 4px 12px; font-size: 12px; border-radius: 8px; background: rgba(255, 255, 255, .14); color: #fff; }
   body.picking #navHud, body.modal-open #navHud { display: none; }
   body.hudon #navActive .navcard, body.hudon #navActive .stats { display: none; }     /* steht schon oben */
@@ -281,6 +322,7 @@
     .limitsign { width: 52px; height: 52px; border-width: 6px; }
     .panel, #pickBar { left: calc(150px + env(safe-area-inset-left, 0px)); right: 12px; }
     #navHud { max-width: 440px; }
+    #navBar { left: auto; right: 12px; width: min(330px, 46vw); margin: 0; }
   }
   .flagicon { background: none; border: 0; }
   .flagpin { width: 40px; height: 44px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .55)); }
@@ -305,7 +347,16 @@
 </div>
 <div id="navHud" class="hidden" role="status" aria-live="polite">
   <div class="hudmain"><div id="hudArrow">↑</div><div id="hudDist">–</div><div id="hudText"></div></div>
+  <div id="hudThen" class="hidden"><span>Dann</span> <span id="hudThenArrow"></span> <span id="hudThenText"></span></div>
   <div class="hudsub"><span id="hudRemain">–</span><span id="hudEta">–</span><button id="hudEnd" type="button" aria-label="Navigation beenden">Beenden</button></div>
+</div>
+<div id="navBar" class="hidden" role="status">
+  <div class="nbmain">
+    <button id="nbEnd" class="nbround red" type="button" aria-label="Navigation beenden">&#10005;</button>
+    <div class="nbinfo"><div class="nbeta" id="nbEta">–</div><div class="nbsub" id="nbSub">–</div></div>
+    <button id="nbMore" class="nbround" type="button" aria-label="Mehr Optionen">&#8942;</button>
+  </div>
+  <div class="nbbtns"><button id="nbStop" class="ghost" type="button">Stopp hinzufügen</button><button id="nbShare" class="ghost" type="button">Ankunft teilen</button></div>
 </div>
 <div id="mapWrap">
   <div id="map" role="application" aria-label="Karte"></div>
@@ -509,13 +560,34 @@
         <div class="row" style="margin-top:6px"><button id="nvIncSave" class="ghost" type="button">Ort speichern</button><button id="nvIncDismiss" class="ghost" type="button">Verwerfen</button></div>
       </div>
       <div id="navSetup">
-        <label for="nvMode">Fortbewegung</label>
-        <select id="nvMode">
+        <h3 class="nvhead">Wohin geht&rsquo;s?</h3>
+        <div class="row">
+          <input id="nvQuery" type="text" placeholder="Adresse, Ort oder Name" autocomplete="off" aria-label="Ziel suchen">
+          <button id="nvSearch" type="button">Suchen</button>
+        </div>
+        <ul id="nvResults" class="list hidden" style="margin-top:8px"></ul>
+        <select id="nvMode" class="hidden" aria-hidden="true" tabindex="-1">
           <option value="car">Auto / Motorrad</option>
           <option value="bike">Fahrrad / E-Bike / Roller</option>
           <option value="foot">Zu Fuß</option>
         </select>
-        <div id="nvQuick">
+        <div id="nvRouteCard" class="routecard hidden">
+          <div class="rcdest"><button id="nvChange" class="nbround" type="button" aria-label="Anderes Ziel wählen">&#8592;</button><div id="nvRcDest" class="rcname"></div></div>
+          <div class="modetabs" id="nvModeTabs">
+            <button type="button" data-mode="car"><span class="mi">&#128663;</span><b id="nvT_car">–</b><small>Auto</small></button>
+            <button type="button" data-mode="bike"><span class="mi">&#128690;</span><b id="nvT_bike">–</b><small>Rad</small></button>
+            <button type="button" data-mode="foot"><span class="mi">&#128694;</span><b id="nvT_foot">–</b><small>Zu Fuß</small></button>
+          </div>
+          <div class="rcsum" id="nvRcSum"></div>
+          <div class="row" style="margin-top:10px">
+            <button id="nvShare" class="ghost hidden nbround wideround" type="button" aria-label="Route teilen">&#10150;</button>
+            <button id="nvGo" type="button">Los geht&rsquo;s</button>
+          </div>
+        </div>
+        <p id="nvDest" class="hint">Noch kein Ziel gewählt.</p>
+        <div id="nvDiscover">
+          <button id="nvRaceStart" class="ghost wide hidden" type="button">Zum Start des Rennens</button>
+          <div id="nvQuick">
           <div class="row between"><strong>Meine Orte</strong><button id="nvPlacesEdit" class="ghost hidden" type="button">Bearbeiten</button></div>
           <div id="nvFavs" class="chips"></div>
           <div class="row" style="margin-top:8px">
@@ -534,30 +606,24 @@
           </div>
           <p class="hint">Deine Orte sind privat. Nur du siehst sie, auch auf der Karte.</p>
         </div>
-        <h3>Freunde auf der Karte</h3>
-        <ul id="nvFriends" class="list"></ul>
-        <label for="nvQuery">Ziel suchen</label>
-        <div class="row">
-          <input id="nvQuery" type="text" placeholder="Adresse oder Ort" autocomplete="off">
-          <button id="nvSearch" type="button">Suchen</button>
-        </div>
-        <ul id="nvResults" class="list hidden" style="margin-top:8px"></ul>
-        <label>Sonderziele in der Nähe</label>
+          <label>Sonderziele in der Nähe</label>
         <div id="nvPoiChips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
         <p class="hint" id="nvPoiHint" style="margin:6px 0 0"></p>
         <ul id="nvPoiList" class="list hidden" style="margin-top:8px"></ul>
-        <div id="nvRecentBox" class="hidden">
+          <div id="nvRecentBox" class="hidden">
           <div class="row between"><strong>Zuletzt gesucht</strong><button id="nvRecentClear" class="ghost" type="button">Leeren</button></div>
           <ul id="nvRecent" class="list" style="margin-top:8px"></ul>
         </div>
-        <button id="nvPick" class="ghost wide" type="button">Ziel auf der Karte wählen</button>
-        <button id="nvFuelNear" class="ghost wide" type="button">Tankstellen in der Nähe suchen</button>
-        <button id="nvRaceStart" class="ghost wide hidden" type="button">Zum Start des Rennens</button>
-        <p id="nvDest" class="hint">Noch kein Ziel gewählt.</p>
-        <button id="nvGo" class="hidden" type="button">Navigation starten</button>
-        <button id="nvShare" class="ghost wide hidden" type="button">Route teilen</button>
+          <details class="more"><summary>Weitere Optionen</summary>
+            <h3>Freunde auf der Karte</h3>
+        <ul id="nvFriends" class="list"></ul>
+            <button id="nvPick" class="ghost wide" type="button">Ziel auf der Karte wählen</button>
+            <button id="nvFuelNear" class="ghost wide" type="button">Tankstellen in der Nähe suchen</button>
+          </details>
+        </div>
       </div>
       <div id="navActive" class="hidden">
+        <button id="nvPanelClose" class="ghost wide" type="button">Zurück zur Karte</button>
         <div class="navcard"><div class="navdist" id="nvStepDist">–</div><div class="navtext" id="nvStepText"></div></div>
         <div class="stats" style="grid-template-columns:repeat(2,1fr)">
           <div><div class="v" id="nvRemain">–</div><div class="l">Rest</div></div>
@@ -2050,7 +2116,68 @@
     else updateDestUI();
   }
 
+  // ---- Routenübersicht: Zeiten für Auto, Rad und zu Fuß, danach „Los geht's“ ----
+  var routePrev = { token: 0, key: null, routes: {}, at: 0, from: null, fitted: false };
+  function destKey(d) { return d ? (+d.lat).toFixed(5) + ',' + (+d.lng).toFixed(5) : ''; }
+  function syncModeTabs() {
+    var m = $('nvMode').value;
+    Array.prototype.forEach.call($('nvModeTabs').querySelectorAll('button'), function (bt) { bt.classList.toggle('on', bt.getAttribute('data-mode') === m); });
+    var r = routePrev.routes[m];
+    $('nvRcSum').textContent = r ? fmtDur(r.dur) + ' · ' + fmtDist(r.dist) : (routePrev.pending ? 'Route wird berechnet …' : (navDest && navDest.followId ? 'Position folgt live.' : (myPos ? '' : 'Warte auf GPS-Position …')));
+  }
+  function drawPreview() {
+    syncModeTabs();
+    if (nav || !navDest) return;
+    var r = routePrev.routes[$('nvMode').value];
+    navLayer.clearLayers();
+    L.marker([navDest.lat, navDest.lng], { icon: flagIcon(), keyboard: false, interactive: false }).addTo(navLayer);
+    if (!r) return;
+    L.polyline(r.coords, { color: '#ffffff', weight: 11, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer);
+    L.polyline(r.coords, { color: '#0284c7', weight: 7, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer);
+    if (!routePrev.fitted && !mode3d) { routePrev.fitted = true; try { fitWithPanel(L.latLngBounds(r.coords)); } catch (e) {} }
+  }
+  function previewRoutes() {
+    var tok = ++routePrev.token;
+    routePrev.routes = {}; routePrev.key = destKey(navDest); routePrev.at = Date.now(); routePrev.fitted = false; routePrev.pending = false;
+    ['car', 'bike', 'foot'].forEach(function (m) { $('nvT_' + m).textContent = myPos ? '…' : '–'; });
+    syncModeTabs();
+    if (!navDest || navDest.followId || !myPos) return;
+    var from = { lat: myPos.lat, lng: myPos.lng }, dest = navDest, left = 3;
+    routePrev.from = from; routePrev.pending = true; syncModeTabs();
+    ['car', 'bike', 'foot'].forEach(function (m) {
+      fetchRoute(from, dest, m).then(function (r) {
+        if (tok !== routePrev.token) return;
+        routePrev.routes[m] = r; $('nvT_' + m).textContent = fmtDur(r.dur);
+      }).catch(function () {
+        if (tok === routePrev.token) $('nvT_' + m).textContent = '–';
+      }).then(function () {
+        if (tok !== routePrev.token) return;
+        if (--left === 0) routePrev.pending = false;
+        drawPreview();
+      });
+    });
+  }
+  function getRoute(mode) {
+    var r = routePrev.routes[mode];
+    if (r && routePrev.key === destKey(navDest) && myPos && routePrev.from && Date.now() - routePrev.at < 120000 &&
+        dist(myPos.lat, myPos.lng, routePrev.from.lat, routePrev.from.lng) < 150) return Promise.resolve(r);
+    return fetchRoute(myPos, navDest, mode);
+  }
+  $('nvModeTabs').addEventListener('click', function (e) {
+    var bt = e.target.closest && e.target.closest('button[data-mode]');
+    if (!bt) return;
+    $('nvMode').value = bt.getAttribute('data-mode'); navModeTouched = true;
+    drawPreview();
+  });
+  $('nvChange').addEventListener('click', function () {
+    navDest = null; routePrev.token++; navLayer.clearLayers(); updateDestUI(); $('nvQuery').focus();
+  });
+
   function updateDestUI() {
+    $('nvRouteCard').classList.toggle('hidden', !navDest);
+    $('navSetup').classList.toggle('hasdest', !!navDest);
+    $('nvRcDest').textContent = navDest ? navDest.label : '';
+    syncModeTabs();
     $('nvDest').textContent = navDest ? 'Ziel: ' + navDest.label + (navDest.followId ? ' (folgt live)' : '') : 'Noch kein Ziel gewählt.';
     $('nvGo').classList.toggle('hidden', !navDest);
     $('nvSaveDest').disabled = !navDest || !!navDest.followId;
@@ -2063,6 +2190,7 @@
     L.marker([d.lat, d.lng], { icon: flagIcon(), keyboard: false, interactive: false }).addTo(navLayer);
     if (!mode3d) { map.panTo([d.lat, d.lng]); follow = false; }
     updateDestUI();
+    previewRoutes();
   }
 
   // Ergebnisse immer nach Nähe: Treffer aus der Umgebung zuerst, Adresssuche zuerst im Umkreis, erst dann weltweit
@@ -2298,11 +2426,11 @@
     }
     $('nvGo').disabled = true; setStatus('Route wird berechnet …', 'warn');
     nav = { dest: navDest, mode: $('nvMode').value, lastReroute: Date.now(), lastFollow: Date.now(), fetching: false };
-    fetchRoute(myPos, navDest, nav.mode).then(function (route) {
+    getRoute(nav.mode).then(function (route) {
       $('nvGo').disabled = false;
       applyRoute(route); addRecent(nav.dest);
       $('navSetup').classList.add('hidden'); $('navActive').classList.remove('hidden');
-      navModeChanged();
+      navModeChanged(); document.body.classList.remove('navpanel');
       follow = true; map.setView([myPos.lat, myPos.lng], 17);
       setStatus('Navigation läuft', 'ok');
       navOnPosition({ latitude: myPos.lat, longitude: myPos.lng, accuracy: myPos.acc });
@@ -2321,6 +2449,17 @@
     if (!silent) setStatus('Navigation beendet.');
   }
   $('nvStop').addEventListener('click', function () { stopover = null; stopNavigation(false); });
+  function openNavPanel(scrollTo) {
+    document.body.classList.add('navpanel');
+    var pn = $('panel'); pn.classList.remove('collapsed'); $('collapseBtn').innerHTML = '&#9662;';
+    if (scrollTo) setTimeout(function () { try { $(scrollTo).scrollIntoView({ block: 'start' }); } catch (e) {} }, 50);
+    layout3D();
+  }
+  $('nbEnd').addEventListener('click', function () { if (confirm('Navigation beenden?')) { stopover = null; stopNavigation(false); } });
+  $('nbMore').addEventListener('click', function () { openNavPanel(); });
+  $('nbStop').addEventListener('click', function () { openNavPanel('nvRoutePoiChips'); });
+  $('nbShare').addEventListener('click', function () { openNavPanel(); $('nvShareActive').click(); });
+  $('nvPanelClose').addEventListener('click', function () { document.body.classList.remove('navpanel'); layout3D(); });
 
   function distToPolyline(lat, lng, pts) {
     var k = Math.cos(lat * Math.PI / 180), best = Infinity, px = lng * k * 111320, py = lat * 110540;
@@ -2375,6 +2514,7 @@
     for (var k = nav.idx; k <= last; k++) remain += steps[k].dist;
     $('nvStepDist').textContent = fmtDist(dNext);
     $('nvStepText').textContent = st.text;
+    nav.remain = remain;
     $('nvRemain').textContent = fmtDist(remain);
     $('nvEta').textContent = fmtDur(remain * nav.secPerM);
     syncHud();
@@ -2406,6 +2546,7 @@
 
   function showScreen(t) {
     currentScreen = t;
+    if (nav) document.body.classList.add('navpanel');      // während der Navigation ist das Panel sonst ausgeblendet
     SCREENS.forEach(function (n) { $('tab' + n).classList.toggle('hidden', n !== t); });
     $('screenHead').classList.toggle('hidden', t === 'Home');
     $('screenTitle').textContent = TITLES[t] || '';
@@ -5167,7 +5308,7 @@
   function layout3D() {
     if (!mode3d) return;
     var H = window.innerHeight, y = H * 0.75, b = document.body.classList;
-    var pr = $('panel').getBoundingClientRect();
+    var pr = (b.contains('hudon') && !b.contains('navpanel') ? $('navBar') : $('panel')).getBoundingClientRect();
     if (!b.contains('modal-open') && !b.contains('picking') && pr.height > 0 && pr.top < H) y = Math.min(y, pr.top - 60);
     y = Math.max(H * 0.40, y);
     wrap3d.style.setProperty('--fy', Math.round(y) + 'px');
@@ -5397,12 +5538,26 @@
     $('hudArrow').textContent = maneuverArrow($('nvStepText').textContent);
     $('hudRemain').textContent = 'Rest ' + $('nvRemain').textContent;
     $('hudEta').textContent = 'Ankunft in ' + $('nvEta').textContent;
+    // „Dann …“: der übernächste Hinweis, wenn er bald folgt
+    var then = $('hudThen');
+    if (nav && nav.steps && nav.idx < nav.steps.length - 1 && nav.steps[nav.idx].dist < 400) {
+      var nt = nav.steps[nav.idx + 1].text;
+      $('hudThenArrow').textContent = maneuverArrow(nt); $('hudThenText').textContent = nt; then.classList.remove('hidden');
+    } else then.classList.add('hidden');
+    // untere Leiste: Restzeit, Strecke, Ankunftszeit
+    if (nav && nav.remain != null) {
+      var sec = nav.remain * (nav.secPerM || 0), arr = new Date(Date.now() + sec * 1000);
+      $('nbEta').textContent = fmtDur(sec);
+      $('nbSub').textContent = fmtDist(nav.remain) + ' · Ankunft ' + pad(arr.getHours()) + ':' + pad(arr.getMinutes());
+    }
   }
   // wird bei Start und Ende der Navigation und beim Umschalten der Einstellung aufgerufen
   function navModeChanged() {
     var on = !!nav, clean = on && navClean, b = document.body.classList;
     b.toggle('hudon', on); b.toggle('navclean', clean);
     $('navHud').classList.toggle('hidden', !on);
+    $('navBar').classList.toggle('hidden', !on);
+    if (!on) b.remove('navpanel');
     trail.setStyle({ opacity: on ? 0 : 0.7 });                 // gefahrene Spur: während der Navigation immer ausgeblendet
     applyOverlays();
     if (on) syncHud();
@@ -5570,7 +5725,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-16-6';
+  var APP_VERSION = '2026-11-16-7';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
