@@ -2112,8 +2112,11 @@
     nav.idx = route.steps.length > 1 ? 1 : 0;
     nav.off = 0;
     navLayer.clearLayers();
-    L.polyline(route.coords, { color: '#ffffff', weight: 11, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer);   // Rand: hebt die Route ab
-    L.polyline(route.coords, { color: '#0284c7', weight: 7, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer);
+    nav.cut = 0;
+    nav.lines = [
+      L.polyline(route.coords, { color: '#ffffff', weight: 11, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer),   // Rand: hebt die Route ab
+      L.polyline(route.coords, { color: '#0284c7', weight: 7, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(navLayer)
+    ];
     L.marker([nav.dest.lat, nav.dest.lng], { icon: flagIcon(), keyboard: false, interactive: false }).addTo(navLayer);
   }
 
@@ -2164,11 +2167,40 @@
     return best;
   }
 
+  // Der bereits gefahrene Teil der blauen Routenlinie verschwindet; sie beginnt immer an deiner Position
+  function trimRoute(lat, lng, acc) {
+    if (!nav || !nav.lines || !nav.coords || nav.coords.length < 2) return;
+    if (acc != null && acc > 50) return;
+    var co = nav.coords, from = nav.cut || 0, to = Math.min(co.length - 1, from + 60), best = from, bd = Infinity;
+    for (var i = from; i <= to; i++) {
+      var d = dist(lat, lng, co[i][0], co[i][1]);
+      if (d < bd) { bd = d; best = i; }
+    }
+    if (bd > 60) return;                       // weit weg von der Route: nichts abschneiden
+    nav.cut = best;
+    var rest = [[lat, lng]].concat(co.slice(best + (best < co.length - 1 && bd < 40 ? 1 : 0)));
+    nav.lines.forEach(function (l) { l.setLatLngs(rest); });
+  }
   function navOnPosition(c) {
     if (!nav || !nav.steps) return;
     if (inRunningRace()) { stopNavigation(false); setStatus('Navigation gestoppt: Das Rennen läuft.', 'warn'); return; }
     var lat = c.latitude, lng = c.longitude, steps = nav.steps, last = steps.length - 1;
-    while (nav.idx < last && dist(lat, lng, steps[nav.idx].loc[0], steps[nav.idx].loc[1]) < 25) nav.idx++;
+    // Hinweis weiterschalten: Kreuzung erreicht (<35 m), schon vorbei (war nah dran und entfernt sich wieder) oder
+    // ein späterer Hinweis ist näher (GPS-Punkte ausgelassen, z. B. bei höherem Tempo oder im Tunnel)
+    for (var guard = 0; guard < 6 && nav.idx < last; guard++) {
+      var dCur = dist(lat, lng, steps[nav.idx].loc[0], steps[nav.idx].loc[1]), adv = false;
+      if (nav.idxFor !== nav.idx) { nav.idxFor = nav.idx; nav.minD = Infinity; }
+      if (dCur < nav.minD) nav.minD = dCur;
+      if (dCur < 35) adv = true;
+      else if (nav.minD < 80 && dCur > nav.minD + 25) adv = true;
+      else {
+        for (var k2 = nav.idx + 1; k2 <= Math.min(last, nav.idx + 2); k2++) {
+          if (dist(lat, lng, steps[k2].loc[0], steps[k2].loc[1]) < 30) { nav.idx = k2 - 1; adv = true; break; }
+        }
+      }
+      if (!adv) break;
+      nav.idx++;
+    }
     var st = steps[nav.idx], dNext = dist(lat, lng, st.loc[0], st.loc[1]);
     if (nav.idx === last && dNext < 30) { stopNavigation(true); setStatus('Ziel erreicht.', 'ok'); return; }
     var remain = dNext;
@@ -2178,6 +2210,7 @@
     $('nvRemain').textContent = fmtDist(remain);
     $('nvEta').textContent = fmtDur(remain * nav.secPerM);
     syncHud();
+    trimRoute(lat, lng, c.accuracy);
 
     navFollowCheck(lat, lng);
 
@@ -5202,7 +5235,7 @@
     var on = !!nav, clean = on && navClean, b = document.body.classList;
     b.toggle('hudon', on); b.toggle('navclean', clean);
     $('navHud').classList.toggle('hidden', !on);
-    trail.setStyle({ opacity: clean ? 0 : 0.7 });             // gefahrene Spur würde mit der Route verschwimmen
+    trail.setStyle({ opacity: on ? 0 : 0.7 });                 // gefahrene Spur: während der Navigation immer ausgeblendet
     applyOverlays();
     if (on) syncHud();
     var panel = $('panel');
@@ -5369,7 +5402,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-16-1';
+  var APP_VERSION = '2026-11-16-3';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
