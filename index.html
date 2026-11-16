@@ -542,6 +542,10 @@
           <button id="nvSearch" type="button">Suchen</button>
         </div>
         <ul id="nvResults" class="list hidden" style="margin-top:8px"></ul>
+        <label>Sonderziele in der Nähe</label>
+        <div id="nvPoiChips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <p class="hint" id="nvPoiHint" style="margin:6px 0 0"></p>
+        <ul id="nvPoiList" class="list hidden" style="margin-top:8px"></ul>
         <div id="nvRecentBox" class="hidden">
           <div class="row between"><strong>Zuletzt gesucht</strong><button id="nvRecentClear" class="ghost" type="button">Leeren</button></div>
           <ul id="nvRecent" class="list" style="margin-top:8px"></ul>
@@ -560,6 +564,14 @@
           <div><div class="v" id="nvEta">–</div><div class="l">Ankunft in</div></div>
         </div>
         <button id="nvFuelRoute" class="ghost wide" type="button">Tankstelle entlang der Route suchen</button>
+        <label>Unterwegs suchen (entlang der Route)</label>
+        <div id="nvRoutePoiChips" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div class="row" style="margin-top:8px">
+          <input id="nvRouteQuery" type="text" placeholder="Name, z. B. McDonald's" autocomplete="off">
+          <button id="nvRouteSearch" type="button">Suchen</button>
+        </div>
+        <p class="hint" id="nvRoutePoiHint" style="margin:6px 0 0"></p>
+        <ul id="nvRoutePoiList" class="list hidden" style="margin-top:8px"></ul>
         <button id="nvShareActive" class="ghost wide" type="button">Route teilen</button>
         <button id="nvStop" type="button">Navigation beenden</button>
       </div>
@@ -2033,6 +2045,7 @@
     $('nvRaceStart').classList.toggle('hidden', !hasRaceStart);
     if (hasRaceStart) $('nvRaceStart').textContent = 'Zum Start von „' + raceCur.name + '“';
     ['nvSearch', 'nvPick', 'nvRaceStart', 'nvGo'].forEach(function (id) { $(id).disabled = blocked; });
+    Array.prototype.forEach.call(document.querySelectorAll('.poiBtn'), function (b) { b.disabled = blocked; });
     if (blocked) $('nvDest').textContent = 'Während eines laufenden Rennens ist die Navigation gesperrt.';
     else updateDestUI();
   }
@@ -2056,6 +2069,8 @@
     var q = $('nvQuery').value.trim();
     if (!q || searchBusy) return;
     searchBusy = true; setStatus('Suche …', 'warn');
+    var npat = namePat(q);
+    if (npat && !poiBusy) poiNear(nameFilters(npat), q, 'Ziel', 20000, true);      // Marken wie McDonald's: Treffer in der Nähe zuerst
     fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&accept-language=de&q=' + encodeURIComponent(q))
       .then(function (r) { return r.json(); })
       .then(function (list) {
@@ -2077,6 +2092,143 @@
       .then(function () { setTimeout(function () { searchBusy = false; }, 1200); });
   });
   $('nvQuery').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('nvSearch').click(); });
+
+  // ---- Sonderziele: Tankstelle, Supermarkt, Marken (z. B. McDonald's) in der Nähe oder entlang der Route ----
+  var POI_TYPES = [
+    { k: 'Tankstelle', f: '["amenity"="fuel"]', d: 'Tankstelle' },
+    { k: 'Ladesäule', f: '["amenity"="charging_station"]', d: 'Ladestation' },
+    { k: 'Supermarkt', f: '["shop"~"^(supermarket|convenience)$"]', d: 'Supermarkt' },
+    { k: 'Restaurant', f: '["amenity"~"^(restaurant|fast_food)$"]', d: 'Restaurant' },
+    { k: 'Café', f: '["amenity"="cafe"]', d: 'Café' },
+    { k: 'Parkplatz', f: '["amenity"="parking"]["access"!~"^(private|customers)$"]', d: 'Parkplatz' },
+    { k: 'Apotheke', f: '["amenity"="pharmacy"]', d: 'Apotheke' },
+    { k: 'Krankenhaus', f: '["amenity"="hospital"]', d: 'Krankenhaus' },
+    { k: 'Werkstatt', f: '["shop"="car_repair"]', d: 'Autowerkstatt' },
+    { k: 'Toilette', f: '["amenity"="toilets"]', d: 'Toilette' }
+  ];
+  // Markenname tolerant: „mc donalds“, „McDonald's“, „mcdonalds“ finden dasselbe
+  function namePat(q) {
+    var a = String(q || '').toLowerCase().replace(/[^a-z0-9äöüß]/g, '').slice(0, 24);
+    return a.length < 2 ? null : a.split('').join("[ '’`´.-]?");
+  }
+  function nameFilters(pat) { return ['["name"~"' + pat + '",i][!"highway"]', '["brand"~"' + pat + '",i][!"highway"]']; }
+  function poiOverpass(area, filters) {
+    var q = '[out:json][timeout:20];(' + filters.map(function (f) { return 'nwr(' + area + ')' + f + ';'; }).join('') + ');out center tags 150;';
+    return overpass(q, { prio: 3 });
+  }
+  function poiItem(e, defName) {
+    var ll = elLatLng(e), tg = e.tags || {};
+    if (ll.lat == null || ll.lng == null || isNaN(ll.lat)) return null;
+    var extra = [tg['addr:street'] ? tg['addr:street'] + (tg['addr:housenumber'] ? ' ' + tg['addr:housenumber'] : '') : '', tg['addr:city'] || ''].filter(Boolean).join(', ');
+    return { lat: ll.lat, lng: ll.lng, name: tg.name || tg.brand || tg.operator || defName || 'Ziel', extra: extra, key: e.type + e.id };
+  }
+  function uniqPoi(list) { var seen = {}; return list.filter(function (x) { return x && !seen[x.key] && (seen[x.key] = 1); }); }
+  function poiCenter() { return myPos ? { lat: myPos.lat, lng: myPos.lng } : map.getCenter(); }
+  function showPoiList(ul, items, label, onPick) {
+    ul.classList.toggle('hidden', !items.length);
+    fillList(ul, items.map(function (it) {
+      var li = el('li', 'click');
+      li.appendChild(el('span', 'nm', it.name + ' · ' + label(it) + (it.extra ? ' · ' + it.extra : '')));
+      li.addEventListener('click', function () { onPick(it); });
+      return li;
+    }), 'Nichts gefunden.');
+  }
+  function pickPoiDest(it, ul, hint) {
+    ul.classList.add('hidden'); hint.textContent = '';
+    var found = { lat: it.lat, lng: it.lng, label: it.name + (it.extra ? ', ' + it.extra : '') };
+    setDest(found); addRecent(found); renderRecent();
+  }
+
+  // (1) in der Nähe (Antippen einer Art oder Marke aus dem Suchfeld)
+  var poiBusy = false;
+  (function () {
+    var box = $('nvPoiChips');
+    POI_TYPES.forEach(function (t) {
+      var bt = el('button', 'ghost poiBtn', t.k);
+      bt.type = 'button'; bt.style.cssText = 'padding:6px 10px;font-size:13px;margin:0';
+      bt.addEventListener('click', function () { poiNear([t.f], t.k, t.d, 6000); });
+      box.appendChild(bt);
+    });
+  })();
+  function poiNear(filters, what, defName, radius, quietEmpty) {
+    if (poiBusy) return;
+    var c = poiCenter(), hint = $('nvPoiHint'), ul = $('nvPoiList');
+    poiBusy = true; if (!quietEmpty) ul.classList.add('hidden');
+    if (!quietEmpty) hint.textContent = what + ' werden gesucht …' + (myPos ? '' : ' (um die Kartenmitte, dein Standort ist noch unbekannt)');
+    poiOverpass('around:' + radius + ',' + (+c.lat).toFixed(5) + ',' + (+c.lng).toFixed(5), filters).then(function (j) {
+      var items = uniqPoi((j.elements || []).map(function (e) { return poiItem(e, defName); })).map(function (it) {
+        it.d = dist(c.lat, c.lng, it.lat, it.lng); return it;
+      }).sort(function (x, y) { return x.d - y.d; }).slice(0, 12);
+      if (!items.length) { if (!quietEmpty) { hint.textContent = 'Nichts gefunden im Umkreis von ' + (radius / 1000) + ' km.'; ul.classList.add('hidden'); } return; }
+      hint.textContent = '„' + what + '“ in der Nähe (Luftlinie). Tippe auf einen als Ziel.';
+      showPoiList(ul, items, function (it) { return fmtDist(it.d); }, function (it) { pickPoiDest(it, ul, hint); });
+    }).catch(function (err) {
+      if (!quietEmpty) hint.textContent = 'Suche fehlgeschlagen: ' + friendlyErr(err) + '. Später nochmal versuchen.';
+    }).then(function () { poiBusy = false; });
+  }
+
+  // (2) entlang der Route (nur während der Navigation)
+  var poiRouteBusy = false;
+  (function () {
+    var box = $('nvRoutePoiChips');
+    POI_TYPES.forEach(function (t) {
+      var bt = el('button', 'ghost poiBtn', t.k);
+      bt.type = 'button'; bt.style.cssText = 'padding:6px 10px;font-size:13px;margin:0';
+      bt.addEventListener('click', function () { poiAlong([t.f], t.k, t.d); });
+      box.appendChild(bt);
+    });
+  })();
+  function poiAlong(filters, what, defName) {
+    var hint = $('nvRoutePoiHint'), ul = $('nvRoutePoiList');
+    if (!nav || !nav.coords || nav.coords.length < 2) { hint.textContent = 'Keine aktive Route.'; return; }
+    if (poiRouteBusy) return;
+    var i0 = Math.min(nav.cut || 0, nav.coords.length - 2), rest = nav.coords.slice(i0);
+    if (myPos) rest = [[myPos.lat, myPos.lng]].concat(rest.slice(1));
+    var cum = [0], k;
+    for (k = 1; k < rest.length; k++) cum.push(cum[k - 1] + dist(rest[k - 1][0], rest[k - 1][1], rest[k][0], rest[k][1]));
+    var step = Math.max(1, Math.ceil(rest.length / 60)), pts = [];
+    for (k = 0; k < rest.length; k += step) pts.push(rest[k][0].toFixed(4) + ',' + rest[k][1].toFixed(4));
+    pts.push(rest[rest.length - 1][0].toFixed(4) + ',' + rest[rest.length - 1][1].toFixed(4));
+    poiRouteBusy = true; ul.classList.add('hidden'); hint.textContent = '„' + what + '“ entlang der Route werden gesucht …';
+    poiOverpass('around:600,' + pts.join(','), filters).then(function (j) {
+      var items = uniqPoi((j.elements || []).map(function (e) { return poiItem(e, defName); })).map(function (it) {
+        var best = Infinity, bi = 0;
+        for (var m = 0; m < rest.length; m++) { var d = dist(it.lat, it.lng, rest[m][0], rest[m][1]); if (d < best) { best = d; bi = m; } }
+        it.side = Math.min(best, distToPolyline(it.lat, it.lng, rest)); it.ahead = cum[bi]; return it;
+      }).filter(function (it) { return it.side <= 600; }).sort(function (x, y) { return x.ahead - y.ahead; }).slice(0, 12);
+      if (!items.length) { hint.textContent = 'Nichts gefunden entlang der Route.'; return; }
+      hint.textContent = items.length + ' Treffer entlang der Route. Tippe einen an: er wird Zwischenstopp, danach geht es zum Ziel weiter.';
+      showPoiList(ul, items, function (it) { return 'in ' + fmtDist(it.ahead) + ', ' + (it.side < 40 ? 'direkt an der Route' : fmtDist(it.side) + ' abseits'); }, function (it) { pickStopover(it, ul, hint); });
+    }).catch(function (err) {
+      hint.textContent = 'Suche fehlgeschlagen: ' + friendlyErr(err) + '. Bitte gleich nochmal versuchen.';
+    }).then(function () { poiRouteBusy = false; });
+  }
+  $('nvRouteSearch').addEventListener('click', function () {
+    var pat = namePat($('nvRouteQuery').value);
+    if (!pat) { $('nvRoutePoiHint').textContent = 'Gib einen Namen ein, z. B. McDonald\'s.'; return; }
+    poiAlong(nameFilters(pat), $('nvRouteQuery').value.trim(), 'Ziel');
+  });
+  $('nvRouteQuery').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('nvRouteSearch').click(); });
+
+  // Zwischenstopp: erst zum Treffer, danach wieder zum ursprünglichen Ziel
+  var stopover = null;
+  function pickStopover(it, ul, hint) {
+    if (!nav) return;
+    if (!confirm('Zwischenstopp bei „' + it.name + '“? Die Route dorthin wird gestartet, danach geht es zum Ziel weiter.')) return;
+    var finalDest = nav.dest;
+    ul.classList.add('hidden'); hint.textContent = '';
+    stopNavigation(true);
+    setDest({ lat: it.lat, lng: it.lng, label: it.name + (it.extra ? ', ' + it.extra : '') });
+    stopover = finalDest;
+    $('nvGo').click();
+  }
+  function resumeAfterStopover() {
+    if (!stopover) return false;
+    var f = stopover; stopover = null;
+    setDest(f);
+    setStatus('Zwischenstopp erreicht. Weiter zu „' + f.label + '“: tippe auf „Navigation starten“.', 'ok');
+    return true;
+  }
 
   $('nvPick').addEventListener('click', function () {
     pickOnMap('Tippe auf der Karte auf dein Ziel', function (ll) {
@@ -2152,7 +2304,7 @@
     updateDestUI(); renderNaviQuick();
     if (!silent) setStatus('Navigation beendet.');
   }
-  $('nvStop').addEventListener('click', function () { stopNavigation(false); });
+  $('nvStop').addEventListener('click', function () { stopover = null; stopNavigation(false); });
 
   function distToPolyline(lat, lng, pts) {
     var k = Math.cos(lat * Math.PI / 180), best = Infinity, px = lng * k * 111320, py = lat * 110540;
@@ -2202,7 +2354,7 @@
       nav.idx++;
     }
     var st = steps[nav.idx], dNext = dist(lat, lng, st.loc[0], st.loc[1]);
-    if (nav.idx === last && dNext < 30) { stopNavigation(true); setStatus('Ziel erreicht.', 'ok'); return; }
+    if (nav.idx === last && dNext < 30) { stopNavigation(true); if (!resumeAfterStopover()) setStatus('Ziel erreicht.', 'ok'); return; }
     var remain = dNext;
     for (var k = nav.idx; k <= last; k++) remain += steps[k].dist;
     $('nvStepDist').textContent = fmtDist(dNext);
@@ -5402,7 +5554,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-16-3';
+  var APP_VERSION = '2026-11-16-5';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
