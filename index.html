@@ -450,6 +450,49 @@
   #authView #submit:disabled { opacity: .6; }
   .auth-switch { margin: 22px 0 0; text-align: center; font-size: .95rem; color: var(--a-mut); }
   .auth-switch a { font-weight: 700; color: var(--a-link); text-decoration: none; }
+
+  /* 3D-Knopf wie im Design: zusammen mit dem Standort-Knopf ein senkrechter Block */
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .locbtn:not(#view3dBtn) { color: var(--ink); border-radius: 16px 16px 0 0; box-shadow: 0 4px 14px rgba(17, 24, 39, .22); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #view3dBtn { left: auto; right: 16px; top: calc(128px + env(safe-area-inset-top, 0px)); bottom: auto; width: 52px; height: 52px; border-radius: 0 0 16px 16px; border-top: 1px solid var(--line); background: var(--paper); color: var(--ink); font-size: 15px; font-weight: 800; box-shadow: 0 8px 14px -6px rgba(17, 24, 39, .22), 6px 0 0 -2px transparent; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #view3dBtn[aria-pressed="true"] { background: #ff8601; color: #111; }
+
+  /* Hell/Dunkel wie in der Vorlage: Akzent Orange, Karten, Hauptmenü und Profilmenü */
+  :root { --h-card: #ffffff; --h-line: #e4e4e7; --h-mut: #52525b; --h-prof: #fff7ed; --h-prof-sub: #c2410c; --h-don-bg: #fff7ed; --h-don-fg: #9a3412; --h-out: #b91c1c; --h-navi: #18181b; --h-scrim: rgba(17, 17, 17, .35); --h-menu-shadow: 0 16px 40px rgba(17, 24, 39, .14); }
+  :root[data-theme="dark"] { --h-card: #16181d; --h-line: #2e323a; --h-mut: #a1a1aa; --h-prof: #2a1a0b; --h-prof-sub: #ff8601; --h-don-bg: #2a1a0b; --h-don-fg: #ffa94d; --h-out: #f87171; --h-navi: #2a2d34; --h-scrim: rgba(0, 0, 0, .55); --h-menu-shadow: 0 16px 40px rgba(0, 0, 0, .5); }
+  .menubtn { border-color: #ff8601; background: var(--h-card); }
+  .menubtn .badge { border-color: var(--h-card); }
+  .brandpill { display: none; position: absolute; z-index: 1200; top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px; height: 46px; padding: 0 16px; border-radius: 23px; background: var(--h-card); box-shadow: 0 4px 14px rgba(17, 24, 39, .18); align-items: center; gap: 5px; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 17px; line-height: 1; letter-spacing: -.01em; color: var(--ink); pointer-events: none; }
+  .brandpill b { color: #f07800; font-weight: 800; }
+  :root[data-theme="dark"] .brandpill b { color: #ff8601; }
+  .bp-bars { display: flex; gap: 2px; margin-right: 3px; }
+  .bp-bars i { display: block; width: 7px; height: 12px; background: var(--ink); transform: skewX(-28deg); }
+  .bp-bars i + i { background: #ff8601; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #brandPill { display: flex; }
+  body:has(#menuBtn.hidden) #brandPill { display: none !important; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .leaflet-top.leaflet-left { top: 62px; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #zoom3d { top: calc(68px + env(safe-area-inset-top, 0px)); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .locbtn, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #view3dBtn { background: var(--h-card); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #view3dBtn { border-top-color: var(--h-line); }
+  #menuScrim { display: none; position: absolute; inset: 0; z-index: 1150; background: var(--h-scrim); }
+  body:has(#menu:not(.hidden)) #menuScrim { display: block; }
+  .menu { background: var(--h-card); border: 1px solid var(--h-line); box-shadow: var(--h-menu-shadow); }
+  .menu-sec { color: var(--h-mut); }
+  .menu hr { border-top-color: var(--h-line); }
+  .menu > button:hover, .menu > a:hover { background: var(--soft); }
+  .menu > button.menu-prof { background: var(--h-prof); }
+  .menu > button.menu-prof:hover { background: var(--h-prof); filter: brightness(.97); }
+  .menu-sub { color: var(--h-prof-sub); font-weight: 600; }
+  .menu-av { border: 3px solid #ff8601; border-radius: 50%; box-sizing: border-box; background: var(--h-card); overflow: hidden; }
+  .menu > a.donate { background: var(--h-don-bg); color: var(--h-don-fg); }
+  .menu > a.donate:hover { background: var(--h-don-bg); filter: brightness(.97); }
+  .menu > button.menu-out { color: var(--h-out); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .panel > .status, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome #mapTip { background: var(--h-card); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome .stats, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome #hint, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome #players { background: var(--h-card); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome .home-grid .bigcard { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; box-shadow: 0 8px 22px rgba(17, 24, 39, .18); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome .home-grid .big-t { font-size: 1.25rem; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #homeRace { background: #ff8601; color: #111; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #homeNavi.alt { background: var(--h-navi); color: #fff; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome .home-grid .hi { stroke-width: 2.2; }
 </style>
 </head>
 <body>
@@ -508,6 +551,8 @@
 <button id="menuBtn" class="menubtn hidden" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Menü">
   <span id="whoAvatar"></span><span id="menuBadge" class="badge hidden"></span>
 </button>
+<div id="brandPill" class="brandpill" role="img" aria-label="RaceNewRoads"><span class="bp-bars" aria-hidden="true"><i></i><i></i></span><span aria-hidden="true">Race<b>New</b>Roads</span></div>
+<div id="menuScrim" aria-hidden="true"></div>
 <div id="menu" class="menu hidden" role="menu">
   <button type="button" role="menuitem" data-go="Profile" class="menu-prof"><span id="whoMini" class="menu-av"></span><span class="menu-pt"><span id="who" class="menu-name"></span><span class="menu-sub">Profil ansehen</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
   <div class="menu-sec">Community</div>
@@ -516,7 +561,7 @@
   <button type="button" role="menuitem" data-go="Friends"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/></svg><span class="mt">Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Stats"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span class="mt">Statistiken</span></button>
   <hr>
-  <button type="button" role="menuitem" data-go="Settings"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="mt">Einstellungen</span></button>
+  <button type="button" role="menuitem" data-go="Settings"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span class="mt">Einstellungen</span></button>
   <button type="button" role="menuitem" data-go="Admin" id="menuAdmin" style="display:none"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="mt">Admin</span></button>
   <a class="donate" role="menuitem" href="https://buymeacoffee.com/racenewroads" target="_blank" rel="noopener noreferrer"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg><span class="mt">Projekt unterstützen</span></a>
   <hr>
@@ -1263,7 +1308,7 @@
   function renderWho() {
     $('who').textContent = myName;
     var h = $('whoAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 42));
-    var hm = $('whoMini'); if (hm) { hm.textContent = ''; hm.appendChild(avatarNode(myAvatar, myName, myColor, 44)); }
+    var hm = $('whoMini'); if (hm) { hm.textContent = ''; hm.appendChild(avatarNode(myAvatar, myName, myColor, 38)); }
   }
   function renderProfileAvatar() {
     var h = $('pAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 84));
@@ -5572,7 +5617,7 @@
     mode3d = on;
     wrap3d.classList.toggle('mode3d', on);
     document.body.classList.toggle('is3d', on);
-    $('view3dBtn').textContent = on ? '2D' : '3D';
+    $('view3dBtn').textContent = on ? '2D' : '3D'; $('view3dBtn').setAttribute('aria-pressed', String(!!on));
     $('zoom3d').classList.toggle('hidden', !on);
     HANDLERS_3D.forEach(function (h) { if (map[h]) map[h][on ? 'disable' : 'enable'](); });   // Verschieben/Zoomen per Finger passt nicht zur geneigten Karte
     if (on) {
@@ -5985,7 +6030,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-20-6';
+  var APP_VERSION = '2026-11-20-8';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
