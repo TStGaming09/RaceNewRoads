@@ -395,6 +395,7 @@
   .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) > .status { align-self: flex-start; width: fit-content; max-width: 100%; margin: 0 0 10px; padding: 8px 14px; border-radius: 22px; background: var(--paper); box-shadow: 0 4px 14px rgba(17, 24, 39, .18); font-size: .9rem; }
   .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) { display: flex; flex-direction: column; }
   #tabHome { display: flex; flex-direction: column; }
+  #tabHome.hidden, #zoom3d.hidden { display: none; }
   #tabHome .home-grid { order: 10; margin-top: 0; gap: 12px; }
   #tabHome #mapTip, #tabHome #homeActive, #tabHome .stats { order: 1; background: var(--paper); border-radius: 16px; padding: 10px 14px; margin: 0 0 10px; box-shadow: 0 4px 14px rgba(17, 24, 39, .14); }
   #tabHome .stats { margin-bottom: 10px; }
@@ -6030,7 +6031,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-20-8';
+  var APP_VERSION = '2026-11-20-9';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
