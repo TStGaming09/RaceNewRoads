@@ -364,6 +364,31 @@
   #flagEdgeDist:empty { display: none; }
   #flagEdge.labtop #flagEdgeDist { top: auto; bottom: 100%; margin: 0 0 3px; }     /* zeigt der Pfeil nach unten, steht die Entfernung oben */
   .hidden { display: none; }
+
+  /* Hauptmenü im neuen Design (Profilkarte, Bereiche, Icons) */
+  .menu { min-width: 0; width: min(290px, calc(100vw - 24px)); border-radius: 24px; padding: 10px; box-shadow: 0 16px 40px rgba(17, 24, 39, .32); max-height: calc(100vh - 90px - env(safe-area-inset-top, 0px)); overflow-y: auto; }
+  .menu > button, .menu > a { min-height: 48px; padding: 0 12px; border-radius: 12px; gap: 12px; justify-content: flex-start; font-size: .95rem; font-weight: 500; }
+  .menu .mi { flex: none; }
+  .menu .mt { flex: 1; text-align: left; }
+  .menu .badge { margin-left: auto; min-width: 20px; height: 20px; }
+  .menu > a.donate { margin-top: 6px; background: #fff7ed; color: #9a3412; font-weight: 600; }
+  .menu > a.donate:hover { background: #ffedd5; }
+  .menu > button.menu-out { color: #b91c1c; }
+  .menu hr { margin: 6px 4px; }
+  .menu > button.menu-prof { background: #eff6ff; color: var(--ink); padding: 10px 12px; border-radius: 16px; gap: 12px; min-height: 64px; }
+  .menu > button.menu-prof:hover { background: #dbeafe; }
+  .menu-av { flex: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+  .menu-pt { flex: 1; display: flex; flex-direction: column; min-width: 0; text-align: left; }
+  .menu-name { font-size: 1.05rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .menu-sub { font-size: .8rem; font-weight: 500; color: #1d4ed8; }
+  .menu-sec { font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 10px 12px 4px; }
+  .menubtn { width: 52px; height: 52px; box-shadow: 0 4px 14px rgba(17, 24, 39, .22); }
+  .menu { top: calc(72px + env(safe-area-inset-top, 0px)); }
+  :root[data-theme="dark"] .menu > button.menu-prof { background: #1e3a5f; }
+  :root[data-theme="dark"] .menu > button.menu-prof:hover { background: #24477a; }
+  :root[data-theme="dark"] .menu-sub { color: #93c5fd; }
+  :root[data-theme="dark"] .menu > a.donate { background: #3a2412; color: #fdba74; }
+  :root[data-theme="dark"] .menu > button.menu-out { color: #fca5a5; }
 </style>
 </head>
 <body>
@@ -423,17 +448,18 @@
   <span id="whoAvatar"></span><span id="menuBadge" class="badge hidden"></span>
 </button>
 <div id="menu" class="menu hidden" role="menu">
-  <div class="menu-head" id="who"></div>
-  <button type="button" role="menuitem" data-go="Notifications"><span>Benachrichtigungen</span><span id="badgeNotifs" class="badge hidden"></span></button>
-  <button type="button" role="menuitem" data-go="Profile"><span>Profil</span></button>
-  <button type="button" role="menuitem" data-go="Stats"><span>Statistiken</span></button>
-  <button type="button" role="menuitem" data-go="Chats"><span>Nachrichten</span><span id="badgeMsgsMenu" class="badge hidden"></span></button>
-  <button type="button" role="menuitem" data-go="Friends"><span>Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
-  <button type="button" role="menuitem" data-go="Settings"><span>Einstellungen</span></button>
-  <button type="button" role="menuitem" data-go="Admin" id="menuAdmin" style="display:none"><span>Admin</span></button>
-  <a class="donate" role="menuitem" href="https://buymeacoffee.com/racenewroads" target="_blank" rel="noopener noreferrer"><span>☕ Projekt unterstützen</span></a>
+  <button type="button" role="menuitem" data-go="Profile" class="menu-prof"><span id="whoMini" class="menu-av"></span><span class="menu-pt"><span id="who" class="menu-name"></span><span class="menu-sub">Profil ansehen</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+  <div class="menu-sec">Community</div>
+  <button type="button" role="menuitem" data-go="Notifications"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="mt">Benachrichtigungen</span><span id="badgeNotifs" class="badge hidden"></span></button>
+  <button type="button" role="menuitem" data-go="Chats"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="mt">Nachrichten</span><span id="badgeMsgsMenu" class="badge hidden"></span></button>
+  <button type="button" role="menuitem" data-go="Friends"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/></svg><span class="mt">Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
+  <button type="button" role="menuitem" data-go="Stats"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span class="mt">Statistiken</span></button>
   <hr>
-  <button type="button" role="menuitem" id="logout"><span>Abmelden</span></button>
+  <button type="button" role="menuitem" data-go="Settings"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="mt">Einstellungen</span></button>
+  <button type="button" role="menuitem" data-go="Admin" id="menuAdmin" style="display:none"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="mt">Admin</span></button>
+  <a class="donate" role="menuitem" href="https://buymeacoffee.com/racenewroads" target="_blank" rel="noopener noreferrer"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg><span class="mt">Projekt unterstützen</span></a>
+  <hr>
+  <button type="button" role="menuitem" id="logout" class="menu-out"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="mt">Abmelden</span></button>
 </div>
 <button id="view3dBtn" class="locbtn hidden" type="button" aria-label="3D-Ansicht ein- oder ausschalten">3D</button>
 <div id="zoom3d" class="hidden">
@@ -1152,6 +1178,7 @@
   function renderWho() {
     $('who').textContent = myName;
     var h = $('whoAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 42));
+    var hm = $('whoMini'); if (hm) { hm.textContent = ''; hm.appendChild(avatarNode(myAvatar, myName, myColor, 44)); }
   }
   function renderProfileAvatar() {
     var h = $('pAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 84));
@@ -5818,7 +5845,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-20-1';
+  var APP_VERSION = '2026-11-20-2';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
