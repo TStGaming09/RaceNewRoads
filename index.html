@@ -143,6 +143,33 @@
   body.picking .limitbox { display: none; }
   .switch { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: var(--ink); font-size: 1rem; }
   input[type=checkbox] { width: 22px; height: 22px; flex: none; }
+  /* ---- Einstellungen im Stil moderner Apps: Gruppen als Karten, Schalter rechts ---- */
+  #tabSettings [hidden] { display: none !important; }
+  #tabSettings h3 { margin: 22px 0 0 6px; font-size: .74rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  #tabSettings .setcard { background: var(--soft); border-radius: 16px; overflow: hidden; margin-top: 8px; }
+  #tabSettings .setrow { display: flex; align-items: center; gap: 12px; padding: 11px 14px; margin: 0; border-top: 1px solid rgba(128, 128, 128, .22); cursor: pointer; font-size: 1rem; }
+  #tabSettings .setcard > .setrow:first-child { border-top: 0; }
+  #tabSettings .setrow.col { flex-direction: column; align-items: stretch; gap: 4px; cursor: default; }
+  #tabSettings .stext { flex: 1; font-weight: 500; min-width: 0; }
+  #tabSettings .stitle { font-weight: 600; }
+  #tabSettings .si { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex: none; }
+  .si.c1 { background: #dbeafe; } .si.c2 { background: #dcfce7; } .si.c3 { background: #ffedd5; } .si.c4 { background: #ede9fe; } .si.c5 { background: #fee2e2; }
+  #tabSettings .switch input[type=checkbox] { -webkit-appearance: none; appearance: none; width: 50px; height: 30px; border-radius: 15px; background: #9aa1ad; position: relative; flex: none; margin: 0; cursor: pointer; transition: background .2s; }
+  #tabSettings .switch input[type=checkbox]::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .35); transition: transform .2s; }
+  #tabSettings .switch input[type=checkbox]:checked { background: #2563eb; }
+  #tabSettings .switch input[type=checkbox]:checked::after { transform: translateX(20px); }
+  #tabSettings .switch input[type=checkbox]:focus-visible { outline: 3px solid rgba(37, 99, 235, .45); outline-offset: 2px; }
+  #tabSettings .setgrp > .hint { margin: 8px 6px 0; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: rgba(128, 128, 128, .2); border-radius: 12px; padding: 4px; margin-top: 8px; }
+  .seg button { margin: 0; padding: 9px 4px; border-radius: 9px; background: transparent; color: var(--ink); font-weight: 600; font-size: .92rem; box-shadow: none; }
+  .seg button.on { background: var(--paper); box-shadow: 0 1px 4px rgba(0, 0, 0, .28); }
+  .setprof { display: flex; align-items: center; gap: 12px; background: var(--soft); border-radius: 16px; padding: 14px; cursor: pointer; }
+  .setprofx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .setprofx b { font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .setprofx .hint { margin: 0; }
+  .setprof .chev { font-size: 1.6rem; color: var(--muted); line-height: 1; }
+  .setsearch { margin-top: 12px; }
+  .setsearch input { width: 100%; box-sizing: border-box; border-radius: 14px; padding: 12px 14px; }
   .fuelpin { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 3px solid #e8590c; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 1px 5px rgba(0, 0, 0, .45); box-sizing: border-box; }
   .tl { width: 18px; height: 34px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .7)); }
   .tl svg { display: block; }
@@ -888,49 +915,69 @@
 
     <!-- Einstellungen -->
     <div id="tabSettings" class="hidden">
-      <label for="sTheme">Darstellung</label>
-      <select id="sTheme">
-        <option value="system">Wie das Gerät</option>
-        <option value="light">Hell</option>
-        <option value="dark">Dunkel</option>
-      </select>
-      <p class="hint">Die Einstellung gilt nur für dieses Gerät. Bei „Dunkel“ wird auch die Karte abgedunkelt.</p>
-
-      <h3>Standort</h3>
-      <label class="switch" for="sAutoLoc"><input type="checkbox" id="sAutoLoc"><span>Standort beim Öffnen automatisch starten</span></label>
+      <div id="setProfile" class="setprof" role="button" tabindex="0"><span id="setProfAv"></span><div class="setprofx"><b id="setProfName">Profil</b><span class="hint">Konto, Garage &amp; Orte</span></div><span class="chev">›</span></div>
+      <div class="setsearch"><input id="setSearch" type="search" placeholder="Einstellungen durchsuchen" autocomplete="off" aria-label="Einstellungen durchsuchen"></div>
+      <section class="setgrp" data-s="darstellung hell dunkel automatisch gerät theme">
+        <div class="setcard"><div class="setrow col"><span class="stitle">Darstellung</span>
+          <div class="seg" id="themeSeg"><button type="button" data-v="light">Hell</button><button type="button" data-v="dark">Dunkel</button><button type="button" data-v="system">Automatisch</button></div>
+          <select id="sTheme" class="hidden" aria-hidden="true" tabindex="-1">
+            <option value="system">Wie das Gerät</option>
+            <option value="light">Hell</option>
+            <option value="dark">Dunkel</option>
+          </select></div></div>
+        <p class="hint">Die Einstellung gilt nur für dieses Gerät. Bei „Dunkel“ wird auch die Karte abgedunkelt.</p>
+      </section>
+      <section class="setgrp" data-s=" standort 📍 standort beim öffnen automatisch starten solange dein standort läuft, sehen ihn deine freunde und die teilnehmer deiner rennen auf der karte, sonst niemand. beim ersten mal fragt dein browser oder handy nach der erlaubnis. ständiges gps kostet akku. wenn du ausschaltest, startest du den standort wieder selbst auf der startseite. das gilt ab dem nächsten öffnen. mit „standort stoppen“ kannst du jederzeit pausieren. ">
+        <h3>Standort</h3>
+        <div class="setcard">
+  <label class="switch setrow" for="sAutoLoc"><span class="si c1">📍</span><span class="stext">Standort beim Öffnen automatisch starten</span><input type="checkbox" id="sAutoLoc"></label>
+        </div>
       <p class="hint">Solange dein Standort läuft, sehen ihn deine Freunde und die Teilnehmer deiner Rennen auf der Karte, sonst niemand. Beim ersten Mal fragt dein Browser oder Handy nach der Erlaubnis. Ständiges GPS kostet Akku. Wenn du ausschaltest, startest du den Standort wieder selbst auf der Startseite. Das gilt ab dem nächsten Öffnen. Mit „Standort stoppen“ kannst du jederzeit pausieren.</p>
-
-      <h3>Navigation</h3>
-      <label class="switch" for="sNavClean"><input type="checkbox" id="sNavClean"><span>Beim Navigieren nur das Nötigste anzeigen</span></label>
+      </section>
+      <section class="setgrp" data-s=" navigation 🧭 beim navigieren nur das nötigste anzeigen während der navigation erscheint oben ein großer abbiegehinweis. dafür werden zusatzebenen (ampeln, straßenzustand, baustellen, tankstellen, orte), deine gefahrene spur, namensschilder und die zoom-tasten ausgeblendet, und die karte wird ruhiger. das panel unten klappt von selbst ein. pinch-zoom und der knopf zum zentrieren bleiben. ">
+        <h3>Navigation</h3>
+        <div class="setcard">
+  <label class="switch setrow" for="sNavClean"><span class="si c1">🧭</span><span class="stext">Beim Navigieren nur das Nötigste anzeigen</span><input type="checkbox" id="sNavClean"></label>
+        </div>
       <p class="hint">Während der Navigation erscheint oben ein großer Abbiegehinweis. Dafür werden Zusatzebenen (Ampeln, Straßenzustand, Baustellen, Tankstellen, Orte), deine gefahrene Spur, Namensschilder und die Zoom-Tasten ausgeblendet, und die Karte wird ruhiger. Das Panel unten klappt von selbst ein. Pinch-Zoom und der Knopf zum Zentrieren bleiben.</p>
-
-      <h3>Tempolimit</h3>
-      <label class="switch" for="sWarn"><input type="checkbox" id="sWarn"><span>Überschreitungs-Warnung</span></label>
+      </section>
+      <section class="setgrp" data-s=" tempolimit ⚠️ überschreitungs-warnung das tempolimit-schild ist immer sichtbar, solange dein standort läuft. bei eingeschalteter warnung blinkt es rot, sobald du mehr als 3 km/h zu schnell bist, dazu gibt es einen ton und, wo das gerät es kann, vibration. die limits stammen aus openstreetmap und können fehlen oder falsch sein. es gelten immer die schilder am straßenrand. ">
+        <h3>Tempolimit</h3>
+        <div class="setcard">
+  <label class="switch setrow" for="sWarn"><span class="si c3">⚠️</span><span class="stext">Überschreitungs-Warnung</span><input type="checkbox" id="sWarn"></label>
+        </div>
       <p class="hint">Das Tempolimit-Schild ist immer sichtbar, solange dein Standort läuft. Bei eingeschalteter Warnung blinkt es rot, sobald du mehr als 3 km/h zu schnell bist, dazu gibt es einen Ton und, wo das Gerät es kann, Vibration. Die Limits stammen aus OpenStreetMap und können fehlen oder falsch sein. Es gelten immer die Schilder am Straßenrand.</p>
-
-      <h3>Karte</h3>
-      <label class="switch" for="sFuel"><input type="checkbox" id="sFuel"><span>Tankstellen anzeigen</span></label>
-      <label class="switch" for="sSignals"><input type="checkbox" id="sSignals"><span>Ampeln anzeigen</span></label>
-      <label class="switch" for="sSurface"><input type="checkbox" id="sSurface"><span>Straßenzustand anzeigen</span></label>
-      <label class="switch" for="sWorks"><input type="checkbox" id="sWorks"><span>Baustellen anzeigen</span></label>
-      <label class="switch" for="sSpeeds"><input type="checkbox" id="sSpeeds"><span>Tempolimits auf der Karte anzeigen</span></label>
-      <label class="switch" for="sPoints"><input type="checkbox" id="sPoints"><span>Treffen und Events anzeigen</span></label>
-      <label class="switch" for="sPlaces"><input type="checkbox" id="sPlaces"><span>Meine Orte auf der Karte anzeigen</span></label>
-      <label class="switch" for="sCams"><input type="checkbox" id="sCams"><span>Blitzerkarte im Stand</span></label>
+      </section>
+      <section class="setgrp" data-s=" karte ⛽ tankstellen anzeigen 🚦 ampeln anzeigen 🛣️ straßenzustand anzeigen 🚧 baustellen anzeigen 🔢 tempolimits auf der karte anzeigen 📌 treffen und events anzeigen ⭐ meine orte auf der karte anzeigen 📷 blitzerkarte im stand die blitzerkarte zeigt feste blitzer aus openstreetmap und erscheint nur, wenn dein standort läuft und du seit etwa 20 sekunden stehst. sobald du schneller als 3 km/h bist, oder wenn die app dein tempo nicht sicher kennt, verschwindet sie wieder. die daten sind unvollständig. mobile blitzer und polizeikontrollen zeigt die app nicht. die daten werden pro kartenkachel zwischengespeichert und höchstens alle 7 tage neu geladen. am steuer darf ein fahrer keine blitzer anzeigen oder nutzen (§ 23 abs. 1c stvo, 75 euro und 1 punkt). nutze die karte nur zum vorab-informieren, nicht während der fahrt. die app ersetzt keine rechtsberatung. die daten kommen aus openstreetmap und werden für den sichtbaren kartenausschnitt geladen. tankstellen erscheinen ab zoomstufe 11, der straßenzustand, die ampeln und die tempolimits ab 15, baustellen ab 13. zoome näher heran, wenn nichts zu sehen ist. der straßenzustand zeigt nur, was in openstreetmap zu belag und qualität eingetragen ist. aktuelle schäden oder schlaglöcher kennt die app nicht. preise zeigt die app nicht. ">
+        <h3>Karte</h3>
+        <div class="setcard">
+  <label class="switch setrow" for="sFuel"><span class="si c3">⛽</span><span class="stext">Tankstellen anzeigen</span><input type="checkbox" id="sFuel"></label>
+  <label class="switch setrow" for="sSignals"><span class="si c2">🚦</span><span class="stext">Ampeln anzeigen</span><input type="checkbox" id="sSignals"></label>
+  <label class="switch setrow" for="sSurface"><span class="si c4">🛣️</span><span class="stext">Straßenzustand anzeigen</span><input type="checkbox" id="sSurface"></label>
+  <label class="switch setrow" for="sWorks"><span class="si c3">🚧</span><span class="stext">Baustellen anzeigen</span><input type="checkbox" id="sWorks"></label>
+  <label class="switch setrow" for="sSpeeds"><span class="si c5">🔢</span><span class="stext">Tempolimits auf der Karte anzeigen</span><input type="checkbox" id="sSpeeds"></label>
+  <label class="switch setrow" for="sPoints"><span class="si c5">📌</span><span class="stext">Treffen und Events anzeigen</span><input type="checkbox" id="sPoints"></label>
+  <label class="switch setrow" for="sPlaces"><span class="si c3">⭐</span><span class="stext">Meine Orte auf der Karte anzeigen</span><input type="checkbox" id="sPlaces"></label>
+  <label class="switch setrow" for="sCams"><span class="si c4">📷</span><span class="stext">Blitzerkarte im Stand</span><input type="checkbox" id="sCams"></label>
+        </div>
       <p class="hint">Die Blitzerkarte zeigt feste Blitzer aus OpenStreetMap und erscheint nur, wenn dein Standort läuft und du seit etwa 20 Sekunden stehst. Sobald du schneller als 3 km/h bist, oder wenn die App dein Tempo nicht sicher kennt, verschwindet sie wieder. Die Daten sind unvollständig. Mobile Blitzer und Polizeikontrollen zeigt die App nicht. Die Daten werden pro Kartenkachel zwischengespeichert und höchstens alle 7 Tage neu geladen. Am Steuer darf ein Fahrer keine Blitzer anzeigen oder nutzen (§ 23 Abs. 1c StVO, 75 Euro und 1 Punkt). Nutze die Karte nur zum Vorab-Informieren, nicht während der Fahrt. Die App ersetzt keine Rechtsberatung.</p>
       <p class="hint">Die Daten kommen aus OpenStreetMap und werden für den sichtbaren Kartenausschnitt geladen. Tankstellen erscheinen ab Zoomstufe 11, der Straßenzustand, die Ampeln und die Tempolimits ab 15, Baustellen ab 13. Zoome näher heran, wenn nichts zu sehen ist. Der Straßenzustand zeigt nur, was in OpenStreetMap zu Belag und Qualität eingetragen ist. Aktuelle Schäden oder Schlaglöcher kennt die App nicht. Preise zeigt die App nicht.</p>
       <p class="hint" id="ovStatus" style="white-space:pre-line"></p>
-
-      <h3>Benachrichtigungen</h3>
-      <label class="switch" for="sNotif"><input type="checkbox" id="sNotif"><span>Hinweise auch im Hintergrund-Tab</span></label>
+      </section>
+      <section class="setgrp" data-s=" benachrichtigungen 🔔 hinweise auch im hintergrund-tab neue benachrichtigungen erscheinen immer in der glocke oben. mit diesem schalter zeigt dein browser sie zusätzlich als hinweis an, wenn die seite zwar offen, aber nicht im vordergrund ist. bei geschlossener app kommen keine hinweise an, dafür bräuchte es echte push-nachrichten, die sind nicht eingebaut. auf dem iphone geht es meist nur, wenn die seite zum home-bildschirm hinzugefügt wurde. ">
+        <h3>Benachrichtigungen</h3>
+        <div class="setcard">
+  <label class="switch setrow" for="sNotif"><span class="si c1">🔔</span><span class="stext">Hinweise auch im Hintergrund-Tab</span><input type="checkbox" id="sNotif"></label>
+        </div>
       <p class="hint">Neue Benachrichtigungen erscheinen immer in der Glocke oben. Mit diesem Schalter zeigt dein Browser sie zusätzlich als Hinweis an, wenn die Seite zwar offen, aber nicht im Vordergrund ist. Bei geschlossener App kommen keine Hinweise an, dafür bräuchte es echte Push-Nachrichten, die sind nicht eingebaut. Auf dem iPhone geht es meist nur, wenn die Seite zum Home-Bildschirm hinzugefügt wurde.</p>
-
-      <h3>Über die App</h3>
+      </section>
+      <section class="setgrp" data-s=" über die app version: neueste version laden fehlt etwas, das es schon geben müsste? dann läuft bei dir vermutlich noch eine ältere version aus dem zwischenspeicher. der knopf holt die aktuelle datei vom server und lädt die seite neu. er sagt dir auch, wenn du schon die neueste hast. ">
+        <h3>Über die App</h3>
       <p class="hint">Version: <strong id="appVersion"></strong></p>
       <button id="reloadApp" class="ghost wide" type="button">Neueste Version laden</button>
       <p class="hint">Fehlt etwas, das es schon geben müsste? Dann läuft bei dir vermutlich noch eine ältere Version aus dem Zwischenspeicher. Der Knopf holt die aktuelle Datei vom Server und lädt die Seite neu. Er sagt dir auch, wenn du schon die neueste hast.</p>
-
-      <div class="donate">
+      </section>
+      <div class="donate setgrp" data-s="projekt unterstützen kaffee buy me a coffee spende">
         <h3>Projekt unterstützen</h3>
         <p class="hint">RaceNewRoads ist ein Hobbyprojekt. Wenn es dir gefällt, kannst du es freiwillig mit einem Kaffee unterstützen. Du bekommst dafür nichts freigeschaltet, alle Funktionen bleiben für alle gleich.</p>
         <a class="btnlink" href="https://buymeacoffee.com/racenewroads" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
@@ -2542,6 +2589,45 @@
   var currentScreen = 'Home', raceView = 'List';
   var incomingCount = 0, inviteCount = 0, raceDist = 0;
   var SCREENS = ['Home', 'Race', 'Navi', 'Friends', 'Profile', 'FriendGarage', 'Stats', 'Boards', 'History', 'Notifications', 'Chats', 'Admin', 'Settings'];
+  // ---- Einstellungen: Profilkarte, Segment-Schalter für die Darstellung, Suche ----
+  function syncThemeSeg() {
+    var v = $('sTheme').value;
+    Array.prototype.forEach.call($('themeSeg').querySelectorAll('button'), function (bt) { bt.classList.toggle('on', bt.getAttribute('data-v') === v); });
+  }
+  $('themeSeg').addEventListener('click', function (e) {
+    var bt = e.target.closest && e.target.closest('button[data-v]');
+    if (!bt) return;
+    $('sTheme').value = bt.getAttribute('data-v');
+    $('sTheme').dispatchEvent(new Event('change', { bubbles: true }));
+    syncThemeSeg();
+  });
+  function settingsOpened() {
+    syncThemeSeg();
+    $('setProfName').textContent = myName || 'Profil';
+    var host = $('setProfAv'); host.textContent = '';
+    try { host.appendChild(avatarNode(myAvatar, myName || '?', myColor, 46)); } catch (e) {}
+  }
+  $('setProfile').addEventListener('click', function () { showScreen('Profile'); });
+  $('setProfile').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showScreen('Profile'); } });
+  $('setSearch').addEventListener('input', function () {
+    var q = $('setSearch').value.trim().toLowerCase();
+    Array.prototype.forEach.call($('tabSettings').querySelectorAll('.setgrp'), function (g) {
+      if (!q) {
+        g.hidden = false;
+        Array.prototype.forEach.call(g.querySelectorAll('.setrow'), function (r) { r.hidden = false; });
+        Array.prototype.forEach.call(g.querySelectorAll('.hint, .setcard'), function (h) { h.hidden = false; });
+        return;
+      }
+      var rows = g.querySelectorAll('.switch'), any = false, secMatch = (g.getAttribute('data-s') || '').indexOf(q) >= 0 && !rows.length;
+      var h3 = g.querySelector('h3'), headHit = !!h3 && h3.textContent.toLowerCase().indexOf(q) >= 0;
+      Array.prototype.forEach.call(rows, function (r) {
+        var m = headHit || r.textContent.toLowerCase().indexOf(q) >= 0; r.hidden = !m; if (m) any = true;
+      });
+      Array.prototype.forEach.call(g.querySelectorAll('.hint'), function (h) { h.hidden = !!q; });
+      g.hidden = !(any || secMatch);
+      if (secMatch) Array.prototype.forEach.call(g.querySelectorAll('.hint'), function (h) { h.hidden = false; });
+    });
+  });
   var TITLES = { Home: '', Race: 'Rennen', Navi: 'Navigation', Friends: 'Freunde', Profile: 'Profil', FriendGarage: 'Garage', Stats: 'Statistiken', Boards: 'Ranglisten', History: 'Rennhistorie', Notifications: 'Benachrichtigungen', Chats: 'Nachrichten', Admin: 'Administration', Settings: 'Einstellungen' };
 
   function showScreen(t) {
@@ -2558,6 +2644,7 @@
     if (t === 'Stats') loadStats();
     if (t === 'Race') loadMyRaces(true);
     if (t === 'Navi') refreshNaviSetup();
+    if (t === 'Settings') settingsOpened();
     if (t !== 'History') histLayer.clearLayers();
     if (t !== 'Boards') trackLayer.clearLayers();
     if (t === 'Boards') boardsOpen();
@@ -5731,7 +5818,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-18-1';
+  var APP_VERSION = '2026-11-20-1';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
