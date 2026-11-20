@@ -2807,14 +2807,16 @@
   function overpass(q, opt) {
     var prio = (opt && opt.prio) || 0;
     return new Promise(function (resolve, reject) {
-      opQueue.push({ q: q, prio: prio, resolve: resolve, reject: reject });
-      opQueue.sort(function (a, b) { return b.prio - a.prio; });
+      opQueue.push({ q: q, prio: prio, t: Date.now(), resolve: resolve, reject: reject });
       opNext();
     });
   }
   function opNext() {
     if (opBusy || !opQueue.length) return;
     opBusy = true;
+    // wer lange wartet, rückt vor: sonst verdrängen Tempolimit-Abfragen beim Fahren die Kartenebenen für immer
+    var nowT = Date.now();
+    opQueue.sort(function (a, b) { return (b.prio + Math.min(4, (nowT - b.t) / 6000)) - (a.prio + Math.min(4, (nowT - a.t) / 6000)); });
     var job = opQueue.shift();
     setTimeout(function () { opRun(job, 0); }, Math.max(0, 1200 - (Date.now() - opLastDone)));
   }
@@ -3470,7 +3472,11 @@
   $('sWorks').checked = ovPrefs.works; $('sSpeeds').checked = ovPrefs.speeds; $('sPoints').checked = ovPrefs.points; $('sPlaces').checked = ovPrefs.places;
 
   function refreshOverlays() { if (overlaysActive) { ov.fuel.refresh(); ov.signals.refresh(); ov.surface.refresh(); ov.works.refresh(); ov.speeds.refresh(); ov.points.refresh(); ov.places.refresh(); ov.cams.refresh(); } }
-  function ovOn(key) { return overlaysActive && !!ovPrefs[key] && !(nav && navClean); }   // beim Navigieren (aufgeräumt) aus
+  function ovOn(key) {   // beim Navigieren (aufgeräumt) bleiben nur Tankstellen und Ampeln an
+    if (!overlaysActive || !ovPrefs[key]) return false;
+    if (nav && navClean) return key === 'fuel' || key === 'signals';
+    return true;
+  }
   function applyOverlays() {
     ov.fuel.set(ovOn('fuel'));
     ov.signals.set(ovOn('signals'));
@@ -5725,7 +5731,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-16-7';
+  var APP_VERSION = '2026-11-18-1';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
