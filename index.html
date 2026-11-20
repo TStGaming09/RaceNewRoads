@@ -415,6 +415,40 @@
   /* Startseite: Tipp, Hinweis und Nachrichten-Karte entfernt (Nachrichten bleiben über das Profilmenü erreichbar); Standort-Knopf und Messwerte nur im Debug-Modus */
   #tabHome #mapTip, #tabHome #hint, #tabHome #homeChats { display: none !important; }
   body:not(.dbgui) #tabHome #statsBox, body:not(.dbgui) #tabHome #start { display: none !important; }
+
+  /* Anmeldescreen im neuen Design: folgt dem Gerätedesign (Hell/Dunkel) */
+  :root { --a-bg: #f4f4f5; --a-ink: #111111; --a-mut: #52525b; --a-field: #ffffff; --a-line: #d4d4d8; --a-link: #c2410c; --a-shadow: rgba(17, 24, 39, .14); }
+  :root[data-theme="dark"] { --a-bg: #050507; --a-ink: #f3f4f6; --a-mut: #a1a1aa; --a-field: #14161b; --a-line: #2e323a; --a-link: #ff8601; --a-shadow: rgba(0, 0, 0, .5); }
+  .panel:has(#authView:not(.hidden)) { position: fixed; inset: 0; left: 0; right: 0; bottom: 0; max-width: none; max-height: none; margin: 0; border-radius: 0; box-shadow: none; background: var(--a-bg); color: var(--a-ink); display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 3000; }
+  .panel:has(#authView:not(.hidden)) > .status { align-self: center; width: fit-content; max-width: 100%; margin: 0 0 8px; padding: 8px 14px; border-radius: 22px; background: var(--a-field); border: 1px solid var(--a-line); color: var(--a-ink); font-size: .85rem; }
+  #authView { width: 100%; max-width: 400px; margin: auto 0; display: flex; flex-direction: column; }
+  .auth-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; margin: 12px 0 28px; }
+  .auth-logo { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; box-shadow: 0 12px 32px var(--a-shadow); }
+  .auth-word { display: flex; align-items: center; gap: 9px; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 30px; line-height: 1; letter-spacing: -.01em; color: var(--a-ink); }
+  .auth-word b { color: #f07800; font-weight: 800; }
+  :root[data-theme="dark"] .auth-word b { color: #ff8601; }
+  .auth-bars { display: flex; gap: 4px; }
+  .auth-bars i { display: block; width: 13px; height: 22px; background: var(--a-ink); transform: skewX(-28deg); }
+  .auth-bars i + i { background: #ff8601; }
+  .auth-tag { margin: -6px 0 0; font-size: .95rem; color: var(--a-mut); text-align: center; }
+  .auth-ver { font-size: .75rem; color: var(--a-mut); margin: -8px 0 0; opacity: .8; }
+  .auth-form { display: flex; flex-direction: column; gap: 14px; }
+  .auth-field label, #stayRow { margin: 0; }
+  .auth-field label { font-size: .9rem; font-weight: 600; color: var(--a-ink); margin-bottom: 6px; }
+  .auth-field input[type=text], .auth-field input[type=email], .auth-field input[type=password] { width: 100%; height: 52px; padding: 0 16px; border-radius: 16px; border: 1px solid var(--a-line); background: var(--a-field); color: var(--a-ink); font-size: 1rem; box-sizing: border-box; margin: 0; }
+  .auth-field input::placeholder { color: var(--a-mut); opacity: .7; }
+  .auth-lblrow { display: flex; justify-content: space-between; align-items: baseline; }
+  .auth-lblrow a { font-size: .9rem; font-weight: 600; color: var(--a-link); text-decoration: none; padding: 6px 0; }
+  .auth-pw { position: relative; }
+  .auth-pw input { padding-right: 52px !important; }
+  .auth-pw button { position: absolute; right: 4px; top: 4px; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; background: transparent; color: var(--a-mut); display: flex; align-items: center; justify-content: center; }
+  .auth-stay { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: .9rem; color: var(--a-mut); cursor: pointer; }
+  .auth-stay input { width: 20px; height: 20px; margin: 0; accent-color: #ff8601; }
+  .auth-intro { margin: 0; font-size: .95rem; color: var(--a-mut); line-height: 1.45; }
+  #authView #submit { height: 56px; margin: 0; border: 0; border-radius: 18px; background: #ff8601; color: #111; font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 24px rgba(255, 134, 1, .25); }
+  #authView #submit:disabled { opacity: .6; }
+  .auth-switch { margin: 22px 0 0; text-align: center; font-size: .95rem; color: var(--a-mut); }
+  .auth-switch a { font-weight: 700; color: var(--a-link); text-decoration: none; }
 </style>
 </head>
 <body>
@@ -513,21 +547,37 @@
 
   <!-- Anmeldung -->
   <div id="authView" class="hidden">
-    <h2 class="brand">RaceNewRoads</h2>
-    <div class="hint" id="loginVersion"></div>
-    <div class="tabs" role="tablist">
+    <div class="auth-hero">
+      <img class="auth-logo" src="icon-512.png" alt="" width="150" height="150">
+      <div class="auth-word" role="img" aria-label="RaceNewRoads"><span class="auth-bars" aria-hidden="true"><i></i><i></i></span><span aria-hidden="true">Race<b>New</b>Roads</span></div>
+      <p class="auth-tag">GPS-Rennen mit Freunden – im echten Leben</p>
+      <div class="auth-ver" id="loginVersion"></div>
+    </div>
+    <div class="tabs hidden" role="tablist">
       <button id="tabLogin" role="tab" aria-selected="true" type="button">Anmelden</button>
       <button id="tabSignup" role="tab" aria-selected="false" type="button">Registrieren</button>
     </div>
-    <div id="usernameRow" class="hidden">
-      <label for="username">Spielername (2–20 Zeichen, nur du hast ihn)</label>
-      <input id="username" type="text" maxlength="20" autocomplete="nickname">
+    <div class="auth-form">
+      <p id="authIntro" class="auth-intro hidden"></p>
+      <div id="usernameRow" class="auth-field hidden">
+        <label for="username">Spielername (2–20 Zeichen)</label>
+        <input id="username" type="text" maxlength="20" autocomplete="nickname">
+      </div>
+      <div id="emailRow" class="auth-field">
+        <label for="email">E-Mail</label>
+        <input id="email" type="email" autocomplete="email" placeholder="name@beispiel.de">
+      </div>
+      <div id="pwRow" class="auth-field">
+        <div class="auth-lblrow"><label for="password" id="pwLabel">Passwort</label><a href="#" id="authForgot" role="button">Passwort vergessen?</a></div>
+        <div class="auth-pw">
+          <input id="password" type="password" autocomplete="current-password" placeholder="Dein Passwort">
+          <button type="button" id="pwToggle" aria-label="Passwort anzeigen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <label id="stayRow" class="auth-stay"><input type="checkbox" id="stayIn" checked> Angemeldet bleiben</label>
+      <button id="submit" type="button"><span id="submitLbl">Anmelden</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
     </div>
-    <label for="email">E-Mail</label>
-    <input id="email" type="email" autocomplete="email">
-    <label for="password">Passwort (mindestens 8 Zeichen)</label>
-    <input id="password" type="password" autocomplete="current-password">
-    <button id="submit" type="button">Anmelden</button>
+    <p class="auth-switch"><span id="authSwitchTxt">Noch kein Konto?</span> <a href="#" id="authSwitch" role="button">Jetzt registrieren</a></p>
   </div>
 
   <!-- Hauptansicht -->
@@ -1119,6 +1169,7 @@
   var statsBox = $('statsBox'), speedEl = $('speed'), accEl = $('acc'), sentEl = $('sent');
   var startBtn = $('start'), playersEl = $('players'), hint = $('hint');
 
+  var recoveryLink = /type=recovery/.test(location.hash || '');
   var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   var map = L.map('map', { zoomControl: false }).setView([51.1657, 10.4515], 6);
@@ -1220,13 +1271,25 @@
   // ---------- Anmeldung ----------
   function setMode(m) {
     mode = m;
-    var signup = m === 'signup';
+    var signup = m === 'signup', forgot = m === 'forgot', recov = m === 'recovery', login = m === 'login';
     tabLogin.setAttribute('aria-selected', String(!signup));
     tabSignup.setAttribute('aria-selected', String(signup));
     usernameRow.classList.toggle('hidden', !signup);
-    submitBtn.textContent = signup ? 'Konto erstellen' : 'Anmelden';
-    passIn.setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
-    setStatus(signup ? 'Neues Konto erstellen' : (pendingCode ? 'Bitte anmelden, um dem Rennen beizutreten' : 'Bitte anmelden'));
+    $('emailRow').classList.toggle('hidden', recov);
+    $('pwRow').classList.toggle('hidden', forgot);
+    $('authForgot').classList.toggle('hidden', !login);
+    $('stayRow').classList.toggle('hidden', !login);
+    $('pwLabel').textContent = recov ? 'Neues Passwort (mindestens 8 Zeichen)' : 'Passwort';
+    passIn.placeholder = recov ? 'Neues Passwort' : 'Dein Passwort';
+    var intro = $('authIntro');
+    intro.classList.toggle('hidden', !(forgot || recov));
+    intro.textContent = forgot ? 'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.' : (recov ? 'Wähle jetzt ein neues Passwort für dein Konto.' : '');
+    $('submitLbl').textContent = signup ? 'Konto erstellen' : (forgot ? 'Link senden' : (recov ? 'Passwort speichern' : 'Anmelden'));
+    $('authSwitchTxt').textContent = login ? 'Noch kein Konto?' : (signup ? 'Schon ein Konto?' : (forgot ? 'Doch eingefallen?' : ''));
+    $('authSwitch').textContent = login ? 'Jetzt registrieren' : (signup ? 'Anmelden' : (forgot ? 'Zur Anmeldung' : ''));
+    $('authSwitch').parentNode.classList.toggle('hidden', recov);
+    passIn.setAttribute('autocomplete', (signup || recov) ? 'new-password' : 'current-password');
+    setStatus(signup ? 'Neues Konto erstellen' : (forgot ? 'Passwort zurücksetzen' : (recov ? 'Neues Passwort festlegen' : (pendingCode ? 'Bitte anmelden, um dem Rennen beizutreten' : 'Bitte anmelden'))));
   }
   tabLogin.addEventListener('click', function () { setMode('login'); });
   tabSignup.addEventListener('click', function () { setMode('signup'); });
@@ -1244,6 +1307,29 @@
 
   function submit() {
     var email = emailIn.value.trim(), pass = passIn.value;
+    if (mode === 'forgot') {
+      if (!email) { setStatus('Bitte deine E-Mail eingeben.', 'warn'); return; }
+      submitBtn.disabled = true;
+      db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }).then(function (res) {
+        submitBtn.disabled = false;
+        if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
+        setStatus('Falls ein Konto zu dieser E-Mail existiert, ist ein Link unterwegs. Schau auch im Spam-Ordner.', 'ok');
+      });
+      return;
+    }
+    if (mode === 'recovery') {
+      if (pass.length < 8) { setStatus('Das neue Passwort braucht mindestens 8 Zeichen.', 'warn'); return; }
+      submitBtn.disabled = true;
+      db.auth.updateUser({ password: pass }).then(function (res) {
+        submitBtn.disabled = false;
+        if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
+        try { history.replaceState(null, '', location.pathname); } catch (e) {}
+        recoveryLink = false; mode = 'login';
+        setStatus('Passwort geändert.', 'ok');
+        afterLogin(res.data.user);
+      });
+      return;
+    }
     if (!email || !pass) { setStatus('Bitte E-Mail und Passwort eingeben.', 'warn'); return; }
     if (pass.length < 8) { setStatus('Das Passwort braucht mindestens 8 Zeichen.', 'warn'); return; }
     submitBtn.disabled = true;
@@ -1260,11 +1346,20 @@
       db.auth.signInWithPassword({ email: email, password: pass }).then(function (res) {
         submitBtn.disabled = false;
         if (res.error) { setStatus(germanAuthError(res.error.message), 'err'); return; }
+        try { localStorage.setItem('rna-nostay', $('stayIn').checked ? '0' : '1'); } catch (e) {}
         afterLogin(res.data.user);
       });
     }
   }
   submitBtn.addEventListener('click', submit);
+  $('authForgot').addEventListener('click', function (e) { e.preventDefault(); setMode('forgot'); });
+  $('authSwitch').addEventListener('click', function (e) { e.preventDefault(); setMode(mode === 'login' ? 'signup' : 'login'); });
+  $('pwToggle').addEventListener('click', function () {
+    var show = passIn.type === 'password';
+    passIn.type = show ? 'text' : 'password';
+    $('pwToggle').setAttribute('aria-label', show ? 'Passwort verbergen' : 'Passwort anzeigen');
+  });
+  emailIn.addEventListener('keydown', function (e) { if (e.key === 'Enter' && mode === 'forgot') submit(); });
   passIn.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
 
   function showAuth() {
@@ -1286,6 +1381,7 @@
   }
 
   function afterLogin(user) {
+    try { sessionStorage.setItem('rna-alive', '1'); } catch (e) {}
     myId = user.id; myEmail = user.email || '';
     db.from('profiles').select('username,color,vehicle,car_category,avatar_url,active_vehicle_id').eq('id', myId).single().then(function (res) {
       if (res.error || !res.data) { setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err'); return; }
@@ -5888,7 +5984,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-20-4';
+  var APP_VERSION = '2026-11-20-5';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
@@ -5928,10 +6024,18 @@
     if (qp) { pendingCode = qp.toUpperCase().slice(0, 6); history.replaceState(null, '', location.pathname); }
   } catch (e) {}
 
-  db.auth.getSession().then(function (res) {
-    if (res.data && res.data.session) afterLogin(res.data.session.user);
-    else showAuth();
+  var preOut = Promise.resolve();
+  try {
+    // „Angemeldet bleiben“ aus: beim nächsten Start der App (neue Browser-Sitzung) abmelden
+    if (!recoveryLink && localStorage.getItem('rna-nostay') === '1' && !sessionStorage.getItem('rna-alive')) preOut = db.auth.signOut();
+  } catch (e) {}
+  preOut.then(function () { return db.auth.getSession(); }).then(function (res) {
+    if (res.data && res.data.session) {
+      if (recoveryLink) { mode = 'recovery'; showAuth(); }
+      else afterLogin(res.data.session.user);
+    } else showAuth();
   });
+  db.auth.onAuthStateChange(function (ev) { if (ev === 'PASSWORD_RECOVERY') { recoveryLink = true; mode = 'recovery'; showAuth(); } });
 })();
 </script>
 </body>
