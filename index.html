@@ -3077,7 +3077,9 @@
   // =====================================================
   //  KARTENEBENEN: TANKSTELLEN, AMPELN, STRASSENZUSTAND
   // =====================================================
-  var OVERPASS_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+  var OVERPASS_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter',
+                            'https://overpass.kumi.systems/api/interpreter', 'https://overpass.openstreetmap.fr/api/interpreter',
+                            'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
   var opQueue = [], opBusy = false, opEp = 0, opLastDone = 0;
 
   function friendlyErr(err) {
@@ -3108,7 +3110,7 @@
   function opRun(job, attempt) {
     var idx = (opEp + attempt) % OVERPASS_ENDPOINTS.length;
     var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 28000);
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, attempt < 2 ? 15000 : 28000);
     fetch(OVERPASS_ENDPOINTS[idx] + '?data=' + encodeURIComponent(job.q), ctl ? { signal: ctl.signal } : undefined)
       .then(function (r) {
         if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
@@ -3122,7 +3124,7 @@
       })
       .catch(function (err) {
         clearTimeout(timer);
-        if (attempt + 1 < OVERPASS_ENDPOINTS.length * 2) {
+        if (attempt + 1 < Math.min(OVERPASS_ENDPOINTS.length * 2, 6)) {
           setTimeout(function () { opRun(job, attempt + 1); }, err && err.status === 429 ? 4000 : 800);
         } else opDone(job, err);
       });
@@ -3233,8 +3235,29 @@
   }
 
   // Eine Ebene lädt nur den sichtbaren Ausschnitt (plus Rand) und nur ab einer Mindest-Zoomstufe
+  // Zwischenspeicher: schon geladene Kartenausschnitte werden wiederverwendet (im Speicher und, wenn klein genug, im Browser),
+  // damit die öffentlichen Overpass-Server viel seltener gefragt werden und die Ebenen auch bei Ausfällen erscheinen.
+  var OV_TTL = { fuel: 3 * 86400000, signals: 14 * 86400000, speeds: 14 * 86400000, surface: 7 * 86400000, works: 6 * 3600000 };
+  var OV_PERSIST = { fuel: 1, signals: 1, speeds: 1, works: 1 };
   function makeOverlay(opt) {
-    var o = { layer: L.layerGroup(), on: false, got: null, inflight: false, blockedUntil: 0 };
+    var o = { layer: L.layerGroup(), on: false, got: null, inflight: false, blockedUntil: 0, fails: 0, cache: [] };
+    var ttl = OV_TTL[opt.key] || 86400000, store = 'rna-ovc-' + opt.key;
+    if (OV_PERSIST[opt.key]) { try { o.cache = (JSON.parse(localStorage.getItem(store) || '[]') || []).filter(function (c) { return c && c.els && Date.now() - c.t < ttl; }); } catch (e) { o.cache = []; } }
+    function cacheFind(b) {
+      for (var i = 0; i < o.cache.length; i++) {
+        var c = o.cache[i];
+        if (Date.now() - c.t < ttl && c.s <= b.getSouth() && c.w <= b.getWest() && c.n >= b.getNorth() && c.e >= b.getEast()) return c;
+      }
+      return null;
+    }
+    function cachePut(pb, els) {
+      o.cache.unshift({ s: pb.getSouth(), w: pb.getWest(), n: pb.getNorth(), e: pb.getEast(), t: Date.now(), els: els });
+      o.cache = o.cache.slice(0, OV_PERSIST[opt.key] ? 8 : 4);
+      if (OV_PERSIST[opt.key]) {
+        try { localStorage.setItem(store, JSON.stringify(o.cache)); }
+        catch (e) { try { o.cache = o.cache.slice(0, 2); localStorage.setItem(store, JSON.stringify(o.cache)); } catch (e2) { try { localStorage.removeItem(store); } catch (e3) {} } }
+      }
+    }
     function info(s) { ovInfo[opt.key] = s; updateOvStatus(); }
     o.refresh = function () {
       if (!o.on) return;
@@ -3245,18 +3268,26 @@
       }
       var b = map.getBounds();
       if (o.got && o.got.contains(b)) return;
+      var hit = cacheFind(b);
+      if (hit) {
+        o.layer.clearLayers(); opt.render(hit.els, o.layer);
+        o.got = L.latLngBounds([hit.s, hit.w], [hit.n, hit.e]);
+        info(hit.els.length + ' aus dem Zwischenspeicher');
+        return;
+      }
       if (o.inflight || Date.now() < o.blockedUntil) return;
       var pb = b.pad(0.3);
       o.inflight = true; info('lädt …');
       overpass(opt.query(bbox(pb.getSouth(), pb.getWest(), pb.getNorth(), pb.getEast())), { prio: 0 }).then(function (j) {
         if (!o.on) return;
         var els = j.elements || [];
-        o.layer.clearLayers(); opt.render(els, o.layer); o.got = pb;
+        o.layer.clearLayers(); opt.render(els, o.layer); o.got = pb; o.fails = 0;
+        cachePut(pb, els);
         info(els.length + ' geladen' + (els.length >= opt.limit ? ' (Höchstzahl erreicht, zoome näher heran)' : ''));
       }).catch(function (err) {
-        o.blockedUntil = Date.now() + 20000;
+        o.fails = Math.min(4, o.fails + 1); o.blockedUntil = Date.now() + 20000 * Math.min(3, o.fails);
         var msg = friendlyErr(err);
-        info('Fehler: ' + msg + ' (neuer Versuch in 20 Sekunden)');
+        info('Fehler: ' + msg + ' (neuer Versuch in ' + Math.round((o.blockedUntil - Date.now()) / 1000) + ' Sekunden)');
         setStatus('Kartenebene „' + opt.label + '“ konnte nicht geladen werden: ' + msg, 'warn');
       }).then(function () {
         o.inflight = false;
@@ -6026,7 +6057,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-20-10';
+  var APP_VERSION = '2026-11-20-11';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
