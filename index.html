@@ -384,11 +384,6 @@
   .menu-sec { font-size: .75rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 10px 12px 4px; }
   .menubtn { width: 52px; height: 52px; box-shadow: 0 4px 14px rgba(17, 24, 39, .22); }
   .menu { top: calc(72px + env(safe-area-inset-top, 0px)); }
-  :root[data-theme="dark"] .menu > button.menu-prof { background: #1e3a5f; }
-  :root[data-theme="dark"] .menu > button.menu-prof:hover { background: #24477a; }
-  :root[data-theme="dark"] .menu-sub { color: #93c5fd; }
-  :root[data-theme="dark"] .menu > a.donate { background: #3a2412; color: #fdba74; }
-  :root[data-theme="dark"] .menu > button.menu-out { color: #fca5a5; }
 
   /* Startseite im neuen Design: freie Karte, zwei große Knöpfe unten */
   .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) { background: transparent; box-shadow: none; padding: 0; overflow: visible; max-height: none; }
@@ -562,7 +557,7 @@
   <button type="button" role="menuitem" data-go="Friends"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1M16 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6"/></svg><span class="mt">Freunde</span><span id="badgeFriends" class="badge hidden"></span></button>
   <button type="button" role="menuitem" data-go="Stats"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg><span class="mt">Statistiken</span></button>
   <hr>
-  <button type="button" role="menuitem" data-go="Settings"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span class="mt">Einstellungen</span></button>
+  <button type="button" role="menuitem" data-go="Settings"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="mt">Einstellungen</span></button>
   <button type="button" role="menuitem" data-go="Admin" id="menuAdmin" style="display:none"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span class="mt">Admin</span></button>
   <a class="donate" role="menuitem" href="https://buymeacoffee.com/racenewroads" target="_blank" rel="noopener noreferrer"><svg class="mi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg><span class="mt">Projekt unterstützen</span></a>
   <hr>
@@ -6031,7 +6026,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-20-9';
+  var APP_VERSION = '2026-11-20-10';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
