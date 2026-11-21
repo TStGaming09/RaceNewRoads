@@ -386,9 +386,9 @@
   .menu { top: calc(72px + env(safe-area-inset-top, 0px)); }
 
   /* Startseite im neuen Design: freie Karte, zwei große Knöpfe unten */
-  .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) { background: transparent; box-shadow: none; padding: 0; overflow: visible; max-height: none; }
-  .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) > .status { align-self: flex-start; width: fit-content; max-width: 100%; margin: 0 0 10px; padding: 8px 14px; border-radius: 22px; background: var(--paper); box-shadow: 0 4px 14px rgba(17, 24, 39, .18); font-size: .9rem; }
-  .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) { display: flex; flex-direction: column; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) { background: transparent; box-shadow: none; padding: 0; overflow: visible; max-height: none; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) > .status { align-self: flex-start; width: fit-content; max-width: 100%; margin: 0 0 10px; padding: 8px 14px; border-radius: 22px; background: var(--paper); box-shadow: 0 4px 14px rgba(17, 24, 39, .18); font-size: .9rem; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabHome:not(.hidden)) { display: flex; flex-direction: column; }
   #tabHome { display: flex; flex-direction: column; }
   #tabHome.hidden, #zoom3d.hidden { display: none; }
   #tabHome .home-grid { order: 10; margin-top: 0; gap: 12px; }
@@ -406,7 +406,7 @@
   #tabHome .home-grid #homeChats { order: -1; flex-direction: row; min-height: 56px; border-radius: 20px; background: var(--paper); color: var(--ink); box-shadow: 0 4px 14px rgba(17, 24, 39, .18); justify-content: center; }
   #tabHome .home-grid #homeChats .big-t { font-size: 1rem; }
   #tabHome .home-grid .badge { top: 8px; right: 12px; }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .locbtn { left: auto; right: 16px; top: auto; bottom: auto; top: calc(76px + env(safe-area-inset-top, 0px)); width: 52px; height: 52px; border-radius: 16px; box-shadow: 0 4px 14px rgba(17, 24, 39, .22); font-size: 24px; color: #2563eb; background: var(--paper); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) .locbtn { left: auto; right: 16px; top: auto; bottom: auto; top: calc(76px + env(safe-area-inset-top, 0px)); width: 52px; height: 52px; border-radius: 16px; box-shadow: 0 4px 14px rgba(17, 24, 39, .22); font-size: 24px; color: #2563eb; background: var(--paper); }
 
   /* Startseite: Tipp, Hinweis und Nachrichten-Karte entfernt (Nachrichten bleiben über das Profilmenü erreichbar); Standort-Knopf und Messwerte nur im Debug-Modus */
   #tabHome #mapTip, #tabHome #hint, #tabHome #homeChats { display: none !important; }
@@ -448,9 +448,9 @@
   .auth-switch a { font-weight: 700; color: var(--a-link); text-decoration: none; }
 
   /* 3D-Knopf wie im Design: zusammen mit dem Standort-Knopf ein senkrechter Block */
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .locbtn:not(#view3dBtn) { color: var(--ink); border-radius: 16px 16px 0 0; box-shadow: 0 4px 14px rgba(17, 24, 39, .22); }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #view3dBtn { left: auto; right: 16px; top: calc(128px + env(safe-area-inset-top, 0px)); bottom: auto; width: 52px; height: 52px; border-radius: 0 0 16px 16px; border-top: 1px solid var(--line); background: var(--paper); color: var(--ink); font-size: 15px; font-weight: 800; box-shadow: 0 8px 14px -6px rgba(17, 24, 39, .22), 6px 0 0 -2px transparent; }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #view3dBtn[aria-pressed="true"] { background: #ff8601; color: #111; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) .locbtn:not(#view3dBtn) { color: var(--ink); border-radius: 16px 16px 0 0; box-shadow: 0 4px 14px rgba(17, 24, 39, .22); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #view3dBtn { left: auto; right: 16px; top: calc(128px + env(safe-area-inset-top, 0px)); bottom: auto; width: 52px; height: 52px; border-radius: 0 0 16px 16px; border-top: 1px solid var(--line); background: var(--paper); color: var(--ink); font-size: 15px; font-weight: 800; box-shadow: 0 8px 14px -6px rgba(17, 24, 39, .22), 6px 0 0 -2px transparent; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #view3dBtn[aria-pressed="true"] { background: #ff8601; color: #111; }
 
   /* Hell/Dunkel wie in der Vorlage: Akzent Orange, Karten, Hauptmenü und Profilmenü */
   :root { --h-card: #ffffff; --h-line: #e4e4e7; --h-mut: #52525b; --h-prof: #fff7ed; --h-prof-sub: #c2410c; --h-don-bg: #fff7ed; --h-don-fg: #9a3412; --h-out: #b91c1c; --h-navi: #18181b; --h-scrim: rgba(17, 17, 17, .35); --h-menu-shadow: 0 16px 40px rgba(17, 24, 39, .14); }
@@ -463,12 +463,12 @@
   .bp-bars { display: flex; gap: 2px; margin-right: 3px; }
   .bp-bars i { display: block; width: 7px; height: 12px; background: var(--ink); transform: skewX(-28deg); }
   .bp-bars i + i { background: #ff8601; }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #brandPill { display: flex; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #brandPill { display: flex; }
   body:has(#menuBtn.hidden) #brandPill { display: none !important; }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .leaflet-top.leaflet-left { top: 62px; }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #zoom3d { top: calc(68px + env(safe-area-inset-top, 0px)); }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .locbtn, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #view3dBtn { background: var(--h-card); }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #view3dBtn { border-top-color: var(--h-line); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) .leaflet-top.leaflet-left { top: 62px; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #zoom3d { top: calc(68px + env(safe-area-inset-top, 0px)); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) .locbtn, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #view3dBtn { background: var(--h-card); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #view3dBtn { border-top-color: var(--h-line); }
   #menuScrim { display: none; position: absolute; inset: 0; z-index: 1150; background: var(--h-scrim); }
   body:has(#menu:not(.hidden)) #menuScrim { display: block; }
   .menu { background: var(--h-card); border: 1px solid var(--h-line); box-shadow: var(--h-menu-shadow); }
@@ -482,13 +482,13 @@
   .menu > a.donate { background: var(--h-don-bg); color: var(--h-don-fg); }
   .menu > a.donate:hover { background: var(--h-don-bg); filter: brightness(.97); }
   .menu > button.menu-out { color: var(--h-out); }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) .panel > .status, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome #mapTip { background: var(--h-card); }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome .stats, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome #hint, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome #players { background: var(--h-card); }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome .home-grid .bigcard { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; box-shadow: 0 8px 22px rgba(17, 24, 39, .18); }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome .home-grid .big-t { font-size: 1.25rem; }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #homeRace { background: #ff8601; color: #111; }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #homeNavi.alt { background: var(--h-navi); color: #fff; }
-  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.navclean):not(.picking) #tabHome .home-grid .hi { stroke-width: 2.2; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) .panel > .status, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #tabHome #mapTip { background: var(--h-card); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #tabHome .stats, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #tabHome #hint, body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #tabHome #players { background: var(--h-card); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #tabHome .home-grid .bigcard { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; box-shadow: 0 8px 22px rgba(17, 24, 39, .18); }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #tabHome .home-grid .big-t { font-size: 1.25rem; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #homeRace { background: #ff8601; color: #111; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #homeNavi.alt { background: var(--h-navi); color: #fff; }
+  body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #tabHome .home-grid .hi { stroke-width: 2.2; }
 </style>
 </head>
 <body>
@@ -2693,14 +2693,16 @@
     updateDestUI(); renderNaviQuick();
     if (!silent) setStatus('Navigation beendet.');
   }
-  $('nvStop').addEventListener('click', function () { stopover = null; stopNavigation(false); });
+  // Nach dem Beenden der Routenführung zurück ins Hauptmenü (Startseite mit Rennen/Navi) statt ins Navi-Menü
+  function backToHome() { document.body.classList.remove('navpanel'); showScreen('Home'); layout3D(); }
+  $('nvStop').addEventListener('click', function () { stopover = null; stopNavigation(false); backToHome(); });
   function openNavPanel(scrollTo) {
     document.body.classList.add('navpanel');
     var pn = $('panel'); pn.classList.remove('collapsed'); $('collapseBtn').innerHTML = '&#9662;';
     if (scrollTo) setTimeout(function () { try { $(scrollTo).scrollIntoView({ block: 'start' }); } catch (e) {} }, 50);
     layout3D();
   }
-  $('nbEnd').addEventListener('click', function () { if (confirm('Navigation beenden?')) { stopover = null; stopNavigation(false); } });
+  $('nbEnd').addEventListener('click', function () { if (confirm('Navigation beenden?')) { stopover = null; stopNavigation(false); backToHome(); } });
   $('nbMore').addEventListener('click', function () { openNavPanel(); });
   $('nbStop').addEventListener('click', function () { openNavPanel('nvRoutePoiChips'); });
   $('nbShare').addEventListener('click', function () { openNavPanel(); $('nvShareActive').click(); });
@@ -2754,7 +2756,7 @@
       nav.idx++;
     }
     var st = steps[nav.idx], dNext = dist(lat, lng, st.loc[0], st.loc[1]);
-    if (nav.idx === last && dNext < 30) { stopNavigation(true); if (!resumeAfterStopover()) setStatus('Ziel erreicht.', 'ok'); return; }
+    if (nav.idx === last && dNext < 30) { stopNavigation(true); if (!resumeAfterStopover()) { setStatus('Ziel erreicht.', 'ok'); backToHome(); } return; }
     var remain = dNext;
     for (var k = nav.idx; k <= last; k++) remain += steps[k].dist;
     $('nvStepDist').textContent = fmtDist(dNext);
@@ -5371,8 +5373,10 @@
       if (!confirm('Die laufende Navigation beenden und zu „' + d.label + '“ navigieren?')) return;
       stopNavigation(true);
     }
+    // Erst Fortbewegungsmittel und Route zeigen; gestartet wird mit „Los geht's“
+    if (currentScreen !== 'Navi') showScreen('Navi');
     setDest(d);
-    $('nvGo').click();
+    try { $('nvRouteCard').scrollIntoView({ block: 'nearest' }); } catch (e) {}
   }
 
   // ----- Freunde auf der Karte -----
@@ -5902,7 +5906,7 @@
     try { localStorage.setItem('rna-dbgui', dbgUI ? '1' : '0'); } catch (e) {}
     document.body.classList.toggle('dbgui', dbgUI);
   });
-  $('hudEnd').addEventListener('click', function () { if (confirm('Navigation beenden?')) stopNavigation(false); });
+  $('hudEnd').addEventListener('click', function () { if (confirm('Navigation beenden?')) { stopover = null; stopNavigation(false); backToHome(); } });
 
   // =====================================================
   //  RENNAUTO 🏎️ am Profilbild: wer gerade in einem Rennen ist (Lobby oder laufend)
@@ -6057,7 +6061,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-20-11';
+  var APP_VERSION = '2026-11-21-3';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
