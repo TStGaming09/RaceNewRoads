@@ -587,6 +587,52 @@
   #tabNavi #nvRecent li .nm { font-size: 15px; font-weight: 600; }
   #tabFriends h3, #tabNavi h4.nvsec, #tabNavi .nvfriends { border: 0; }
   #tabNavi .nvfriends li:has(.empty) .empty { color: var(--h-mut); font-size: .85rem; }
+  /* ===== Vollbild wie im Designplan ===== */
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) :is(#tabSettings, #tabChats, #tabFriends, #tabNotifications):not(.hidden)) {
+    position: fixed; inset: 0; left: 0; right: 0; bottom: 0; max-width: none; max-height: none; margin: 0; width: auto;
+    border-radius: 0; box-shadow: none; z-index: 1250; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    background: var(--h-bg); color: var(--h-ink);
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) :is(#tabSettings, #tabChats, #tabFriends, #tabNotifications):not(.hidden)) > .status { margin-bottom: 4px; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) :is(#tabSettings, #tabChats, #tabFriends, #tabNotifications):not(.hidden)) .screenhead { top: calc(-14px - env(safe-area-inset-top, 0px)); padding-top: calc(14px + env(safe-area-inset-top, 0px)); margin-top: 0; }
+  #tabChats #chThread { display: flex; flex-direction: column; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabNotifications:not(.hidden)) .screenhead { background: var(--h-bg); }
+  /* Benachrichtigungen im Nachrichten-Stil */
+  #tabNotifications { color: var(--h-ink); }
+  #tabNotifications .ntbar { display: flex; gap: 8px; margin: 4px 0 14px; }
+  #tabNotifications .ntbar button { width: auto; margin: 0; flex: 1; height: 40px; padding: 0 16px; border-radius: 20px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); font-size: 14px; font-weight: 600; box-shadow: none; }
+  #tabNotifications .cvlist { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; overflow: hidden; margin: 0; padding: 0; }
+  #tabNotifications .cvlist li { padding: 12px 14px; gap: 12px; border-bottom: 1px solid var(--h-line); align-items: center; }
+  #tabNotifications .cvlist li:last-child { border-bottom: 0; }
+  #tabNotifications .nticon { width: 52px; height: 52px; flex: none; border-radius: 16px; background: var(--h-bg); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  #tabNotifications .ntrow.unread .nticon { background: #ff8601; }
+  #tabNotifications .cvx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  #tabNotifications .cv1, #tabNotifications .cv2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  #tabNotifications .cvname { font-size: 16px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabNotifications .ntrow:not(.unread) .cvname { font-weight: 600; }
+  #tabNotifications .cvtime { font-size: 12px; font-weight: 600; color: var(--h-mut); flex: none; }
+  #tabNotifications .cvtime.new { color: var(--h-prof-sub); }
+  #tabNotifications .cvprev { font-size: 14px; color: var(--h-mut); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #tabNotifications .cvprev.new { color: var(--h-ink); }
+  #tabNotifications .cvbadge.ntdot { min-width: 10px; width: 10px; height: 10px; padding: 0; border-radius: 50%; background: #ff8601; flex: none; }
+  #tabNotifications .cvx .acts { display: flex; gap: 8px; margin-top: 6px; }
+  #tabNotifications .cvx .acts button { flex: 1; border-radius: 12px; }
+  /* Statistiken: Vollbild, solange das Fenster aufgeklappt ist */
+  #statsModal:not(.collapsed) { background: var(--h-bg); }
+  #statsModal:not(.collapsed) .modal-card { left: 0; right: 0; top: 0; bottom: 0; max-width: none; border-radius: 0; box-shadow: none; background: var(--h-bg); color: var(--h-ink); }
+  #statsModal:not(.collapsed) .modal-head { background: var(--h-bg); border-bottom: 0; padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 6px; gap: 4px; }
+  #statsModal .modal-head #smBack { width: 44px; height: 44px; padding: 0; margin: 0; font-size: 0; border-radius: 14px; background: transparent; color: var(--h-ink); box-shadow: none; display: flex; align-items: center; justify-content: center; flex: none; }
+  #statsModal .modal-head #smBack::before { content: ''; width: 22px; height: 22px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 5-7 7 7 7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 5-7 7 7 7'/%3E%3C/svg%3E") center / contain no-repeat; }
+  #statsModal .modal-head #smTitle { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.75rem; line-height: 1.1; color: var(--h-ink); }
+  #statsModal:not(.collapsed) .modal-tabs { display: flex; gap: 8px; padding: 8px 16px 4px; background: transparent; }
+  #statsModal .modal-tabs button { width: auto; flex: 1; height: 40px; margin: 0; padding: 0 12px; border-radius: 20px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); font-size: 14px; font-weight: 600; box-shadow: none; }
+  #statsModal .modal-tabs button[aria-selected="true"] { background: var(--h-ink); color: var(--h-bg); border-color: var(--h-ink); }
+  #statsModal:not(.collapsed) .modal-body { padding: 8px 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  #tabStats .stats > div, #tabStats .stats4 > div { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; padding: 14px 10px; text-align: center; }
+  #tabStats .stats .v, #tabStats .stats4 .v { font-size: 1.3rem; }
+  #tabStats .stats .l, #tabStats .stats4 .l, #tabStats .hint { color: var(--h-mut); }
+  #tabStats .ghost.wide { border-radius: 16px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); }
 </style>
 </head>
 <body>
@@ -1093,11 +1139,11 @@
 
     <!-- Benachrichtigungen -->
     <div id="tabNotifications" class="hidden">
-      <div class="row between">
+      <div class="ntbar">
         <button id="ntReadAll" class="ghost" type="button">Alle als gelesen</button>
         <button id="ntClear" class="ghost" type="button">Alle löschen</button>
       </div>
-      <ul id="ntList" class="list" style="margin-top:10px"></ul>
+      <ul id="ntList" class="list cvlist"></ul>
     </div>
 
     <!-- Garage eines Freundes (nur ansehen) -->
@@ -4799,15 +4845,17 @@
 
   function renderNotifs() {
     fillList($('ntList'), notifs.map(function (n) {
-      var li = el('li', 'click wrap');
-      if (!n.read_at) li.appendChild(el('span', 'udot'));
-      var name = el('span', 'nm', (NOTIF_ICON[n.kind] || '🔔') + ' ' + n.title);
-      if (!n.read_at) name.style.fontWeight = '800'; else name.style.fontWeight = '500';
-      li.appendChild(name);
-      li.appendChild(el('span', 'ago', relTime(n.created_at)));
-      if (n.body) li.appendChild(el('div', 'sub', n.body));
+      var li = el('li', 'click cvrow ntrow' + (n.read_at ? '' : ' unread'));
+      var ic = el('span', 'nticon', NOTIF_ICON[n.kind] || '🔔'); li.appendChild(ic);
+      var x = el('div', 'cvx'), l1 = el('div', 'cv1'), l2 = el('div', 'cv2');
+      l1.appendChild(el('span', 'cvname', n.title));
+      l1.appendChild(el('span', 'cvtime' + (n.read_at ? '' : ' new'), relTime(n.created_at)));
+      l2.appendChild(el('span', 'cvprev' + (n.read_at ? '' : ' new'), n.body || ''));
+      if (!n.read_at) l2.appendChild(el('span', 'cvbadge ntdot', ''));
+      x.appendChild(l1); if (n.body) x.appendChild(l2);
       var acts = notifActions(n);
-      if (acts) li.appendChild(acts);
+      if (acts) x.appendChild(acts);
+      li.appendChild(x);
       li.addEventListener('click', function () { openNotif(n); });
       return li;
     }), 'Keine Benachrichtigungen.');
@@ -6212,7 +6260,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-21-5';
+  var APP_VERSION = '2026-11-21-6';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
