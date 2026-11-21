@@ -596,7 +596,9 @@
   }
   body:not(.hudon) .panel:has(#mainView:not(.hidden) :is(#tabSettings, #tabChats, #tabFriends, #tabNotifications):not(.hidden)) > .status { margin-bottom: 4px; }
   body:not(.hudon) .panel:has(#mainView:not(.hidden) :is(#tabSettings, #tabChats, #tabFriends, #tabNotifications):not(.hidden)) .screenhead { top: calc(-14px - env(safe-area-inset-top, 0px)); padding-top: calc(14px + env(safe-area-inset-top, 0px)); margin-top: 0; }
-  #tabChats #chThread { display: flex; flex-direction: column; }
+  #tabChats #chThread:not(.hidden) { display: flex; flex-direction: column; }
+  #tabChats .hidden { display: none !important; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) :is(#tabSettings, #tabChats, #tabFriends, #tabNotifications):not(.hidden)) > .status #collapseBtn { display: none !important; }
   body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabNotifications:not(.hidden)) .screenhead { background: var(--h-bg); }
   /* Benachrichtigungen im Nachrichten-Stil */
   #tabNotifications { color: var(--h-ink); }
@@ -6260,7 +6262,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-21-6';
+  var APP_VERSION = '2026-11-21-7';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
