@@ -409,7 +409,7 @@
   body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) .locbtn { left: auto; right: 16px; top: auto; bottom: auto; top: calc(76px + env(safe-area-inset-top, 0px)); width: 52px; height: 52px; border-radius: 16px; box-shadow: 0 4px 14px rgba(17, 24, 39, .22); font-size: 24px; color: #2563eb; background: var(--paper); }
 
   /* Startseite: Tipp, Hinweis und Nachrichten-Karte entfernt (Nachrichten bleiben über das Profilmenü erreichbar); Standort-Knopf und Messwerte nur im Debug-Modus */
-  #tabHome #mapTip, #tabHome #hint, #tabHome #homeChats { display: none !important; }
+  #tabHome #mapTip, #tabHome #hint, #tabHome #homeChats, #tabHome #players { display: none !important; }
   body:not(.dbgui) #tabHome #statsBox, body:not(.dbgui) #tabHome #start { display: none !important; }
 
   /* Anmeldescreen im neuen Design: folgt dem Gerätedesign (Hell/Dunkel) */
@@ -489,6 +489,104 @@
   body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #homeRace { background: #ff8601; color: #111; }
   body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #homeNavi.alt { background: var(--h-navi); color: #fff; }
   body:has(#mainView:not(.hidden) #tabHome:not(.hidden)):not(.hudon):not(.navclean):not(.picking) #tabHome .home-grid .hi { stroke-width: 2.2; }
+  /* ===== Design: Einstellungen, Nachrichten, Freunde, Zielsuche ===== */
+  :root { --h-bg: #f4f4f5; --h-ink: #111111; --h-seg: #ffffff; --h-sw-off: #c4c4cc; }
+  :root[data-theme="dark"] { --h-bg: #0b0c10; --h-ink: #f3f4f6; --h-seg: #2e323a; --h-sw-off: #3a3e47; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) :is(#tabSettings, #tabChats, #tabFriends, #tabNavi):not(.hidden)) { background: var(--h-bg); color: var(--h-ink); border-radius: 28px 28px 0 0; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) :is(#tabSettings, #tabChats, #tabFriends, #tabNavi):not(.hidden)) .screenhead { background: var(--h-bg); }
+  /* Kopfzeile: Zurück-Pfeil + Titel im Design-Stil */
+  #screenHead #backBtn { width: 44px; height: 44px; padding: 0; margin: 0; font-size: 0; border-radius: 14px; background: transparent; color: var(--h-ink); box-shadow: none; display: flex; align-items: center; justify-content: center; flex: none; }
+  #screenHead #backBtn::before { content: ''; width: 22px; height: 22px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 5-7 7 7 7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m15 5-7 7 7 7'/%3E%3C/svg%3E") center / contain no-repeat; }
+  #screenHead { gap: 4px; }
+  #screenHead #screenTitle { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.75rem; line-height: 1.1; color: var(--h-ink); }
+
+  /* --- Einstellungen --- */
+  #tabSettings { color: var(--h-ink); }
+  #tabSettings .setsearch input, #tabChats .cvsearch, #tabFriends input:not([type=checkbox]) { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 16px; color: var(--h-ink); }
+  #tabSettings .setsearch input { height: 52px; padding: 0 14px; font-size: 15px; }
+  #tabSettings .setprof { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; margin-top: 14px; }
+  #tabSettings #setProfAv .avatar { box-shadow: 0 0 0 3px #ff8601; }
+  #tabSettings .setprofx b { font-size: 17px; }
+  #tabSettings .hint, #tabSettings .setprof .chev { color: var(--h-mut); }
+  #tabSettings h3 { margin: 22px 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--h-mut); }
+  #tabSettings .setcard { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; margin-top: 8px; }
+  #tabSettings .setrow { min-height: 56px; padding: 0 14px; border-top: 1px solid var(--h-line); }
+  #tabSettings .setrow.col { padding: 14px; gap: 10px; }
+  #tabSettings .stitle { font-weight: 500; font-size: 15px; }
+  #tabSettings .si, #tabSettings .si.c1, #tabSettings .si.c2, #tabSettings .si.c3, #tabSettings .si.c4, #tabSettings .si.c5 { background: var(--h-bg); color: var(--h-ink); }
+  #tabSettings .switch input[type=checkbox] { width: 52px; height: 32px; border-radius: 16px; background: var(--h-sw-off); }
+  #tabSettings .switch input[type=checkbox]::after { top: 3px; left: 3px; width: 26px; height: 26px; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); }
+  #tabSettings .switch input[type=checkbox]:checked { background: #ff8601; }
+  #tabSettings .switch input[type=checkbox]:checked::after { transform: translateX(20px); }
+  #tabSettings .switch input[type=checkbox]:focus-visible { outline-color: rgba(255, 134, 1, .5); }
+  #tabSettings .seg { background: var(--h-bg); border-radius: 14px; margin-top: 0; }
+  #tabSettings .seg button { height: 40px; padding: 0; border-radius: 10px; font-weight: 500; font-size: 14px; color: var(--h-ink); }
+  #tabSettings .seg button.on { background: var(--h-seg); font-weight: 600; box-shadow: 0 1px 4px rgba(17, 24, 39, .14); }
+  #tabSettings .ghost.wide, #tabSettings .btnlink { border-radius: 16px; }
+
+  /* --- Nachrichten --- */
+  #tabChats { color: var(--h-ink); }
+  #tabChats #chNewBtn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; margin: 4px 0 12px; border-radius: 16px; background: #ff8601; color: #111111; font-weight: 700; }
+  #tabChats .cvsearch { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; color: var(--h-mut); }
+  #tabChats .cvsearch input { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none; padding: 0; margin: 0; font-size: 15px; color: var(--h-ink); outline: none; height: auto; }
+  #tabChats .cvtabs { display: flex; gap: 8px; margin: 12px 0; }
+  #tabChats .cvtabs button { width: auto; margin: 0; height: 40px; padding: 0 16px; border-radius: 20px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); font-size: 14px; font-weight: 600; box-shadow: none; }
+  #tabChats .cvtabs button[aria-selected="true"] { background: var(--h-ink); color: var(--h-bg); border-color: var(--h-ink); }
+  #tabChats .cvlist { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; overflow: hidden; margin: 0; padding: 0; }
+  #tabChats .cvlist li { padding: 12px 14px; gap: 12px; border-bottom: 1px solid var(--h-line); }
+  #tabChats .cvlist li:last-child { border-bottom: 0; }
+  #tabChats .cvlist li > .avatar { width: 52px !important; height: 52px !important; flex: none; }
+  #tabChats .cvx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  #tabChats .cv1, #tabChats .cv2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  #tabChats .cvname { font-size: 16px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabChats .cvtime { font-size: 12px; font-weight: 600; color: var(--h-mut); flex: none; }
+  #tabChats .cvtime.new { color: var(--h-prof-sub); }
+  #tabChats .cvprev { font-size: 14px; color: var(--h-mut); font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabChats .cvprev.new { color: var(--h-ink); font-weight: 700; }
+  #tabChats .cvbadge { min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px; background: #ff8601; color: #111111; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+
+  /* --- Freunde --- */
+  #tabFriends { color: var(--h-ink); }
+  #tabFriends h3 { margin: 22px 0 8px 6px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--h-mut); }
+  #tabFriends input:not([type=checkbox]) { height: 52px; padding: 0 14px; font-size: 15px; }
+  #tabFriends #friendAdd { background: #ff8601; color: #111111; border-radius: 16px; font-weight: 700; }
+  #tabFriends .list { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; overflow: hidden; padding: 0; margin: 0; }
+  #tabFriends .list li { padding: 12px 14px; gap: 12px; border-bottom: 1px solid var(--h-line); }
+  #tabFriends .list li:last-child { border-bottom: 0; }
+  #tabFriends .list li > .avatar { width: 44px !important; height: 44px !important; font-size: 18px !important; flex: none; }
+  #tabFriends .list li .nm { font-size: 16px; font-weight: 700; }
+  #tabFriends .list li button { border-radius: 12px; background: var(--h-bg); color: var(--h-ink); }
+  #tabFriends .list li button:not(.ghost) { background: #ff8601; color: #111111; }
+
+  /* --- Zielsuche --- */
+  #tabNavi { color: var(--h-ink); }
+  #tabNavi .nvhead { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.6rem; margin: 4px 0 14px; color: var(--h-ink); }
+  #tabNavi #nvQuery { height: 52px; border-radius: 16px; background: var(--h-card); color: var(--h-ink); border: 2px solid #ff8601; padding: 0 14px; font-size: 15px; }
+  #tabNavi #nvSearch { height: 52px; border-radius: 16px; background: #ff8601; color: #111111; font-weight: 700; }
+  #tabNavi .nvsec { margin: 18px 0 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--h-mut); }
+  #tabNavi .modesel { display: flex; gap: 4px; padding: 4px; margin-top: 14px; border-radius: 16px; background: var(--h-card); border: 1px solid var(--h-line); }
+  #tabNavi .modesel button { flex: 1; height: 48px; margin: 0; padding: 0; border-radius: 12px; background: transparent; color: var(--h-ink); box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  #tabNavi .modesel button[aria-checked="true"] { background: #ff8601; color: #111111; }
+  #tabNavi #nvFavs .chip { height: 40px; padding: 0 14px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); font-size: 14px; font-weight: 500; }
+  #tabNavi #nvFavs { flex-wrap: nowrap; overflow-x: auto; }
+  #tabNavi #nvFavs .chip { flex: none; white-space: nowrap; }
+  #tabNavi .nvfriends { display: flex; gap: 8px; overflow-x: auto; padding: 0; margin: 0; }
+  #tabNavi .nvfriends li { flex-direction: column; align-items: center; gap: 6px; width: 64px; flex: none; padding: 0; border: 0; cursor: pointer; }
+  #tabNavi .nvfriends li > .avatar { width: 52px !important; height: 52px !important; font-size: 20px !important; }
+  #tabNavi .nvfriends li .nm { font-size: 12px; font-weight: 500; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabNavi .nvfriends li .ago, #tabNavi .nvfriends li button { display: none; }
+  #tabNavi .nvfriends li:has(.empty) { width: auto; flex-direction: row; cursor: default; }
+  #tabNavi .routecard { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; }
+  #tabNavi .modetabs button { background: var(--h-bg); color: var(--h-ink); box-shadow: none; border-radius: 14px; }
+  #tabNavi .modetabs button.on { background: #ff8601; color: #111111; }
+  #tabNavi #nvGo { background: #ff8601; color: #111111; border-radius: 16px; font-weight: 700; }
+  #tabNavi #nvRecent { background: transparent; }
+  #tabNavi #nvRecent li { min-height: 60px; gap: 12px; padding: 0; border-bottom: 1px solid var(--h-line); }
+  #tabNavi #nvRecent li:last-child { border-bottom: 0; }
+  #tabNavi #nvRecent li::before { content: ''; width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--h-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E") center / 18px no-repeat; border: 1px solid var(--h-line); box-sizing: border-box; }
+  #tabNavi #nvRecent li .nm { font-size: 15px; font-weight: 600; }
+  #tabFriends h3, #tabNavi h4.nvsec, #tabNavi .nvfriends { border: 0; }
+  #tabNavi .nvfriends li:has(.empty) .empty { color: var(--h-mut); font-size: .85rem; }
 </style>
 </head>
 <body>
@@ -756,10 +854,17 @@
           </div>
         </div>
         <p id="nvDest" class="hint">Noch kein Ziel gewählt.</p>
+        <div id="nvModeSel" class="modesel" role="radiogroup" aria-label="Verkehrsmittel">
+          <button type="button" role="radio" data-mode="car" aria-checked="true" aria-label="Auto / Motorrad"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16V11l2-5h10l2 5v5Z"/><path d="M3 16h18v3H3z"/></svg></button>
+          <button type="button" role="radio" data-mode="bike" aria-checked="false" aria-label="Fahrrad / E-Bike / Roller"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5 9 9h6l3.5 7.5M9 9 12 16.5"/></svg></button>
+          <button type="button" role="radio" data-mode="foot" aria-checked="false" aria-label="Zu Fuß"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="m10 21 2-6 3 3v3M8 12l2-4 4 1 2 4M12 15l-1-4"/></svg></button>
+        </div>
         <div id="nvDiscover">
+          <h4 class="nvsec">Zu Freunden navigieren</h4>
+          <ul id="nvFriends" class="list nvfriends"></ul>
           <button id="nvRaceStart" class="ghost wide hidden" type="button">Zum Start des Rennens</button>
           <div id="nvQuick">
-          <div class="row between"><strong>Meine Orte</strong><button id="nvPlacesEdit" class="ghost hidden" type="button">Bearbeiten</button></div>
+          <div class="row between"><h4 class="nvsec" style="margin:0">Meine Orte</h4><button id="nvPlacesEdit" class="ghost hidden" type="button">Bearbeiten</button></div>
           <div id="nvFavs" class="chips"></div>
           <div class="row" style="margin-top:8px">
             <button id="nvSaveDest" class="ghost" type="button">Ziel speichern</button>
@@ -782,12 +887,10 @@
         <p class="hint" id="nvPoiHint" style="margin:6px 0 0"></p>
         <ul id="nvPoiList" class="list hidden" style="margin-top:8px"></ul>
           <div id="nvRecentBox" class="hidden">
-          <div class="row between"><strong>Zuletzt gesucht</strong><button id="nvRecentClear" class="ghost" type="button">Leeren</button></div>
+          <div class="row between"><h4 class="nvsec" style="margin:0">Zuletzt</h4><button id="nvRecentClear" class="ghost" type="button">Leeren</button></div>
           <ul id="nvRecent" class="list" style="margin-top:8px"></ul>
         </div>
           <details class="more"><summary>Weitere Optionen</summary>
-            <h3>Freunde auf der Karte</h3>
-        <ul id="nvFriends" class="list"></ul>
             <button id="nvPick" class="ghost wide" type="button">Ziel auf der Karte wählen</button>
             <button id="nvFuelNear" class="ghost wide" type="button">Tankstellen in der Nähe suchen</button>
           </details>
@@ -909,8 +1012,10 @@
     <!-- Nachrichten und Gruppen -->
     <div id="tabChats" class="hidden">
       <div id="chList">
-        <button id="chNewBtn" type="button">Neuer Chat oder neue Gruppe</button>
-        <ul id="chConvs" class="list" style="margin-top:12px"></ul>
+        <button id="chNewBtn" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Neuer Chat oder neue Gruppe</span></button>
+        <div class="cvsearch"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chSearch" type="search" placeholder="Chats durchsuchen" autocomplete="off" aria-label="Chats durchsuchen"></div>
+        <div id="chFilter" class="cvtabs" role="tablist" aria-label="Filter"><button type="button" role="tab" data-f="all" aria-selected="true">Alle</button><button type="button" role="tab" data-f="unread" aria-selected="false">Ungelesen</button><button type="button" role="tab" data-f="groups" aria-selected="false">Gruppen</button></div>
+        <ul id="chConvs" class="list cvlist"></ul>
         <p class="hint">Nachrichten liegen unverschlüsselt in eurer Datenbank. Für Freunde reicht das, es ersetzt aber keinen verschlüsselten Messenger.</p>
       </div>
       <div id="chNew" class="hidden">
@@ -1071,38 +1176,38 @@
           </select></div></div>
         <p class="hint">Die Einstellung gilt nur für dieses Gerät. Bei „Dunkel“ wird auch die Karte abgedunkelt.</p>
       </section>
-      <section class="setgrp" data-s=" standort 📍 standort beim öffnen automatisch starten solange dein standort läuft, sehen ihn deine freunde und die teilnehmer deiner rennen auf der karte, sonst niemand. beim ersten mal fragt dein browser oder handy nach der erlaubnis. ständiges gps kostet akku. wenn du ausschaltest, startest du den standort wieder selbst auf der startseite. das gilt ab dem nächsten öffnen. mit „standort stoppen“ kannst du jederzeit pausieren. ">
-        <h3>Standort</h3>
+      <section class="setgrp" data-s=" rennen live-standort für freunde teilen standort sichtbar karte freunde ein aus ">
+        <h3>Rennen &amp; Freunde</h3>
         <div class="setcard">
-  <label class="switch setrow" for="sAutoLoc"><span class="si c1">📍</span><span class="stext">Standort beim Öffnen automatisch starten</span><input type="checkbox" id="sAutoLoc"></label>
+  <label class="switch setrow" for="sShareLive"><span class="si c1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><span class="stext">Live-Standort für Freunde</span><input type="checkbox" id="sShareLive"></label>
         </div>
-      <p class="hint">Solange dein Standort läuft, sehen ihn deine Freunde und die Teilnehmer deiner Rennen auf der Karte, sonst niemand. Beim ersten Mal fragt dein Browser oder Handy nach der Erlaubnis. Ständiges GPS kostet Akku. Wenn du ausschaltest, startest du den Standort wieder selbst auf der Startseite. Das gilt ab dem nächsten Öffnen. Mit „Standort stoppen“ kannst du jederzeit pausieren.</p>
+      <p class="hint" id="shareHint"></p>
       </section>
       <section class="setgrp" data-s=" navigation 🧭 beim navigieren nur das nötigste anzeigen während der navigation erscheint oben ein großer abbiegehinweis. dafür werden zusatzebenen (ampeln, straßenzustand, baustellen, tankstellen, orte), deine gefahrene spur, namensschilder und die zoom-tasten ausgeblendet, und die karte wird ruhiger. das panel unten klappt von selbst ein. pinch-zoom und der knopf zum zentrieren bleiben. ">
         <h3>Navigation</h3>
         <div class="setcard">
-  <label class="switch setrow" for="sNavClean"><span class="si c1">🧭</span><span class="stext">Beim Navigieren nur das Nötigste anzeigen</span><input type="checkbox" id="sNavClean"></label>
+  <label class="switch setrow" for="sNavClean"><span class="si c1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span><span class="stext">Beim Navigieren nur das Nötigste anzeigen</span><input type="checkbox" id="sNavClean"></label>
         </div>
       <p class="hint">Während der Navigation erscheint oben ein großer Abbiegehinweis. Dafür werden Zusatzebenen (Ampeln, Straßenzustand, Baustellen, Tankstellen, Orte), deine gefahrene Spur, Namensschilder und die Zoom-Tasten ausgeblendet, und die Karte wird ruhiger. Das Panel unten klappt von selbst ein. Pinch-Zoom und der Knopf zum Zentrieren bleiben.</p>
       </section>
       <section class="setgrp" data-s=" tempolimit ⚠️ überschreitungs-warnung das tempolimit-schild ist immer sichtbar, solange dein standort läuft. bei eingeschalteter warnung blinkt es rot, sobald du mehr als 3 km/h zu schnell bist, dazu gibt es einen ton und, wo das gerät es kann, vibration. die limits stammen aus openstreetmap und können fehlen oder falsch sein. es gelten immer die schilder am straßenrand. ">
         <h3>Tempolimit</h3>
         <div class="setcard">
-  <label class="switch setrow" for="sWarn"><span class="si c3">⚠️</span><span class="stext">Überschreitungs-Warnung</span><input type="checkbox" id="sWarn"></label>
+  <label class="switch setrow" for="sWarn"><span class="si c3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17.2v.1"/></svg></span><span class="stext">Überschreitungs-Warnung</span><input type="checkbox" id="sWarn"></label>
         </div>
       <p class="hint">Das Tempolimit-Schild ist immer sichtbar, solange dein Standort läuft. Bei eingeschalteter Warnung blinkt es rot, sobald du mehr als 3 km/h zu schnell bist, dazu gibt es einen Ton und, wo das Gerät es kann, Vibration. Die Limits stammen aus OpenStreetMap und können fehlen oder falsch sein. Es gelten immer die Schilder am Straßenrand.</p>
       </section>
       <section class="setgrp" data-s=" karte ⛽ tankstellen anzeigen 🚦 ampeln anzeigen 🛣️ straßenzustand anzeigen 🚧 baustellen anzeigen 🔢 tempolimits auf der karte anzeigen 📌 treffen und events anzeigen ⭐ meine orte auf der karte anzeigen 📷 blitzerkarte im stand die blitzerkarte zeigt feste blitzer aus openstreetmap und erscheint nur, wenn dein standort läuft und du seit etwa 20 sekunden stehst. sobald du schneller als 3 km/h bist, oder wenn die app dein tempo nicht sicher kennt, verschwindet sie wieder. die daten sind unvollständig. mobile blitzer und polizeikontrollen zeigt die app nicht. die daten werden pro kartenkachel zwischengespeichert und höchstens alle 7 tage neu geladen. am steuer darf ein fahrer keine blitzer anzeigen oder nutzen (§ 23 abs. 1c stvo, 75 euro und 1 punkt). nutze die karte nur zum vorab-informieren, nicht während der fahrt. die app ersetzt keine rechtsberatung. die daten kommen aus openstreetmap und werden für den sichtbaren kartenausschnitt geladen. tankstellen erscheinen ab zoomstufe 11, der straßenzustand, die ampeln und die tempolimits ab 15, baustellen ab 13. zoome näher heran, wenn nichts zu sehen ist. der straßenzustand zeigt nur, was in openstreetmap zu belag und qualität eingetragen ist. aktuelle schäden oder schlaglöcher kennt die app nicht. preise zeigt die app nicht. ">
         <h3>Karte</h3>
         <div class="setcard">
-  <label class="switch setrow" for="sFuel"><span class="si c3">⛽</span><span class="stext">Tankstellen anzeigen</span><input type="checkbox" id="sFuel"></label>
-  <label class="switch setrow" for="sSignals"><span class="si c2">🚦</span><span class="stext">Ampeln anzeigen</span><input type="checkbox" id="sSignals"></label>
-  <label class="switch setrow" for="sSurface"><span class="si c4">🛣️</span><span class="stext">Straßenzustand anzeigen</span><input type="checkbox" id="sSurface"></label>
-  <label class="switch setrow" for="sWorks"><span class="si c3">🚧</span><span class="stext">Baustellen anzeigen</span><input type="checkbox" id="sWorks"></label>
-  <label class="switch setrow" for="sSpeeds"><span class="si c5">🔢</span><span class="stext">Tempolimits auf der Karte anzeigen</span><input type="checkbox" id="sSpeeds"></label>
-  <label class="switch setrow" for="sPoints"><span class="si c5">📌</span><span class="stext">Treffen und Events anzeigen</span><input type="checkbox" id="sPoints"></label>
-  <label class="switch setrow" for="sPlaces"><span class="si c3">⭐</span><span class="stext">Meine Orte auf der Karte anzeigen</span><input type="checkbox" id="sPlaces"></label>
-  <label class="switch setrow" for="sCams"><span class="si c4">📷</span><span class="stext">Blitzerkarte im Stand</span><input type="checkbox" id="sCams"></label>
+  <label class="switch setrow" for="sFuel"><span class="si c3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v15M4 20h11M14 9h2.5a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0V9l-3-3M7.5 8h4"/></svg></span><span class="stext">Tankstellen anzeigen</span><input type="checkbox" id="sFuel"></label>
+  <label class="switch setrow" for="sSignals"><span class="si c2"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2.5" width="8" height="19" rx="3"/><circle cx="12" cy="8" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="16" r="1.2"/></svg></span><span class="stext">Ampeln anzeigen</span><input type="checkbox" id="sSignals"></label>
+  <label class="switch setrow" for="sSurface"><span class="si c4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 21M16 3l4 18M12 4v3M12 11v3M12 18v3"/></svg></span><span class="stext">Straßenzustand anzeigen</span><input type="checkbox" id="sSurface"></label>
+  <label class="switch setrow" for="sWorks"><span class="si c3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9h18v5H3zM6 14v6M18 14v6M3 9l5 5M10 9l5 5M15 9l3 3"/></svg></span><span class="stext">Baustellen anzeigen</span><input type="checkbox" id="sWorks"></label>
+  <label class="switch setrow" for="sSpeeds"><span class="si c5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h14M5 15h14M10 4 8 20M16 4l-2 16"/></svg></span><span class="stext">Tempolimits auf der Karte anzeigen</span><input type="checkbox" id="sSpeeds"></label>
+  <label class="switch setrow" for="sPoints"><span class="si c5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14 4 6 6-3 1-3.5 3.5.5 4-2 2-3.5-3.5L4 21M9 9l-.5-3 2-2z"/></svg></span><span class="stext">Treffen und Events anzeigen</span><input type="checkbox" id="sPoints"></label>
+  <label class="switch setrow" for="sPlaces"><span class="si c3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><span class="stext">Meine Orte auf der Karte anzeigen</span><input type="checkbox" id="sPlaces"></label>
+  <label class="switch setrow" for="sCams"><span class="si c4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span><span class="stext">Blitzerkarte im Stand</span><input type="checkbox" id="sCams"></label>
         </div>
       <p class="hint">Die Blitzerkarte zeigt feste Blitzer aus OpenStreetMap und erscheint nur, wenn dein Standort läuft und du seit etwa 20 Sekunden stehst. Sobald du schneller als 3 km/h bist, oder wenn die App dein Tempo nicht sicher kennt, verschwindet sie wieder. Die Daten sind unvollständig. Mobile Blitzer und Polizeikontrollen zeigt die App nicht. Die Daten werden pro Kartenkachel zwischengespeichert und höchstens alle 7 Tage neu geladen. Am Steuer darf ein Fahrer keine Blitzer anzeigen oder nutzen (§ 23 Abs. 1c StVO, 75 Euro und 1 Punkt). Nutze die Karte nur zum Vorab-Informieren, nicht während der Fahrt. Die App ersetzt keine Rechtsberatung.</p>
       <p class="hint">Die Daten kommen aus OpenStreetMap und werden für den sichtbaren Kartenausschnitt geladen. Tankstellen erscheinen ab Zoomstufe 11, der Straßenzustand, die Ampeln und die Tempolimits ab 15, Baustellen ab 13. Zoome näher heran, wenn nichts zu sehen ist. Der Straßenzustand zeigt nur, was in OpenStreetMap zu Belag und Qualität eingetragen ist. Aktuelle Schäden oder Schlaglöcher kennt die App nicht. Preise zeigt die App nicht.</p>
@@ -1111,14 +1216,14 @@
       <section class="setgrp" data-s=" benachrichtigungen 🔔 hinweise auch im hintergrund-tab neue benachrichtigungen erscheinen immer in der glocke oben. mit diesem schalter zeigt dein browser sie zusätzlich als hinweis an, wenn die seite zwar offen, aber nicht im vordergrund ist. bei geschlossener app kommen keine hinweise an, dafür bräuchte es echte push-nachrichten, die sind nicht eingebaut. auf dem iphone geht es meist nur, wenn die seite zum home-bildschirm hinzugefügt wurde. ">
         <h3>Benachrichtigungen</h3>
         <div class="setcard">
-  <label class="switch setrow" for="sNotif"><span class="si c1">🔔</span><span class="stext">Hinweise auch im Hintergrund-Tab</span><input type="checkbox" id="sNotif"></label>
+  <label class="switch setrow" for="sNotif"><span class="si c1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></svg></span><span class="stext">Hinweise auch im Hintergrund-Tab</span><input type="checkbox" id="sNotif"></label>
         </div>
       <p class="hint">Neue Benachrichtigungen erscheinen immer in der Glocke oben. Mit diesem Schalter zeigt dein Browser sie zusätzlich als Hinweis an, wenn die Seite zwar offen, aber nicht im Vordergrund ist. Bei geschlossener App kommen keine Hinweise an, dafür bräuchte es echte Push-Nachrichten, die sind nicht eingebaut. Auf dem iPhone geht es meist nur, wenn die Seite zum Home-Bildschirm hinzugefügt wurde.</p>
       </section>
       <section class="setgrp" data-s=" experimentell debug startseite standort starten stoppen messwerte genauigkeit gesendet km/h">
         <h3>Experimentell</h3>
         <div class="setcard">
-  <label class="switch setrow" for="sDebugUI"><span class="si c5">🛠️</span><span class="stext">Debug-Anzeige auf der Startseite</span><input type="checkbox" id="sDebugUI"></label>
+  <label class="switch setrow" for="sDebugUI"><span class="si c5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8zM5 5l5 5M3 7l4-4 2 2-4 4z"/></svg></span><span class="stext">Debug-Anzeige auf der Startseite</span><input type="checkbox" id="sDebugUI"></label>
         </div>
       <p class="hint">Zeigt auf der Startseite zusätzlich den Knopf „Standort starten/stoppen“ sowie Tempo, Genauigkeit und die Zahl der gesendeten Positionen. Nur für die Fehlersuche gedacht.</p>
       </section>
@@ -1740,8 +1845,9 @@
   // ---------- Eigene Position ----------
   function sendPosition(c) {
     var now = Date.now();
+    if (!sharingNow()) { cleanOwnRow(); return; }
     if (now - lastSent < SEND_EVERY_MS) return;
-    lastSent = now;
+    lastSent = now; ownRowGone = false;
     db.from('positions').upsert({
       user_id: myId, username: myName, color: myColor, avatar_url: myAvatar,
       lat: c.latitude, lng: c.longitude, accuracy: c.accuracy, updated_at: new Date().toISOString()
@@ -1797,7 +1903,7 @@
     setStatus('Suche Position …', 'warn');
     follow = !raceCur;
     loadAll().then(subscribe);
-    tick = setInterval(function () { sweep(); reconcileTick++; if (reconcileTick % 3 === 0) loadAll(); }, 5000);   // alle 15 s mit der Datenbank abgleichen
+    tick = setInterval(function () { sweep(); try { cleanOwnRow(); } catch (e) {} reconcileTick++; if (reconcileTick % 3 === 0) loadAll(); }, 5000);   // alle 15 s mit der Datenbank abgleichen
     watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
   }
 
@@ -1816,12 +1922,25 @@
   }
   // ----- Standort automatisch beim Öffnen starten -----
   var autoLoc = true, userStoppedLoc = false;
-  try { autoLoc = localStorage.getItem('rennen-autoloc') !== '0'; } catch (e) {}
-  $('sAutoLoc').checked = autoLoc;
-  function idleHint() {
-    return (autoLoc ? 'Der Standort startet automatisch beim Öffnen der App. ' : 'Tippe auf „Standort starten“. ') +
-      'Du siehst Freunde und Rennteilnehmer, die ihren Standort ebenfalls teilen.';
+  // ----- Live-Standort teilen (ersetzt den alten Schalter „Standort beim Öffnen starten“): GPS läuft für dich immer, geteilt wird nur, wenn der Schalter an ist -----
+  var shareLive = true, ownRowGone = false;
+  try { shareLive = localStorage.getItem('rna-sharelive') !== '0'; } catch (e) {}
+  $('sShareLive').checked = shareLive;
+  function sharingNow() { return shareLive || !!raceCur; }      // im Rennen sehen dich die Teilnehmer immer
+  function shareHintText() {
+    return shareLive
+      ? 'Solange dein Standort läuft, sehen ihn deine Freunde und die Teilnehmer deiner Rennen auf der Karte, sonst niemand. Beim ersten Mal fragt dein Browser oder Handy nach der Erlaubnis. Ständiges GPS kostet Akku.'
+      : 'Aus: Deine Freunde sehen dich nicht auf der Karte. Dein eigener Standort läuft weiter, damit Karte und Navigation funktionieren. In einem laufenden Rennen sehen dich die Teilnehmer trotzdem.';
   }
+  function cleanOwnRow() {
+    if (ownRowGone || !myId || sharingNow()) return;
+    ownRowGone = true;
+    db.from('positions').delete().eq('user_id', myId).then(function () {});
+  }
+  function idleHint() {
+    return 'Der Standort startet automatisch beim Öffnen der App. ' + (shareLive ? 'Du siehst Freunde und Rennteilnehmer, die ihren Standort ebenfalls teilen.' : 'Dein Standort ist für Freunde ausgeblendet (Einstellungen).');
+  }
+  $('shareHint').textContent = shareHintText();
   hint.textContent = idleHint();
 
   function onStartButton() {
@@ -1834,13 +1953,16 @@
     if (!autoLoc || userStoppedLoc || watchId !== null || !myId) return;
     start();
   }
-  function setAutoLoc(v) {
-    autoLoc = v;
-    try { localStorage.setItem('rennen-autoloc', v ? '1' : '0'); } catch (e) {}
+  function setShareLive(v) {
+    shareLive = v;
+    try { localStorage.setItem('rna-sharelive', v ? '1' : '0'); } catch (e) {}
+    $('shareHint').textContent = shareHintText();
     if (watchId === null) hint.textContent = idleHint();
-    if (v && watchId === null && myId) { userStoppedLoc = false; start(); }
+    if (v) { lastSent = 0; ownRowGone = false; if (myPos) sendPosition({ latitude: myPos.lat, longitude: myPos.lng, accuracy: myPos.acc }); }
+    else cleanOwnRow();
+    setStatus(v ? 'Live-Standort für Freunde ist an.' : 'Live-Standort für Freunde ist aus.', v ? 'ok' : 'warn');
   }
-  $('sAutoLoc').addEventListener('change', function () { setAutoLoc($('sAutoLoc').checked); });
+  $('sShareLive').addEventListener('change', function () { setShareLive($('sShareLive').checked); });
 
   // =====================================================
   //  RENNMODUS
@@ -2350,7 +2472,7 @@
   }
 
   function refreshNaviSetup() {
-    renderNaviQuick();
+    renderNaviQuick(); syncModeSel();
     var blocked = inRunningRace();
     var hasRaceStart = !!(raceCur && raceCur.status === 'lobby' && raceCur.start_lat != null);
     $('nvRaceStart').classList.toggle('hidden', !hasRaceStart);
@@ -2364,8 +2486,17 @@
   // ---- Routenübersicht: Zeiten für Auto, Rad und zu Fuß, danach „Los geht's“ ----
   var routePrev = { token: 0, key: null, routes: {}, at: 0, from: null, fitted: false };
   function destKey(d) { return d ? (+d.lat).toFixed(5) + ',' + (+d.lng).toFixed(5) : ''; }
-  function syncModeTabs() {
+  function syncModeSel() {
     var m = $('nvMode').value;
+    Array.prototype.forEach.call($('nvModeSel').querySelectorAll('button'), function (bt) { bt.setAttribute('aria-checked', bt.getAttribute('data-mode') === m ? 'true' : 'false'); });
+  }
+  $('nvModeSel').addEventListener('click', function (e) {
+    var bt = e.target.closest && e.target.closest('button[data-mode]'); if (!bt) return;
+    $('nvMode').value = bt.getAttribute('data-mode'); navModeTouched = true;
+    syncModeSel(); if (navDest) drawPreview();
+  });
+  function syncModeTabs() {
+    var m = $('nvMode').value; syncModeSel();
     Array.prototype.forEach.call($('nvModeTabs').querySelectorAll('button'), function (bt) { bt.classList.toggle('on', bt.getAttribute('data-mode') === m); });
     var r = routePrev.routes[m];
     $('nvRcSum').textContent = r ? fmtDur(r.dur) + ' · ' + fmtDist(r.dist) : (routePrev.pending ? 'Route wird berechnet …' : (navDest && navDest.followId ? 'Position folgt live.' : (myPos ? '' : 'Warte auf GPS-Position …')));
@@ -2413,6 +2544,10 @@
     if (!bt) return;
     $('nvMode').value = bt.getAttribute('data-mode'); navModeTouched = true;
     drawPreview();
+  });
+  $('nvFriends').addEventListener('click', function (e) {
+    var li = e.target.closest && e.target.closest('li'); if (!li || e.target.closest('button')) return;
+    var b = li.querySelector('button'); if (b) b.click();
   });
   $('nvChange').addEventListener('click', function () {
     navDest = null; routePrev.token++; navLayer.clearLayers(); updateDestUI(); $('nvQuery').focus();
@@ -4733,25 +4868,41 @@
       });
     });
   }
+  var chFilter = 'all', chQuery = '';
   function renderConvList() {
-    fillList($('chConvs'), convs.map(function (c) {
-      var li = el('li', 'click wrap'), info = c.kind === 'direct' ? pInfo(c.other_user) : null;
+    var q = chQuery.trim().toLowerCase();
+    var shown = convs.filter(function (c) {
+      if (chFilter === 'unread' && !c.unread) return false;
+      if (chFilter === 'groups' && c.kind === 'direct') return false;
+      if (q && convTitle(c).toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    fillList($('chConvs'), shown.map(function (c) {
+      var li = el('li', 'click cvrow'), info = c.kind === 'direct' ? pInfo(c.other_user) : null;
       if (c.kind === 'direct') li.setAttribute('data-race-uid', c.other_user);
-      li.appendChild(info ? avatarNode(info.avatar, info.name, info.color, 36) : groupAvatar(36));
-      var nm = el('span', 'nm', convTitle(c)); if (c.unread) nm.style.fontWeight = '800';
-      li.appendChild(nm);
-      if (c.unread) li.appendChild(el('span', 'badge', String(c.unread)));
-      if (c.last_at) li.appendChild(el('span', 'ago', relTime(c.last_at)));
+      li.appendChild(info ? avatarNode(info.avatar, info.name, info.color, 52) : groupAvatar(52));
+      var x = el('div', 'cvx'), l1 = el('div', 'cv1'), l2 = el('div', 'cv2');
+      l1.appendChild(el('span', 'cvname', convTitle(c)));
+      if (c.last_at) { var tm = el('span', 'cvtime' + (c.unread ? ' new' : ''), relTime(c.last_at)); l1.appendChild(tm); }
       var prev = 'Noch keine Nachrichten.';
       if (c.last_body) {
         var who = c.last_sender === myId ? 'Du: ' : (c.kind === 'group' ? pInfo(c.last_sender).name + ': ' : '');
         prev = (c.last_kind === 'race' ? '🏁 ' : '') + who + (routeFromText(c.last_body) ? '📍 Route geteilt' : c.last_body);
       }
-      li.appendChild(el('div', 'sub', prev.length > 90 ? prev.slice(0, 90) + '…' : prev));
+      l2.appendChild(el('span', 'cvprev' + (c.unread ? ' new' : ''), prev.length > 90 ? prev.slice(0, 90) + '…' : prev));
+      if (c.unread) l2.appendChild(el('span', 'cvbadge', String(c.unread)));
+      x.appendChild(l1); x.appendChild(l2); li.appendChild(x);
       li.addEventListener('click', function () { openThread(c); });
       return li;
-    }), 'Noch keine Unterhaltungen. Tippe oben auf „Neuer Chat oder neue Gruppe“.');
+    }), convs.length ? 'Keine passenden Unterhaltungen.' : 'Noch keine Unterhaltungen. Tippe oben auf „Neuer Chat oder neue Gruppe“.');
   }
+  $('chSearch').addEventListener('input', function () { chQuery = $('chSearch').value; renderConvList(); });
+  $('chFilter').addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('button[data-f]'); if (!b) return;
+    chFilter = b.getAttribute('data-f');
+    Array.prototype.forEach.call($('chFilter').querySelectorAll('button'), function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+    renderConvList();
+  });
 
   function openConversationById(id) {
     showScreen('Chats');
@@ -6061,7 +6212,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-21-3';
+  var APP_VERSION = '2026-11-21-5';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
