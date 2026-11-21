@@ -692,63 +692,149 @@
   body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabProfile:not(.hidden) #garForm:not(.hidden)) > .status { display: flex; }
   .panel:has(#tabProfile:not(.hidden)), #tabProfile .garscroll, #tabProfile .garcards, #statsModal .modal-body { scrollbar-width: none; -ms-overflow-style: none; }
   .panel:has(#tabProfile:not(.hidden))::-webkit-scrollbar, #tabProfile .garscroll::-webkit-scrollbar, #tabProfile .garcards::-webkit-scrollbar { display: none; width: 0; height: 0; }
-  #tabProfile { color: var(--h-ink); }
-  #tabProfile .pfbanner { position: relative; height: calc(150px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, var(--pf, #2563eb), color-mix(in srgb, var(--pf, #2563eb) 55%, #000)); }
-  #tabProfile .pfbtn { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px; width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 14px; background: rgba(0, 0, 0, .25); color: #ffffff; box-shadow: none; display: flex; align-items: center; justify-content: center; }
-  #tabProfile .pfbody { padding: 0 16px; }
-  #tabProfile .pfhero { margin-top: -56px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  #tabProfile .pfav { position: relative; }
-  #tabProfile #pAvatar .avatar { border: 5px solid var(--pf, #2563eb); box-sizing: border-box; box-shadow: 0 0 0 4px var(--h-bg); background-color: var(--h-card); }
-  #tabProfile #pAvatar .avatar img { border-radius: 50%; }
-  #tabProfile .pfcam { position: absolute; right: -2px; bottom: 2px; width: 40px; height: 40px; margin: 0; padding: 0; border-radius: 50%; border: 3px solid var(--h-bg); background: #ff8601; color: #111111; box-shadow: none; display: flex; align-items: center; justify-content: center; }
-  #tabProfile .pfname { margin: 4px 0 0; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.75rem; line-height: 1.1; }
-  #tabProfile .pfsub { font-size: 14px; color: var(--h-mut); }
-  #tabProfile .pfedit { width: auto; height: 40px; margin: 0; padding: 0 18px; border-radius: 20px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); font-size: 14px; font-weight: 600; box-shadow: none; }
-  #tabProfile .pfstats { display: flex; margin-top: 22px; background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; }
-  #tabProfile .pfstats > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 0; }
-  #tabProfile .pfstats > div + div { border-left: 1px solid var(--h-line); }
-  #tabProfile .pfnum { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.5rem; }
-  #tabProfile .pfl { font-size: 12px; color: var(--h-mut); }
-  #tabProfile .pfsec { margin-top: 22px; }
-  #tabProfile h3, #tabProfile .pfh { margin: 0 0 10px 6px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--h-mut); }
-  #tabProfile .pfcard { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; padding: 14px; margin-top: 14px; }
-  #tabProfile .pfsec .pfcard { margin-top: 0; }
-  #tabProfile .pfcard input:not([type=file]):not([type=color]) { border-radius: 14px; background: var(--h-bg); color: var(--h-ink); border: 1px solid var(--h-line); }
-  #tabProfile .pfcard label { color: var(--h-mut); }
-  #tabProfile .pfrow2 { display: flex; gap: 8px; }
-  #tabProfile .pfrow2 button { flex: 1; margin: 0; border-radius: 14px; background: var(--h-bg); color: var(--h-ink); }
-  #tabProfile .pfcard button:not(.ghost):not(.pfsw1) { border-radius: 14px; background: #ff8601; color: #111111; font-weight: 700; }
-  #tabProfile .pfsw { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; justify-items: center; }
-  #tabProfile .pfsw1 { width: 100%; max-width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 50%; background: transparent; border: 3px solid transparent; box-shadow: none; display: flex; align-items: center; justify-content: center; }
-  #tabProfile .pfsw1 span { width: 30px; height: 30px; border-radius: 50%; display: block; }
-  #tabProfile .pfsw1.on { border-color: var(--h-ink); }
-  #tabProfile .pfnote { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--h-line); font-size: 13px; line-height: 1.4; color: var(--h-mut); }
-  #tabProfile .pfsechead { display: flex; justify-content: space-between; align-items: center; margin: 0 0 10px; }
-  #tabProfile .pfsechead h3 { margin: 0 0 0 6px; }
-  #tabProfile .pfsechead a { font-size: 14px; font-weight: 600; text-decoration: none; color: #ff8601; }
-  #tabProfile .pflist { padding: 0; overflow: hidden; }
-  #tabProfile .pflist li { min-height: 60px; padding: 0 14px; gap: 12px; border-bottom: 1px solid var(--h-line); }
-  #tabProfile .pflist li:last-child { border-bottom: 0; }
-  #tabProfile .pfrank { width: 40px; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.25rem; }
-  #tabProfile .pfrank.gold { color: #ff8601; }
-  #tabProfile .pfrx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  #tabProfile .pfrn { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #tabProfile .pfrd { font-size: 13px; color: var(--h-mut); }
+  :is(#tabProfile, #userModal) { color: var(--h-ink); }
+  :is(#tabProfile, #userModal) .pfbanner { position: relative; height: calc(150px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, var(--pf, #2563eb), color-mix(in srgb, var(--pf, #2563eb) 55%, #000)); }
+  :is(#tabProfile, #userModal) .pfbtn { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px; width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 14px; background: rgba(0, 0, 0, .25); color: #ffffff; box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  :is(#tabProfile, #userModal) .pfbody { padding: 0 16px; }
+  :is(#tabProfile, #userModal) .pfhero { margin-top: -56px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  :is(#tabProfile, #userModal) .pfav { position: relative; }
+  :is(#tabProfile, #userModal) .pfav .avatar { border: 5px solid var(--pf, #2563eb); box-sizing: border-box; box-shadow: 0 0 0 4px var(--h-bg); background-color: var(--h-card); }
+  :is(#tabProfile, #userModal) .pfav .avatar img { border-radius: 50%; }
+  :is(#tabProfile, #userModal) .pfcam { position: absolute; right: -2px; bottom: 2px; width: 40px; height: 40px; margin: 0; padding: 0; border-radius: 50%; border: 3px solid var(--h-bg); background: #ff8601; color: #111111; box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  :is(#tabProfile, #userModal) .pfname { margin: 4px 0 0; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.75rem; line-height: 1.1; }
+  :is(#tabProfile, #userModal) .pfsub { font-size: 14px; color: var(--h-mut); }
+  :is(#tabProfile, #userModal) .pfedit { width: auto; height: 40px; margin: 0; padding: 0 18px; border-radius: 20px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); font-size: 14px; font-weight: 600; box-shadow: none; }
+  :is(#tabProfile, #userModal) .pfstats { display: flex; margin-top: 22px; background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; }
+  :is(#tabProfile, #userModal) .pfstats > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 0; }
+  :is(#tabProfile, #userModal) .pfstats > div + div { border-left: 1px solid var(--h-line); }
+  :is(#tabProfile, #userModal) .pfnum { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.5rem; }
+  :is(#tabProfile, #userModal) .pfl { font-size: 12px; color: var(--h-mut); }
+  :is(#tabProfile, #userModal) .pfsec { margin-top: 22px; }
+  :is(#tabProfile, #userModal) h3, :is(#tabProfile, #userModal) .pfh { margin: 0 0 10px 6px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--h-mut); }
+  :is(#tabProfile, #userModal) .pfcard { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; padding: 14px; margin-top: 14px; }
+  :is(#tabProfile, #userModal) .pfsec .pfcard { margin-top: 0; }
+  :is(#tabProfile, #userModal) .pfcard input:not([type=file]):not([type=color]) { border-radius: 14px; background: var(--h-bg); color: var(--h-ink); border: 1px solid var(--h-line); }
+  :is(#tabProfile, #userModal) .pfcard label { color: var(--h-mut); }
+  :is(#tabProfile, #userModal) .pfrow2 { display: flex; gap: 8px; }
+  :is(#tabProfile, #userModal) .pfrow2 button { flex: 1; margin: 0; border-radius: 14px; background: var(--h-bg); color: var(--h-ink); }
+  :is(#tabProfile, #userModal) .pfcard button:not(.ghost):not(.pfsw1) { border-radius: 14px; background: #ff8601; color: #111111; font-weight: 700; }
+  :is(#tabProfile, #userModal) .pfsw { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; justify-items: center; }
+  :is(#tabProfile, #userModal) .pfsw1 { width: 100%; max-width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 50%; background: transparent; border: 3px solid transparent; box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  :is(#tabProfile, #userModal) .pfsw1 span { width: 30px; height: 30px; border-radius: 50%; display: block; }
+  :is(#tabProfile, #userModal) .pfsw1.on { border-color: var(--h-ink); }
+  :is(#tabProfile, #userModal) .pfnote { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--h-line); font-size: 13px; line-height: 1.4; color: var(--h-mut); }
+  :is(#tabProfile, #userModal) .pfsechead { display: flex; justify-content: space-between; align-items: center; margin: 0 0 10px; }
+  :is(#tabProfile, #userModal) .pfsechead h3 { margin: 0 0 0 6px; }
+  :is(#tabProfile, #userModal) .pfsechead a { font-size: 14px; font-weight: 600; text-decoration: none; color: #ff8601; }
+  :is(#tabProfile, #userModal) .pflist { padding: 0; overflow: hidden; }
+  :is(#tabProfile, #userModal) .pflist li { min-height: 60px; padding: 0 14px; gap: 12px; border-bottom: 1px solid var(--h-line); }
+  :is(#tabProfile, #userModal) .pflist li:last-child { border-bottom: 0; }
+  :is(#tabProfile, #userModal) .pfrank { width: 40px; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.25rem; }
+  :is(#tabProfile, #userModal) .pfrank.gold { color: #ff8601; }
+  :is(#tabProfile, #userModal) .pfrx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  :is(#tabProfile, #userModal) .pfrn { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  :is(#tabProfile, #userModal) .pfrd { font-size: 13px; color: var(--h-mut); }
   /* Garage als waagerechte Karten */
-  #tabProfile #garListBox, #tabProfile #profBottom { padding: 22px 0 0; }
-  #tabProfile #garListBox > .pfh, #tabProfile #garListBox > .hint { margin-left: 22px; margin-right: 22px; }
-  #tabProfile .garscroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px 4px; }
-  #tabProfile .garcards { display: flex; gap: 10px; margin: 0; padding: 0; border: 0; background: transparent; overflow: visible; flex: none; }
-  #tabProfile .garcards li.vcard { flex: none; width: 170px; flex-direction: column; align-items: stretch; gap: 10px; padding: 14px; border: 1px solid var(--h-line); border-radius: 20px; background: var(--h-card); }
-  #tabProfile .garcards li.vcard .thumb, #tabProfile .garcards li.vcard > :first-child { width: 52px; height: 52px; border-radius: 16px; flex: none; }
-  #tabProfile .garcards .vinfo { min-width: 0; }
-  #tabProfile .garcards .vinfo strong { font-size: 15px; }
-  #tabProfile .garcards .sub { font-size: 12px; color: var(--h-mut); }
-  #tabProfile .garcards .vbtns { display: flex; gap: 6px; }
-  #tabProfile .garcards .vbtns { margin-top: auto; }
-  #tabProfile .garcards .vbtns button:not(.ghost) { background: #ff8601; color: #111111; }
-  #tabProfile .garcards .vbtns button { flex: 1; padding: 6px 8px; border-radius: 12px; font-size: 13px; }
-  #tabProfile .garaddcard:not(.hidden) { flex: none; width: 120px; margin: 0; padding: 0 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 2px dashed var(--h-line); border-radius: 20px; background: transparent; color: var(--h-mut); font-size: 14px; font-weight: 600; box-shadow: none; }
+  :is(#tabProfile, #userModal) #garListBox, :is(#tabProfile, #userModal) #profBottom { padding: 22px 0 0; }
+  :is(#tabProfile, #userModal) #garListBox > .pfh, :is(#tabProfile, #userModal) #garListBox > .hint { margin-left: 22px; margin-right: 22px; }
+  :is(#tabProfile, #userModal) .garscroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px 4px; }
+  :is(#tabProfile, #userModal) .garcards { display: flex; gap: 10px; margin: 0; padding: 0; border: 0; background: transparent; overflow: visible; flex: none; }
+  :is(#tabProfile, #userModal) .garcards li.vcard { flex: none; width: 170px; flex-direction: column; align-items: stretch; gap: 10px; padding: 14px; border: 1px solid var(--h-line); border-radius: 20px; background: var(--h-card); }
+  :is(#tabProfile, #userModal) .garcards li.vcard .thumb, :is(#tabProfile, #userModal) .garcards li.vcard > :first-child { width: 52px; height: 52px; border-radius: 16px; flex: none; }
+  :is(#tabProfile, #userModal) .garcards .vinfo { min-width: 0; }
+  :is(#tabProfile, #userModal) .garcards .vinfo strong { font-size: 15px; }
+  :is(#tabProfile, #userModal) .garcards .sub { font-size: 12px; color: var(--h-mut); }
+  :is(#tabProfile, #userModal) .garcards .vbtns { display: flex; gap: 6px; }
+  :is(#tabProfile, #userModal) .garcards .vbtns { margin-top: auto; }
+  :is(#tabProfile, #userModal) .garcards .vbtns button:not(.ghost) { background: #ff8601; color: #111111; }
+  :is(#tabProfile, #userModal) .garcards .vbtns button { flex: 1; padding: 6px 8px; border-radius: 12px; font-size: 13px; }
+  :is(#tabProfile, #userModal) .garaddcard:not(.hidden) { flex: none; width: 120px; margin: 0; padding: 0 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 2px dashed var(--h-line); border-radius: 20px; background: transparent; color: var(--h-mut); font-size: 14px; font-weight: 600; box-shadow: none; }
+  /* Freunde-Profil: Vollbild im selben Design */
+  #userModal:not(.hidden) { background: var(--h-bg); }
+  #userModal .modal-card { left: 0; right: 0; top: 0; bottom: 0; max-width: none; border-radius: 0; box-shadow: none; background: var(--h-bg); color: var(--h-ink); }
+  #userModal .modal-head { display: none; }
+  #userModal .modal-body { padding: 0 0 calc(24px + env(safe-area-inset-bottom, 0px)); scrollbar-width: none; }
+  #userModal .modal-body::-webkit-scrollbar { display: none; width: 0; }
+  #userModal .sm-status { position: absolute; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 5; }
+  #userModal .pfactions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
+  #userModal .pfactions button { width: auto; height: 44px; margin: 0; padding: 0 18px; border-radius: 22px; background: #ff8601; color: #111111; font-size: 14px; font-weight: 700; box-shadow: none; }
+  #userModal .pfactions button.ghost { background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); font-weight: 600; }
+  #userModal .pfveh { font-size: 13px; color: var(--h-mut); }
+  #userModal .pfstats + .pfstats { margin-top: 10px; }
+  #userModal .pfgar { padding-top: 22px; }
+  #userModal .pfgar > .pfh { margin-left: 22px; }
+  #userModal .pflocked { margin-top: 22px; text-align: center; color: var(--h-mut); font-size: 14px; padding: 18px; }
+  /* ===== Ranglisten und Rennhistorie (Designplan) ===== */
+  :root { --h-g1: #eab308; --h-g2: #94a3b8; --h-g3: #b45309; --h-chip-off: #e4e4e7; --h-chip-off-fg: #52525b; }
+  :root[data-theme="dark"] { --h-chip-off: #2e323a; --h-chip-off-fg: #a1a1aa; }
+  #statsModal:not(.collapsed) .modal-tabs { display: flex; gap: 4px; padding: 4px; margin: 8px 16px 4px; border-radius: 14px; background: var(--h-daysep); }
+  #statsModal .modal-tabs button { flex: 1; height: 40px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: var(--h-ink); font-size: 14px; font-weight: 500; box-shadow: none; }
+  #statsModal .modal-tabs button[aria-selected="true"] { background: var(--h-card); color: var(--h-ink); font-weight: 700; border: 0; box-shadow: 0 1px 4px rgba(17, 24, 39, .14); }
+  #tabBoards, #tabHistory { color: var(--h-ink); }
+  #tabBoards .tabs, #tabBoards .bdchips { display: flex; gap: 6px; margin: 6px 0 14px; }
+  #tabBoards .tabs button, #tabBoards .bdchips button { flex: none; width: auto; height: 36px; margin: 0; padding: 0 14px; border-radius: 18px; background: transparent; color: var(--h-ink); border: 1px solid var(--h-line); font-size: 13px; font-weight: 600; box-shadow: none; }
+  #tabBoards .tabs button[aria-selected="true"], #tabBoards .bdchips button[aria-pressed="true"] { background: var(--h-ink); color: var(--h-bg); border-color: var(--h-ink); }
+  #tabBoards .podium { display: flex; align-items: flex-end; gap: 10px; padding-top: 6px; margin-bottom: 16px; }
+  #tabBoards .pcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  #tabBoards .pname { font-size: 14px; font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabBoards .pbar { width: 100%; border-radius: 16px 16px 6px 6px; background: var(--h-seg); border-top: 4px solid var(--h-g2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  :root:not([data-theme="dark"]) #tabBoards .pbar { background: var(--h-card); box-shadow: inset 0 0 0 1px var(--h-line); }
+  #tabBoards .prank { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.6rem; line-height: 1; }
+  #tabBoards .pval { font-size: 13px; color: var(--h-mut); }
+  :is(#tabBoards, #tabHistory) .list { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; overflow: hidden; padding: 0; margin: 0; }
+  :is(#tabBoards, #tabHistory) .list li { min-height: 60px; padding: 8px 14px; gap: 12px; border-bottom: 1px solid var(--h-line); }
+  :is(#tabBoards, #tabHistory) .list li:last-child { border-bottom: 0; }
+  :is(#tabBoards, #tabHistory) .list li.me { background: var(--h-prof); }
+  :is(#tabBoards, #tabHistory) .list li .nm { font-size: 15px; font-weight: 500; }
+  :is(#tabBoards, #tabHistory) .list li.me .nm { font-weight: 700; }
+  :is(#tabBoards, #tabHistory) .list li .ago { font-size: 15px; font-weight: 700; color: var(--h-ink); }
+  :is(#tabBoards, #tabHistory) .list li .sub { color: var(--h-mut); }
+  :is(#tabBoards, #tabHistory) .rank { width: 28px; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.25rem; text-align: left; }
+  :is(#tabBoards, #tabHistory) li.me .rank { color: #ff8601; }
+  :is(#tabBoards, #tabHistory) .rank.r1 { color: var(--h-g1); }
+  #tabBoards .hint, #tabHistory .hint { color: var(--h-mut); }
+  #tabBoards #bdTrackName, #tabHistory #hsName { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--h-ink); }
+  #tabBoards .ghost.wide, #tabHistory .ghost.wide { border-radius: 16px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); }
+  #tabBoards #bdClass { border-radius: 14px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); }
+  #tabBoards #bdStart { border-radius: 16px; background: #ff8601; color: #111111; font-weight: 700; }
+  /* Rennhistorie */
+  #tabHistory .hscount { margin: 4px 4px 10px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--h-mut); }
+  #tabHistory .hsrow { cursor: pointer; }
+  #tabHistory .hschip { min-width: 44px; height: 30px; padding: 0 8px; box-sizing: border-box; border-radius: 10px; background: var(--h-chip-off); color: var(--h-chip-off-fg); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex: none; }
+  #tabHistory .hschip.g1 { background: var(--h-g1); color: #111111; }
+  #tabHistory .hschip.g2 { background: var(--h-g2); color: #111111; }
+  #tabHistory .hschip.g3 { background: var(--h-g3); color: #ffffff; }
+  #tabHistory .hsx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  #tabHistory .hsn { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabHistory .hsd { font-size: 13px; color: var(--h-mut); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabHistory .hschev { color: var(--h-mut); display: flex; }
+  #tabHistory .hscard { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 24px; padding: 16px; margin-bottom: 18px; }
+  #tabHistory .hshead { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  #tabHistory .hshx { min-width: 0; }
+  #tabHistory .hshx .hint { margin: 2px 0 0; font-size: 13px; }
+  #tabHistory .hsbadge { flex: none; padding: 4px 10px; border-radius: 10px; font-size: 13px; font-weight: 700; background: var(--h-chip-off); color: var(--h-chip-off-fg); }
+  #tabHistory .hsbadge.hidden { display: none; }
+  #tabHistory .hsbadge.g1 { background: var(--h-g1); color: #111111; }
+  #tabHistory .hsbadge.g2 { background: var(--h-g2); color: #111111; }
+  #tabHistory .hsbadge.g3 { background: var(--h-g3); color: #ffffff; }
+  #tabHistory .hstiles { display: flex; gap: 8px; margin-top: 14px; }
+  #tabHistory .hstile { flex: 1; min-width: 0; padding: 10px; border-radius: 14px; background: var(--h-bg); display: flex; flex-direction: column; gap: 4px; }
+  #tabHistory .hstl { font-size: 12px; color: var(--h-mut); }
+  #tabHistory .hstv { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.15rem; line-height: 1.1; }
+  #tabHistory .hstv.acc { color: #ff8601; }
+  /* Streckenvorschau in der Rennhistorie */
+  :root { --h-mapbg: #e9ede6; }
+  :root[data-theme="dark"] { --h-mapbg: #1a1d23; }
+  #tabHistory .hscard { padding: 0; overflow: hidden; }
+  #tabHistory .hsin { padding: 14px 16px 16px; }
+  #tabHistory .hsprev { position: relative; height: 230px; background: var(--h-mapbg); border-bottom: 1px solid var(--h-line); }
+  #tabHistory .hsprev.hidden { display: none; }
+  #tabHistory .hsprev svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #tabHistory .hsleg { position: absolute; top: 12px; left: 12px; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border-radius: 12px; background: var(--h-card); font-size: 12px; font-weight: 600; color: var(--h-ink); max-width: 60%; }
+  #tabHistory .hslr { display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #tabHistory .hsls { width: 18px; height: 0; flex: none; border-top: 4px solid; border-radius: 2px; }
+  #tabHistory .hsls.dash { border-top-width: 3px; border-top-style: dashed; }
+  #tabHistory .hsexp { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 12px; background: var(--h-card); color: var(--h-ink); box-shadow: none; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body>
@@ -1320,17 +1406,25 @@
         <button id="bdDelete" class="ghost wide hidden" type="button">Strecke löschen</button>
       </div>
       <div id="bdOverall" class="hidden">
-        <ul id="bdOverallList" class="list" style="margin-top:12px"></ul>
+        <div id="bdMetric" class="bdchips" role="group" aria-label="Sortierung"><button type="button" data-m="wins" aria-pressed="true">Siege</button><button type="button" data-m="dist" aria-pressed="false">Strecke</button></div>
+        <div id="bdPodium" class="podium"></div>
+        <ul id="bdOverallList" class="list"></ul>
         <p class="hint">Es zählen du und deine Freunde. Siege und Podien gibt es nur in Rennen mit mindestens zwei Teilnehmern.</p>
       </div>
     </div>
 
     <!-- Rennhistorie -->
     <div id="tabHistory" class="hidden">
-      <div id="hsList"><ul id="hsListUl" class="list" style="margin-top:12px"></ul></div>
+      <div id="hsList"><h3 id="hsCount" class="hscount"></h3><ul id="hsListUl" class="list"></ul></div>
       <div id="hsDetail" class="hidden">
-        <h3 id="hsName" style="margin-top:12px"></h3>
-        <p class="hint" id="hsInfo"></p>
+        <section class="hscard">
+          <div id="hsPreview" class="hsprev hidden" aria-label="Streckenvorschau"></div>
+          <div class="hsin">
+            <div class="hshead"><div class="hshx"><h3 id="hsName"></h3><p class="hint" id="hsInfo"></p></div><span id="hsBadge" class="hsbadge hidden"></span></div>
+            <div id="hsTiles" class="hstiles"></div>
+          </div>
+        </section>
+        <h3 class="hscount">Teilnehmer</h3>
         <ul id="hsMembers" class="list"></ul>
         <p class="hint" id="hsHint"></p>
         <button id="hsMap" class="ghost wide" type="button">Karte ansehen</button>
@@ -4697,7 +4791,7 @@
       $('bdTracksMsg').textContent = trackCache.length ? 'Tippe eine Strecke an für die Rangliste.' : '';
       return getProfiles(trackCache.map(function (x) { return x.record_user; }).filter(Boolean)).then(function () {
         fillList($('bdTrackList'), trackCache.map(function (tr) {
-          var li = el('li', 'click wrap');
+          var li = el('li', 'click wrap trk');
           li.appendChild(el('span', 'nm', tr.name));
           li.appendChild(el('span', 'ago', tr.my_best_ms ? 'Bestzeit ' + fmtMs(tr.my_best_ms) : 'noch keine Zeit'));
           var sub = fmtDist(dist(tr.start_lat, tr.start_lng, tr.finish_lat, tr.finish_lng)) + ' Luftlinie';
@@ -4740,9 +4834,9 @@
     var rows = boardRows.filter(function (r) { return !cls || r.vehicle_class === cls; })
       .sort(function (a, b) { return a.best_ms - b.best_ms; });
     fillList($('bdBoard'), rows.map(function (r, i) {
-      var info = pInfo(r.user_id), li = el('li', 'wrap'); li.setAttribute('data-uid', r.user_id);
-      li.appendChild(el('span', 'rank', i === 0 ? '🏆' : (i + 1) + '.'));
-      li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+      var info = pInfo(r.user_id), li = el('li', 'wrap' + (r.user_id === myId ? ' me' : '')); li.setAttribute('data-uid', r.user_id);
+      li.appendChild(el('span', 'rank r' + (i + 1), (i + 1) + '.'));
+      li.appendChild(avatarNode(info.avatar, info.name, info.color, 36));
       li.appendChild(el('span', 'nm', info.name + (r.user_id === myId ? ' (du)' : '')));
       li.appendChild(el('span', 'ago', fmtMs(r.best_ms)));
       if (r.vehicle_label) li.appendChild(el('div', 'sub', r.vehicle_label));
@@ -4758,25 +4852,49 @@
     });
   });
 
+  var ovRows = [], ovMetric = 'wins';
   function loadOverall() {
-    fillList($('bdOverallList'), [], 'Lade …');
+    fillList($('bdOverallList'), [], 'Lade …'); $('bdPodium').textContent = '';
     db.rpc('overall_board').then(function (res) {
       if (res.error) { fillList($('bdOverallList'), [], 'Fehler: ' + res.error.message); return; }
-      var rows = (res.data || []).slice().sort(function (a, b) {
-        return (b.wins - a.wins) || (b.podiums - a.podiums) || (b.finished - a.finished) || (b.distance_m - a.distance_m);
-      });
-      return getProfiles(rows.map(function (r) { return r.user_id; })).then(function () {
-        fillList($('bdOverallList'), rows.map(function (r, i) {
-          var info = pInfo(r.user_id), li = el('li', 'wrap'); li.setAttribute('data-uid', r.user_id);
-          li.appendChild(el('span', 'rank', i === 0 && r.wins > 0 ? '🏆' : (i + 1) + '.'));
-          li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
-          li.appendChild(el('span', 'nm', info.name + (r.user_id === myId ? ' (du)' : '')));
-          li.appendChild(el('span', 'ago', r.wins + ' Siege'));
-          li.appendChild(el('div', 'sub', r.podiums + ' Podien · ' + r.finished + ' im Ziel von ' + r.races + ' Rennen · ' + fmtDist(+r.distance_m || 0)));
-          return li;
-        }), 'Noch keine Ergebnisse.');
-      });
+      ovRows = res.data || [];
+      return getProfiles(ovRows.map(function (r) { return r.user_id; })).then(renderOverall);
     });
+  }
+  $('bdMetric').addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('button[data-m]'); if (!b) return;
+    ovMetric = b.getAttribute('data-m');
+    Array.prototype.forEach.call($('bdMetric').querySelectorAll('button'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    renderOverall();
+  });
+  function renderOverall() {
+    var rows = ovRows.slice().sort(function (a, b) {
+      if (ovMetric === 'dist') return (+b.distance_m || 0) - (+a.distance_m || 0);
+      return (b.wins - a.wins) || (b.podiums - a.podiums) || (b.finished - a.finished) || (b.distance_m - a.distance_m);
+    });
+    function val(r) { return ovMetric === 'dist' ? fmtDist(+r.distance_m || 0) : r.wins + (r.wins === 1 ? ' Sieg' : ' Siege'); }
+    var pod = $('bdPodium'); pod.textContent = '';
+    if (rows.length) {
+      var order = rows.length > 1 ? [1, 0, 2] : [0], cols = ['#eab308', '#94a3b8', '#b45309'], hts = [124, 92, 70];
+      order.forEach(function (idx) {
+        var r = rows[idx]; if (!r) return;
+        var info = pInfo(r.user_id), col = el('div', 'pcol'); col.setAttribute('data-uid', r.user_id);
+        var av = avatarNode(info.avatar, info.name, info.color, idx === 0 ? 56 : 48); av.style.boxShadow = '0 0 0 3px ' + cols[idx]; col.appendChild(av);
+        col.appendChild(el('span', 'pname nm', info.name + (r.user_id === myId ? ' (du)' : '')));
+        var bar = el('div', 'pbar'); bar.style.height = hts[idx] + 'px'; bar.style.borderTopColor = cols[idx];
+        var rk = el('span', 'prank', (idx + 1) + '.'); rk.style.color = cols[idx]; bar.appendChild(rk);
+        bar.appendChild(el('span', 'pval', val(r))); col.appendChild(bar); pod.appendChild(col);
+      });
+    }
+    fillList($('bdOverallList'), rows.map(function (r, i) {
+      var info = pInfo(r.user_id), li = el('li', 'wrap' + (r.user_id === myId ? ' me' : '')); li.setAttribute('data-uid', r.user_id);
+      li.appendChild(el('span', 'rank r' + (i + 1), (i + 1) + '.'));
+      li.appendChild(avatarNode(info.avatar, info.name, info.color, 36));
+      li.appendChild(el('span', 'nm', info.name + (r.user_id === myId ? ' (du)' : '')));
+      li.appendChild(el('span', 'ago val', val(r)));
+      li.appendChild(el('div', 'sub', r.podiums + ' Podien · ' + r.finished + ' im Ziel von ' + r.races + ' Rennen' + (ovMetric === 'dist' ? ' · ' + r.wins + ' Siege' : ' · ' + fmtDist(+r.distance_m || 0))));
+      return li;
+    }), 'Noch keine Ergebnisse.');
   }
 
   // ---------- Rennhistorie ----------
@@ -4787,46 +4905,108 @@
       (res.data || []).forEach(function (m) { (by[m.race_id] = by[m.race_id] || []).push(m); });
       ids.forEach(function (id) {
         var ms = by[id] || [], mine = ms.filter(function (m) { return m.user_id === myId; })[0];
-        if (!mine || mine.status !== 'finished') return;
+        if (!mine) return;
+        out[id] = { opp: ms.filter(function (m) { return m.user_id !== myId; }).map(function (m) { return m.user_id; }) };
+        if (mine.status !== 'finished') return;
         var field = ms.filter(function (m) { return m.status === 'finished' || m.status === 'dnf'; });
-        out[id] = { rank: 1 + ms.filter(function (m) { return m.status === 'finished' && m.result_ms < mine.result_ms; }).length, solo: field.length < 2 };
+        out[id].rank = 1 + ms.filter(function (m) { return m.status === 'finished' && m.result_ms < mine.result_ms; }).length;
+        out[id].solo = field.length < 2;
       });
       return out;
     });
+  }
+  function medalClass(rk) { return rk && !rk.solo ? (rk.rank === 1 ? 'g1' : rk.rank === 2 ? 'g2' : rk.rank === 3 ? 'g3' : '') : ''; }
+  function vsText(ids) {
+    var n = ids.map(function (u) { return pInfo(u).name; });
+    if (!n.length) return '';
+    return 'gegen ' + (n.length > 2 ? n.slice(0, 2).join(', ') + ' +' + (n.length - 2) : n.join(', '));
   }
 
   function histOpen() {
     histView = 'List'; histLayer.clearLayers();
     $('hsDetail').classList.add('hidden'); $('hsList').classList.remove('hidden');
-    fillList($('hsListUl'), [], 'Lade …');
+    fillList($('hsListUl'), [], 'Lade …'); $('hsCount').textContent = '';
     db.from('race_members')
       .select('race_id,status,result_ms,distance_m,vehicle_label,races(name,created_at,track_id,tracks(name))')
       .eq('user_id', myId).in('status', ['finished', 'dnf']).then(function (res) {
         if (res.error) { fillList($('hsListUl'), [], 'Konnte nicht geladen werden: ' + res.error.message); return; }
         var rows = (res.data || []).filter(function (r) { return r.races; })
           .sort(function (a, b) { return new Date(b.races.created_at) - new Date(a.races.created_at); }).slice(0, 50);
-        var fin = rows.filter(function (r) { return r.status === 'finished'; }).map(function (r) { return r.race_id; });
-        return loadRanks(fin).then(function (ranks) {
-          fillList($('hsListUl'), rows.map(function (r) {
-            var li = el('li', 'click wrap'), rk = ranks[r.race_id];
-            li.appendChild(el('span', 'nm', r.races.name));
-            li.appendChild(el('span', 'ago', r.status === 'finished' ? fmtMs(r.result_ms) : 'aufgegeben'));
-            var parts = [new Date(r.races.created_at).toLocaleDateString('de-DE')];
-            if (r.races.tracks && r.races.tracks.name) parts.push(r.races.tracks.name);
-            if (r.status === 'finished') { parts.push(rk && !rk.solo ? rk.rank + '. Platz' : 'solo'); if (r.distance_m) parts.push(fmtDist(r.distance_m)); }
-            if (r.vehicle_label) parts.push(r.vehicle_label);
-            li.appendChild(el('div', 'sub', parts.join(' · ')));
-            li.addEventListener('click', function () { histDetail(r); });
-            return li;
-          }), 'Noch keine abgeschlossenen Rennen.');
+        return loadRanks(rows.map(function (r) { return r.race_id; })).then(function (ranks) {
+          var oppIds = []; Object.keys(ranks).forEach(function (k) { oppIds = oppIds.concat(ranks[k].opp || []); });
+          return getProfiles(oppIds).then(function () {
+            $('hsCount').textContent = 'Alle Rennen · ' + rows.length;
+            fillList($('hsListUl'), rows.map(function (r) {
+              var li = el('li', 'click hsrow'), rk = ranks[r.race_id] || {};
+              var chip = r.status === 'dnf' ? 'DNF' : (rk.rank && !rk.solo ? rk.rank + '.' : 'solo');
+              li.appendChild(el('span', 'hschip ' + (r.status === 'dnf' ? 'dnf' : medalClass(rk)), chip));
+              var x = el('div', 'hsx'); x.appendChild(el('span', 'hsn', r.races.name));
+              var parts = [new Date(r.races.created_at).toLocaleDateString('de-DE')];
+              var vs = vsText(rk.opp || []); if (vs) parts.push(vs);
+              else if (r.races.tracks && r.races.tracks.name) parts.push(r.races.tracks.name);
+              if (r.status === 'finished') { parts.push(fmtMs(r.result_ms)); if (r.distance_m) parts.push(fmtDist(r.distance_m)); }
+              x.appendChild(el('span', 'hsd', parts.join(' · '))); li.appendChild(x);
+              li.insertAdjacentHTML('beforeend', '<span class="hschev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></span>');
+              li.addEventListener('click', function () { histDetail(r); });
+              return li;
+            }), 'Noch keine abgeschlossenen Rennen.');
+          });
         });
       });
   }
 
+  // kleine Streckenvorschau (SVG, ohne Kartenkacheln)
+  function drawHistPreview(routes, race, ms, hasStart) {
+    var box = $('hsPreview'); box.textContent = '';
+    var lines = routes.filter(function (r) { return r.points && r.points.length >= 2; });
+    if (!lines.length) { box.classList.add('hidden'); return; }
+    var pts = [];
+    lines.forEach(function (r) { r.points.forEach(function (q) { pts.push(q); }); });
+    if (hasStart) pts.push([race.start_lat, race.start_lng]);
+    pts.push([race.finish_lat, race.finish_lng]);
+    var minLa = 90, maxLa = -90, minLn = 180, maxLn = -180;
+    pts.forEach(function (q) { if (q[0] < minLa) minLa = q[0]; if (q[0] > maxLa) maxLa = q[0]; if (q[1] < minLn) minLn = q[1]; if (q[1] > maxLn) maxLn = q[1]; });
+    var W = 340, H = 200, pad = 26, k = Math.cos(((minLa + maxLa) / 2) * Math.PI / 180);
+    var dx = Math.max((maxLn - minLn) * k, 1e-6), dy = Math.max(maxLa - minLa, 1e-6);
+    var sc = Math.min((W - 2 * pad) / dx, (H - 2 * pad) / dy), ox = (W - dx * sc) / 2, oy = (H - dy * sc) / 2;
+    function X(q) { return (ox + (q[1] - minLn) * k * sc).toFixed(1); }
+    function Y(q) { return (oy + (maxLa - q[0]) * sc).toFixed(1); }
+    var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('preserveAspectRatio', 'xMidYMid meet'); svg.setAttribute('aria-hidden', 'true');
+    function node(name, attrs) { var n = document.createElementNS(NS, name); Object.keys(attrs).forEach(function (a) { n.setAttribute(a, attrs[a]); }); svg.appendChild(n); return n; }
+    var order = lines.slice().sort(function (a, b) { return (a.user_id === myId ? 1 : 0) - (b.user_id === myId ? 1 : 0); });   // deine Linie liegt oben
+    order.forEach(function (r) {
+      var step = Math.max(1, Math.floor(r.points.length / 300)), d = '';
+      for (var i = 0; i < r.points.length; i += step) d += (d ? 'L' : 'M') + X(r.points[i]) + ' ' + Y(r.points[i]);
+      var last = r.points[r.points.length - 1]; d += 'L' + X(last) + ' ' + Y(last);
+      var mine = r.user_id === myId, col = pInfo(r.user_id).color || '#2563eb';
+      node('path', { d: d, fill: 'none', stroke: 'rgba(255,255,255,.85)', 'stroke-width': mine ? 8 : 6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '.55' });
+      var line = node('path', { d: d, fill: 'none', stroke: col, 'stroke-width': mine ? 4.5 : 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' });
+      if (!mine) line.setAttribute('stroke-dasharray', '7 5');
+    });
+    if (hasStart) { var sp = [race.start_lat, race.start_lng]; node('circle', { cx: X(sp), cy: Y(sp), r: 6, fill: '#16a34a', stroke: '#ffffff', 'stroke-width': 2.5 }); }
+    var fp = [race.finish_lat, race.finish_lng]; node('circle', { cx: X(fp), cy: Y(fp), r: 6, fill: '#dc2626', stroke: '#ffffff', 'stroke-width': 2.5 });
+    box.appendChild(svg);
+    var leg = el('div', 'hsleg');
+    lines.slice().sort(function (a, b) { return (a.user_id === myId ? 0 : 1) - (b.user_id === myId ? 0 : 1); }).forEach(function (r) {
+      var m = ms.filter(function (x) { return x.user_id === r.user_id; })[0], mine = r.user_id === myId, row = el('span', 'hslr');
+      var sw = el('span', 'hsls' + (mine ? '' : ' dash')); sw.style.borderColor = pInfo(r.user_id).color || '#2563eb'; sw.style.background = mine ? (pInfo(r.user_id).color || '#2563eb') : 'transparent';
+      row.appendChild(sw);
+      row.appendChild(document.createTextNode((mine ? 'Du' : pInfo(r.user_id).name) + (m && m.status === 'finished' ? ' · ' + fmtMs(m.result_ms) : '')));
+      leg.appendChild(row);
+    });
+    box.appendChild(leg);
+    var ex = el('button', 'hsexp'); ex.type = 'button'; ex.setAttribute('aria-label', 'Karte vergrößern');
+    ex.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>';
+    ex.addEventListener('click', function () { $('hsMap').click(); });
+    box.appendChild(ex);
+    box.classList.remove('hidden');
+  }
   function histDetail(row) {
     histView = 'Detail'; histLayer.clearLayers();
     $('hsList').classList.add('hidden'); $('hsDetail').classList.remove('hidden');
     $('hsName').textContent = row.races.name; $('hsInfo').textContent = 'Lade …'; $('hsHint').textContent = '';
+    $('hsBadge').classList.add('hidden'); $('hsTiles').textContent = ''; $('hsPreview').classList.add('hidden'); $('hsPreview').textContent = '';
     fillList($('hsMembers'), [], '');
     Promise.all([
       db.from('races').select('*').eq('id', row.race_id).single(),
@@ -4853,13 +5033,26 @@
           bounds.extend(line.getBounds());
         });
         fitWithPanel(bounds);
+        try { drawHistPreview(routes, race, ms, hasStart); } catch (e) {}
         var fin = ms.filter(function (m) { return m.status === 'finished'; }).sort(function (a, b) { return a.result_ms - b.result_ms; });
         var rest = ms.filter(function (m) { return m.status === 'dnf'; });
         var place = 0;
+        var meM = ms.filter(function (m) { return m.user_id === myId; })[0], tiles = $('hsTiles'); tiles.textContent = '';
+        function tile(label, value, accent) { var t = el('div', 'hstile'); t.appendChild(el('span', 'hstl', label)); var v = el('span', 'hstv', value); if (accent) v.classList.add('acc'); t.appendChild(v); tiles.appendChild(t); }
+        if (meM && meM.status === 'finished') {
+          var myRank = 1 + fin.filter(function (m) { return m.result_ms < meM.result_ms; }).length, solo = (fin.length + rest.length) < 2;
+          var bd = $('hsBadge'); bd.className = 'hsbadge ' + (solo ? 'g0' : (myRank === 1 ? 'g1' : myRank === 2 ? 'g2' : myRank === 3 ? 'g3' : 'g0'));
+          bd.textContent = solo ? 'Solo' : (myRank === 1 ? '1. Sieg' : myRank + '. Platz');
+          tile('Zeit', fmtMs(meM.result_ms)); tile('Strecke', meM.distance_m ? fmtDist(meM.distance_m) : '–');
+          if (!solo) {
+            if (myRank === 1 && fin[1]) tile('Vorsprung', fmtMs(fin[1].result_ms - meM.result_ms), true);
+            else if (myRank > 1) tile('Rückstand', '+' + fmtMs(meM.result_ms - fin[0].result_ms), false);
+          }
+        } else if (meM) { var bd2 = $('hsBadge'); bd2.className = 'hsbadge g0'; bd2.textContent = 'DNF'; tile('Strecke', meM.distance_m ? fmtDist(meM.distance_m) : '–'); }
         fillList($('hsMembers'), fin.concat(rest).map(function (m) {
-          var info = pInfo(m.user_id), li = el('li', 'wrap'); li.setAttribute('data-uid', m.user_id);
-          li.appendChild(el('span', 'rank', m.status === 'finished' ? (++place) + '.' : '–'));
-          li.appendChild(avatarNode(info.avatar, info.name, info.color, 28));
+          var info = pInfo(m.user_id), li = el('li', 'wrap' + (m.user_id === myId ? ' me' : '')); li.setAttribute('data-uid', m.user_id);
+          li.appendChild(el('span', 'rank' + (m.status === 'finished' ? ' r' + (place + 1) : ''), m.status === 'finished' ? (++place) + '.' : '–'));
+          li.appendChild(avatarNode(info.avatar, info.name, info.color, 36));
           if (histLines[m.user_id]) li.appendChild(histSwatch(m.user_id));
           li.appendChild(el('span', 'nm', info.name + (m.user_id === myId ? ' (du)' : '')));
           li.appendChild(el('span', 'ago', m.status === 'finished' ? fmtMs(m.result_ms) : 'aufgegeben'));
@@ -5519,23 +5712,26 @@
   function renderProfileView(uid, relInfo, statsRes, vehRes) {
     var rel = relInfo.rel, f = relInfo.f, info = pInfo(uid), body = $('umBody');
     body.textContent = '';
-    var top = el('div', 'um-top'); top.setAttribute('data-race-uid', uid);
-    top.appendChild(avatarNode(info.avatar, info.name, info.color, 72));
-    var nm = el('div', 'um-name');
-    nm.appendChild(el('strong', '', info.name));
-    nm.appendChild(el('div', 'hint', { me: 'Das bist du', friend: 'Freund', sent: 'Freundschaftsanfrage gesendet',
+    var wrap = el('div', 'pfwrap'); wrap.style.setProperty('--pf', info.color || '#2563eb');
+    var banner = el('div', 'pfbanner');
+    var back = el('button', 'pfbtn'); back.type = 'button'; back.setAttribute('aria-label', 'Zurück');
+    back.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg>';
+    back.addEventListener('click', closeProfile); banner.appendChild(back); wrap.appendChild(banner);
+    var pb = el('div', 'pfbody'); wrap.appendChild(pb);
+    var hero = el('div', 'pfhero'); hero.setAttribute('data-race-uid', uid);
+    var av = el('div', 'pfav'); av.appendChild(avatarNode(info.avatar, info.name, info.color, 112)); hero.appendChild(av);
+    hero.appendChild(el('h1', 'pfname', info.name));
+    hero.appendChild(el('span', 'pfsub', { me: 'Das bist du', friend: 'Freund', sent: 'Freundschaftsanfrage gesendet',
       received: 'Hat dir eine Freundschaftsanfrage geschickt', none: 'Noch nicht befreundet' }[rel]));
-    if (info.label) nm.appendChild(el('div', 'hint', 'Aktives Fahrzeug: ' + info.label));
-    top.appendChild(nm); body.appendChild(top);
-
-    var acts = el('div', 'um-actions');
+    if (info.label) hero.appendChild(el('span', 'pfveh', 'Aktives Fahrzeug: ' + info.label));
+    var acts = el('div', 'pfactions');
     function btn(label, ghost, fn) {
       var b = el('button', ghost ? 'ghost' : '', label); b.type = 'button'; b.addEventListener('click', fn); acts.appendChild(b);
     }
     if (rel === 'me') btn('Profil bearbeiten', false, function () { closeProfile(); showScreen('Profile'); });
     if (rel === 'friend') btn('Nachricht schreiben', false, function () { closeProfile(); startDirectChat(uid); });
-    if (rel === 'friend') btn('Rennen mit ' + info.name + ' starten', false, function () { closeProfile(); startDuel(uid); });
-    if (rel === 'friend' && others[uid]) btn('Zu ' + info.name + ' navigieren', false, function () { closeProfile(); showScreen('Navi'); quickNav(friendDest(uid)); });
+    if (rel === 'friend') btn('Rennen starten', false, function () { closeProfile(); startDuel(uid); });
+    if (rel === 'friend' && others[uid]) btn('Navigieren', true, function () { closeProfile(); showScreen('Navi'); quickNav(friendDest(uid)); });
     if (rel === 'none') btn('Freundschaftsanfrage senden', false, function () {
       db.from('friendships').insert({ requester_id: myId, addressee_id: uid }).then(function (r) {
         if (r.error) { setStatus(r.error.code === '23505' ? 'Es gibt schon eine Anfrage mit dieser Person.' : 'Anfrage fehlgeschlagen: ' + r.error.message, 'err'); return; }
@@ -5554,30 +5750,34 @@
       });
       btn('Ablehnen', true, function () { db.from('friendships').delete().eq('id', f.id).then(function () { umAfterFriendChange(uid); }); });
     }
-    if (acts.children.length) body.appendChild(acts);
+    if (acts.children.length) hero.appendChild(acts);
+    pb.appendChild(hero);
 
+    function strip(items) {
+      var d = el('div', 'pfstats');
+      items.forEach(function (x) { var c = el('div'); c.appendChild(el('span', 'pfnum', String(x[1]))); c.appendChild(el('span', 'pfl', x[0])); d.appendChild(c); });
+      return d;
+    }
     if (rel === 'me' || rel === 'friend') {
       var st = statsRes && !statsRes.error && statsRes.data && statsRes.data[0];
       if (st) {
-        var g1 = el('div', 'stats4');
-        [['Rennen', st.races], ['im Ziel', st.finished], ['Siege', st.wins], ['Podium', st.podiums]].forEach(function (x) { g1.appendChild(profTile(x[1] == null ? 0 : x[1], x[0])); });
-        body.appendChild(g1);
-        var secs = +st.moving_s || 0, g2 = el('div', 'stats'); g2.style.gridTemplateColumns = 'repeat(2, 1fr)';
-        g2.appendChild(profTile(fmtDist(+st.distance_m || 0), 'Strecke gesamt'));
-        g2.appendChild(profTile(secs >= 60 ? fmtDur(secs) : '0 min', 'Fahrzeit'));
-        body.appendChild(g2);
+        var dm = +st.distance_m || 0, secs = +st.moving_s || 0;
+        pb.appendChild(strip([['Rennen', st.races == null ? 0 : st.races], ['Siege', st.wins == null ? 0 : st.wins], ['km gefahren', (dm / 1000).toFixed(dm < 100000 ? 1 : 0).replace('.', ',')]]));
+        pb.appendChild(strip([['im Ziel', st.finished == null ? 0 : st.finished], ['Podium', st.podiums == null ? 0 : st.podiums], ['Fahrzeit', secs >= 60 ? fmtDur(secs) : '0 min']]));
       } else if (statsRes && statsRes.error) {
-        body.appendChild(el('p', 'hint', 'Statistik nicht verfügbar (SQL-Schritt ausgeführt?): ' + statsRes.error.message));
+        pb.appendChild(el('p', 'pflocked', 'Statistik nicht verfügbar (SQL-Schritt ausgeführt?): ' + statsRes.error.message));
       }
     } else {
-      body.appendChild(el('p', 'hint', 'Statistiken und Garage sind nur für Freunde sichtbar.'));
+      pb.appendChild(el('p', 'pflocked', 'Statistiken und Garage sind nur für Freunde sichtbar.'));
     }
-
     if (rel === 'friend') {
-      body.appendChild(el('h3', '', 'Garage'));
-      var ul = el('ul', 'list'); body.appendChild(ul);
+      var gar = el('div', 'pfgar');
+      gar.appendChild(el('h3', 'pfh', 'Garage'));
+      var sc = el('div', 'garscroll'), ul = el('ul', 'list garcards'); sc.appendChild(ul); gar.appendChild(sc);
+      wrap.appendChild(gar);
       renderGarage((vehRes && vehRes.data) || [], false, ul);
     }
+    body.appendChild(wrap);
   }
 
   $('umBack').addEventListener('click', closeProfile);
@@ -6471,7 +6671,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-21-9';
+  var APP_VERSION = '2026-11-21-12';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
