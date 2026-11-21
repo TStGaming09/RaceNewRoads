@@ -635,6 +635,120 @@
   #tabStats .stats .v, #tabStats .stats4 .v { font-size: 1.3rem; }
   #tabStats .stats .l, #tabStats .stats4 .l, #tabStats .hint { color: var(--h-mut); }
   #tabStats .ghost.wide { border-radius: 16px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); }
+  /* ===== Chat und Gruppenchat (Designplan) ===== */
+  :root { --h-daysep: #e4e4e7; --h-mine-meta: #3f2a12; }
+  :root[data-theme="dark"] { --h-daysep: #22252c; }
+  body:not(.hudon) .panel:has(#chThread:not(.hidden)) .screenhead { display: none; }
+  #tabChats #chThread:not(.hidden) { position: fixed; inset: 0; z-index: 1260; display: flex; flex-direction: column; background: var(--h-bg); color: var(--h-ink); }
+  #chThread .thhead { display: flex; align-items: center; gap: 8px; padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 12px; background: var(--h-card); border-bottom: 1px solid var(--h-line); flex: none; }
+  #chThread .thic { width: 44px; height: 44px; flex: none; margin: 0; padding: 0; border-radius: 14px; background: var(--h-seg); color: var(--h-ink); box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  :root:not([data-theme="dark"]) #chThread .thic { background: var(--h-bg); }
+  #chThread .thic.plain { background: transparent; }
+  #chThread .thic.round { border-radius: 50%; }
+  #chThread .thwho { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; margin: 0; padding: 0; background: transparent; color: var(--h-ink); text-align: left; box-shadow: none; }
+  #chThread .thav { position: relative; width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; }
+  #chThread .thav.grp { border-radius: 14px; background: #ff8601; color: #111111; }
+  #chThread .thon { position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; border-radius: 50%; background: #22c55e; border: 2px solid var(--h-card); }
+  #chThread .thtx { display: flex; flex-direction: column; min-width: 0; }
+  #chThread .thname { font-size: 17px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #chThread .thsub { font-size: 13px; color: var(--h-mut); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #chThread .thsub:empty { display: none; }
+  #chThread .msgs { flex: 1; max-height: none; min-height: 0; margin: 0; padding: 16px 14px; gap: 10px; overflow-y: auto; }
+  #chThread .daysep { align-self: center; font-size: 12px; font-weight: 600; color: var(--h-mut); background: var(--h-daysep); padding: 4px 12px; border-radius: 10px; }
+  #chThread .msg { max-width: 78%; padding: 10px 14px; gap: 3px; border-radius: 18px 18px 18px 6px; background: var(--h-card); border: 1px solid var(--h-line); }
+  #chThread .msg.mine { border-radius: 18px 18px 6px 18px; background: #ff8601; border-color: #ff8601; color: #111111; }
+  #chThread .msg .who { margin: 0; font-size: 13px; font-weight: 700; }
+  #chThread .msg .bub { background: transparent; color: inherit; padding: 0; border-radius: 0; font-size: 15px; line-height: 1.4; }
+  #chThread .msg.mine .bub { background: transparent; color: #111111; }
+  #chThread .msg .meta { align-self: flex-end; margin: 0; font-size: 11px; color: var(--h-mut); }
+  #chThread .msg.mine .meta { color: var(--h-mine-meta); }
+  #chThread .msg .linkbtn { color: inherit; font-size: 11px; }
+  #chThread .msg.mcard { width: 290px; max-width: 86%; padding: 0; gap: 0; overflow: hidden; border: 2px solid #ff8601; border-radius: 20px; background: var(--h-card); color: var(--h-ink); }
+  #chThread .msg.mcard.mine { background: var(--h-card); color: var(--h-ink); border-color: #ff8601; }
+  #chThread .msg.mcard .who { padding: 10px 14px 0; }
+  #chThread .msg.mcard .bub { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  #chThread .msg.mcard.mine .bub { color: var(--h-ink); }
+  #chThread .mlabel { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #ff8601; }
+  #chThread .mtitle { font-size: 17px; font-weight: 700; word-break: break-word; }
+  #chThread .msg .bub .mbtn { width: 100%; height: 44px; margin: 6px 0 0; border-radius: 14px; background: #ff8601; color: #111111; font-size: 14px; font-weight: 700; box-shadow: none; }
+  #chThread .msg.mcard .meta { padding: 0 14px 8px; }
+  #chThread .msg.mcard.mine .meta { color: var(--h-mut); }
+  #chThread #thShare { flex: none; padding: 0 14px; max-height: 40%; overflow-y: auto; background: var(--h-card); border-top: 1px solid var(--h-line); }
+  #chThread .composer { flex: none; margin: 0; padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px)); gap: 8px; background: var(--h-card); border-top: 1px solid var(--h-line); }
+  #chThread .composer input { height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid var(--h-line); background: var(--h-bg); color: var(--h-ink); font-size: 15px; box-sizing: border-box; margin: 0; }
+  #chThread .composer .send { width: 44px; height: 44px; flex: none; margin: 0; padding: 0; border-radius: 50%; background: #ff8601; color: #111111; display: flex; align-items: center; justify-content: center; }
+  /* ===== Profil (Designplan), ohne Scrollbalken ===== */
+  :root { --h-pf-chip: #22252c; }
+  :root:not([data-theme="dark"]) { --h-pf-chip: #f4f4f5; }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabProfile:not(.hidden)) {
+    position: fixed; inset: 0; left: 0; right: 0; bottom: 0; max-width: none; max-height: none; margin: 0; width: auto;
+    border-radius: 0; box-shadow: none; z-index: 1250; overflow-y: auto; padding: 0 0 calc(24px + env(safe-area-inset-bottom, 0px));
+    background: var(--h-bg); color: var(--h-ink);
+  }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabProfile:not(.hidden)) > .status, body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabProfile:not(.hidden)) .screenhead { display: none; }
+  /* Fahrzeug-Formular: normale Kopfzeile mit Zurück */
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabProfile:not(.hidden) #garForm:not(.hidden)) { padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabProfile:not(.hidden) #garForm:not(.hidden)) .screenhead { display: flex; background: var(--h-bg); }
+  body:not(.hudon) .panel:has(#mainView:not(.hidden) #tabProfile:not(.hidden) #garForm:not(.hidden)) > .status { display: flex; }
+  .panel:has(#tabProfile:not(.hidden)), #tabProfile .garscroll, #tabProfile .garcards, #statsModal .modal-body { scrollbar-width: none; -ms-overflow-style: none; }
+  .panel:has(#tabProfile:not(.hidden))::-webkit-scrollbar, #tabProfile .garscroll::-webkit-scrollbar, #tabProfile .garcards::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  #tabProfile { color: var(--h-ink); }
+  #tabProfile .pfbanner { position: relative; height: calc(150px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, var(--pf, #2563eb), color-mix(in srgb, var(--pf, #2563eb) 55%, #000)); }
+  #tabProfile .pfbtn { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); left: 12px; width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 14px; background: rgba(0, 0, 0, .25); color: #ffffff; box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  #tabProfile .pfbody { padding: 0 16px; }
+  #tabProfile .pfhero { margin-top: -56px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  #tabProfile .pfav { position: relative; }
+  #tabProfile #pAvatar .avatar { border: 5px solid var(--pf, #2563eb); box-sizing: border-box; box-shadow: 0 0 0 4px var(--h-bg); background-color: var(--h-card); }
+  #tabProfile #pAvatar .avatar img { border-radius: 50%; }
+  #tabProfile .pfcam { position: absolute; right: -2px; bottom: 2px; width: 40px; height: 40px; margin: 0; padding: 0; border-radius: 50%; border: 3px solid var(--h-bg); background: #ff8601; color: #111111; box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  #tabProfile .pfname { margin: 4px 0 0; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.75rem; line-height: 1.1; }
+  #tabProfile .pfsub { font-size: 14px; color: var(--h-mut); }
+  #tabProfile .pfedit { width: auto; height: 40px; margin: 0; padding: 0 18px; border-radius: 20px; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); font-size: 14px; font-weight: 600; box-shadow: none; }
+  #tabProfile .pfstats { display: flex; margin-top: 22px; background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; }
+  #tabProfile .pfstats > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 0; }
+  #tabProfile .pfstats > div + div { border-left: 1px solid var(--h-line); }
+  #tabProfile .pfnum { font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.5rem; }
+  #tabProfile .pfl { font-size: 12px; color: var(--h-mut); }
+  #tabProfile .pfsec { margin-top: 22px; }
+  #tabProfile h3, #tabProfile .pfh { margin: 0 0 10px 6px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--h-mut); }
+  #tabProfile .pfcard { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; padding: 14px; margin-top: 14px; }
+  #tabProfile .pfsec .pfcard { margin-top: 0; }
+  #tabProfile .pfcard input:not([type=file]):not([type=color]) { border-radius: 14px; background: var(--h-bg); color: var(--h-ink); border: 1px solid var(--h-line); }
+  #tabProfile .pfcard label { color: var(--h-mut); }
+  #tabProfile .pfrow2 { display: flex; gap: 8px; }
+  #tabProfile .pfrow2 button { flex: 1; margin: 0; border-radius: 14px; background: var(--h-bg); color: var(--h-ink); }
+  #tabProfile .pfcard button:not(.ghost):not(.pfsw1) { border-radius: 14px; background: #ff8601; color: #111111; font-weight: 700; }
+  #tabProfile .pfsw { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; justify-items: center; }
+  #tabProfile .pfsw1 { width: 100%; max-width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 50%; background: transparent; border: 3px solid transparent; box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  #tabProfile .pfsw1 span { width: 30px; height: 30px; border-radius: 50%; display: block; }
+  #tabProfile .pfsw1.on { border-color: var(--h-ink); }
+  #tabProfile .pfnote { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--h-line); font-size: 13px; line-height: 1.4; color: var(--h-mut); }
+  #tabProfile .pfsechead { display: flex; justify-content: space-between; align-items: center; margin: 0 0 10px; }
+  #tabProfile .pfsechead h3 { margin: 0 0 0 6px; }
+  #tabProfile .pfsechead a { font-size: 14px; font-weight: 600; text-decoration: none; color: #ff8601; }
+  #tabProfile .pflist { padding: 0; overflow: hidden; }
+  #tabProfile .pflist li { min-height: 60px; padding: 0 14px; gap: 12px; border-bottom: 1px solid var(--h-line); }
+  #tabProfile .pflist li:last-child { border-bottom: 0; }
+  #tabProfile .pfrank { width: 40px; font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif; font-style: italic; font-weight: 800; font-size: 1.25rem; }
+  #tabProfile .pfrank.gold { color: #ff8601; }
+  #tabProfile .pfrx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  #tabProfile .pfrn { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabProfile .pfrd { font-size: 13px; color: var(--h-mut); }
+  /* Garage als waagerechte Karten */
+  #tabProfile #garListBox, #tabProfile #profBottom { padding: 22px 0 0; }
+  #tabProfile #garListBox > .pfh, #tabProfile #garListBox > .hint { margin-left: 22px; margin-right: 22px; }
+  #tabProfile .garscroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px 4px; }
+  #tabProfile .garcards { display: flex; gap: 10px; margin: 0; padding: 0; border: 0; background: transparent; overflow: visible; flex: none; }
+  #tabProfile .garcards li.vcard { flex: none; width: 170px; flex-direction: column; align-items: stretch; gap: 10px; padding: 14px; border: 1px solid var(--h-line); border-radius: 20px; background: var(--h-card); }
+  #tabProfile .garcards li.vcard .thumb, #tabProfile .garcards li.vcard > :first-child { width: 52px; height: 52px; border-radius: 16px; flex: none; }
+  #tabProfile .garcards .vinfo { min-width: 0; }
+  #tabProfile .garcards .vinfo strong { font-size: 15px; }
+  #tabProfile .garcards .sub { font-size: 12px; color: var(--h-mut); }
+  #tabProfile .garcards .vbtns { display: flex; gap: 6px; }
+  #tabProfile .garcards .vbtns { margin-top: auto; }
+  #tabProfile .garcards .vbtns button:not(.ghost) { background: #ff8601; color: #111111; }
+  #tabProfile .garcards .vbtns button { flex: 1; padding: 6px 8px; border-radius: 12px; font-size: 13px; }
+  #tabProfile .garaddcard:not(.hidden) { flex: none; width: 120px; margin: 0; padding: 0 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 2px dashed var(--h-line); border-radius: 20px; background: transparent; color: var(--h-mut); font-size: 14px; font-weight: 600; box-shadow: none; }
 </style>
 </head>
 <body>
@@ -995,27 +1109,43 @@
     <!-- Profil -->
     <div id="tabProfile" class="hidden">
       <div id="profTop">
-      <div class="avatar-edit">
-        <span id="pAvatar"></span>
-        <div class="btns">
-          <button id="pPick" class="ghost" type="button">Bild wählen</button>
-          <button id="pRemovePic" class="ghost" type="button">Bild entfernen</button>
-        </div>
-        <input id="pFile" type="file" accept="image/*" class="hidden">
+      <div class="pfbanner"><button id="pfBack" class="pfbtn" type="button" aria-label="Zurück"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button></div>
+      <div class="pfbody">
+      <div class="pfhero">
+        <div class="pfav"><span id="pAvatar"></span><button id="pfCam" class="pfcam" type="button" aria-label="Profilbild ändern"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button></div>
+        <h1 id="pfName" class="pfname"></h1>
+        <span id="pfSub" class="pfsub"></span>
+        <button id="pfEditBtn" class="pfedit" type="button">Profil bearbeiten</button>
       </div>
-      <label for="pEmail">E-Mail</label>
-      <input id="pEmail" type="email" disabled>
-      <label for="pName">Spielername</label>
-      <input id="pName" type="text" maxlength="20">
-      <label for="pColor">Deine Farbe auf der Karte</label>
-      <input id="pColor" type="color" value="#1d4ed8">
-      <button id="pSave" type="button">Profil speichern</button>
+      <div class="pfstats">
+        <div><span id="pfRaces" class="pfnum">–</span><span class="pfl">Rennen</span></div>
+        <div><span id="pfWins" class="pfnum">–</span><span class="pfl">Siege</span></div>
+        <div><span id="pfKm" class="pfnum">–</span><span class="pfl">km gefahren</span></div>
+      </div>
+      <div id="pfEdit" class="pfcard hidden">
+        <input id="pFile" type="file" accept="image/*" class="hidden">
+        <div class="pfrow2"><button id="pPick" class="ghost" type="button">Bild wählen</button><button id="pRemovePic" class="ghost" type="button">Bild entfernen</button></div>
+        <label for="pEmail">E-Mail</label>
+        <input id="pEmail" type="email" disabled>
+        <label for="pName">Spielername</label>
+        <input id="pName" type="text" maxlength="20">
+        <label for="pColor">Eigene Farbe</label>
+        <input id="pColor" type="color" value="#1d4ed8">
+        <button id="pSave" type="button">Profil speichern</button>
+      </div>
+      <section class="pfsec">
+        <h3>Persönliche Farbe</h3>
+        <div class="pfcard">
+          <div id="pfSwatches" class="pfsw" role="radiogroup" aria-label="Persönliche Farbe"></div>
+          <p class="pfnote">So sehen dich Freunde auf der Karte, im Rennen und im Chat.</p>
+        </div>
+      </section>
+      </div>
       </div>
       <div id="profGarage">
       <div id="garListBox">
-        <h3 style="margin-top:20px">Meine Garage</h3>
-        <button id="garAdd" type="button">Fahrzeug hinzufügen</button>
-        <ul id="garList" class="list" style="margin-top:12px"></ul>
+        <h3 class="pfh">Garage</h3>
+        <div class="garscroll"><ul id="garList" class="list garcards"></ul><button id="garAdd" class="garaddcard" type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Fahrzeug hinzufügen</span></button></div>
         <p class="hint">Dein aktives Fahrzeug wird bei jedem Rennen mit dem Ergebnis gespeichert. Ohne Fahrzeug in der Garage wird keines gespeichert. Bilder sind über ihren Link öffentlich lesbar. Verdecke deshalb Kennzeichen.</p>
       </div>
       <div id="garForm" class="hidden">
@@ -1050,10 +1180,20 @@
       </div>
       </div>
       <div id="profBottom">
-      <h3>Passwort ändern</h3>
-      <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
-      <input id="pNewPass" type="password" autocomplete="new-password">
-      <button id="pPassSave" type="button">Passwort ändern</button>
+      <div class="pfbody">
+      <section class="pfsec">
+        <div class="pfsechead"><h3>Letzte Rennen</h3><a href="#" id="pfToStats" role="button">Statistiken</a></div>
+        <ul id="pfRecent" class="list pfcard pflist"></ul>
+      </section>
+      <section class="pfsec">
+        <h3>Passwort ändern</h3>
+        <div class="pfcard">
+          <label for="pNewPass">Neues Passwort (mindestens 8 Zeichen)</label>
+          <input id="pNewPass" type="password" autocomplete="new-password">
+          <button id="pPassSave" type="button">Passwort ändern</button>
+        </div>
+      </section>
+      </div>
       </div>
     </div>
 
@@ -1077,13 +1217,19 @@
         <button id="grCreate" type="button">Gruppe erstellen</button>
       </div>
       <div id="chThread" class="hidden">
-        <div class="row between"><span id="thSub" class="hint" style="margin:0"></span><button id="thInfo" class="ghost hidden" type="button">Gruppe</button></div>
+        <div class="thhead">
+          <button id="thBack" class="thic plain" type="button" aria-label="Zurück"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+          <button id="thWho" class="thwho" type="button"><span id="thAv" class="thav"></span><span class="thtx"><span id="thName" class="thname"></span><span id="thSub" class="thsub"></span></span></button>
+          <button id="thNav" class="thic hidden" type="button" aria-label="Zum Freund navigieren"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8z"/></svg></button>
+          <button id="thDuel" class="thic hidden" type="button" aria-label="Zum Rennen herausfordern"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/></svg></button>
+          <button id="thInfo" class="thic hidden" type="button" aria-label="Gruppeninfo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.1"/></svg></button>
+        </div>
         <div id="thMsgs" class="msgs"></div>
         <div id="thShare" class="hidden"><p class="hint">Welches Rennen soll geteilt werden?</p><ul id="thShareList" class="list"></ul></div>
         <div class="composer">
-          <button id="thRace" class="ghost" type="button" aria-label="Rennen teilen">🏁</button>
-          <input id="thInput" type="text" maxlength="2000" placeholder="Nachricht schreiben …" autocomplete="off">
-          <button id="thSend" type="button">Senden</button>
+          <button id="thRace" class="thic round" type="button" aria-label="Rennen teilen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/></svg></button>
+          <input id="thInput" type="text" maxlength="2000" placeholder="Nachricht" autocomplete="off" aria-label="Nachricht">
+          <button id="thSend" class="send" type="button" aria-label="Senden"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
         </div>
       </div>
       <div id="chInfo" class="hidden">
@@ -1459,9 +1605,28 @@
     var h = $('whoAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 42));
     var hm = $('whoMini'); if (hm) { hm.textContent = ''; hm.appendChild(avatarNode(myAvatar, myName, myColor, 38)); }
   }
+  var PF_COLORS = [['#ff8601', 'Orange'], ['#2563eb', 'Blau'], ['#7c3aed', 'Lila'], ['#16a34a', 'Grün'], ['#db2777', 'Pink'], ['#0891b2', 'Türkis'], ['#dc2626', 'Rot'], ['#ca8a04', 'Gold']];
+  var myJoined = null;
   function renderProfileAvatar() {
-    var h = $('pAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 84));
+    var h = $('pAvatar'); h.textContent = ''; h.appendChild(avatarNode(myAvatar, myName, myColor, 112));
+    $('profTop').style.setProperty('--pf', myColor || '#2563eb');
+    $('pfName').textContent = myName || '';
+    var since = '';
+    if (myJoined) { try { since = ' · dabei seit ' + new Date(myJoined).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }); } catch (e) {} }
+    $('pfSub').textContent = '@' + (myName || '') + since;
+    var sw = $('pfSwatches'); sw.textContent = '';
+    PF_COLORS.forEach(function (c) {
+      var on = (myColor || '').toLowerCase() === c[0];
+      var b = el('button', 'pfsw1' + (on ? ' on' : '')); b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-label', c[1]);
+      var dot = el('span'); dot.style.background = c[0]; b.appendChild(dot);
+      b.addEventListener('click', function () { $('pColor').value = c[0]; $('pSave').click(); });
+      sw.appendChild(b);
+    });
   }
+  $('pfBack').addEventListener('click', function () { $('backBtn').click(); });
+  $('pfCam').addEventListener('click', function () { $('pPick').click(); });
+  $('pfEditBtn').addEventListener('click', function () { $('pfEdit').classList.toggle('hidden'); });
+  $('pfToStats').addEventListener('click', function (e) { e.preventDefault(); showScreen('Stats'); });
 
   // ---------- Anmeldung ----------
   function setMode(m) {
@@ -1577,7 +1742,7 @@
 
   function afterLogin(user) {
     try { sessionStorage.setItem('rna-alive', '1'); } catch (e) {}
-    myId = user.id; myEmail = user.email || '';
+    myId = user.id; myEmail = user.email || ''; myJoined = user.created_at || null;
     db.from('profiles').select('username,color,vehicle,car_category,avatar_url,active_vehicle_id').eq('id', myId).single().then(function (res) {
       if (res.error || !res.data) { setStatus('Profil nicht gefunden. Bitte neu anmelden oder SQL-Schritt prüfen.', 'err'); return; }
       applyProfile(res.data);
@@ -1651,6 +1816,7 @@
       if (res.error) { setStatus('Statistik nicht verfügbar (SQL-Schritt ausgeführt?): ' + res.error.message, 'err'); return; }
       var d = +res.data.total_distance_m + ride.pendDist, s = +res.data.total_moving_s + ride.pendSecs;
       $('stDist').textContent = fmtDist(d);
+      $('pfKm').textContent = (d / 1000).toFixed(d < 100000 ? 1 : 0).replace('.', ',');
       $('stTime').textContent = s >= 60 ? fmtDur(s) : '0 min';
       $('stSpeed').textContent = s >= 60 ? (d / s * 3.6).toFixed(1) + ' km/h' : '–';
     });
@@ -1659,9 +1825,9 @@
         if (res.error) { setStatus('Rennstatistik nicht verfügbar: ' + res.error.message, 'err'); return; }
         var mine = res.data || [];
         var finished = mine.filter(function (m) { return m.status === 'finished'; });
-        $('stRaces').textContent = mine.length;
+        $('stRaces').textContent = mine.length; $('pfRaces').textContent = mine.length;
         $('stFinished').textContent = finished.length;
-        if (!finished.length) { $('stWins').textContent = 0; $('stPodium').textContent = 0; renderStatRaces(mine, {}); return; }
+        if (!finished.length) { $('pfWins').textContent = 0; $('stWins').textContent = 0; $('stPodium').textContent = 0; renderStatRaces(mine, {}); return; }
         db.from('race_members').select('race_id,user_id,status,result_ms')
           .in('race_id', finished.map(function (m) { return m.race_id; })).then(function (r2) {
             if (r2.error) return;
@@ -1676,7 +1842,7 @@
               ranks[m.race_id] = { rank: rank, solo: solo };
               if (!solo) { if (rank === 1) wins++; if (rank <= 3) podium++; }
             });
-            $('stWins').textContent = wins; $('stPodium').textContent = podium;
+            $('pfWins').textContent = wins; $('stWins').textContent = wins; $('stPodium').textContent = podium;
             renderStatRaces(mine, ranks);
           });
       });
@@ -1690,6 +1856,16 @@
       li.appendChild(el('span', 'nm', m.races.name));
       var det = m.status === 'finished' ? fmtMs(m.result_ms) + (m.distance_m ? ' · ' + fmtDist(m.distance_m) : '') : '';
       li.appendChild(el('span', 'ago', det));
+      return li;
+    }), 'Noch keine Rennen.');
+    fillList($('pfRecent'), rows.slice(0, 3).map(function (m) {
+      var li = el('li', 'click pfrace'), rk = ranks[m.race_id];
+      li.appendChild(el('span', 'pfrank' + (rk && !rk.solo && rk.rank === 1 ? ' gold' : ''), m.status === 'dnf' ? '–' : (rk && !rk.solo ? rk.rank + '.' : '•')));
+      var x = el('div', 'pfrx');
+      x.appendChild(el('span', 'pfrn', m.races.name));
+      x.appendChild(el('span', 'pfrd', m.status === 'finished' ? fmtMs(m.result_ms) + (m.distance_m ? ' · ' + fmtDist(m.distance_m) : '') : 'aufgegeben'));
+      li.appendChild(x);
+      li.addEventListener('click', function () { showScreen('History'); });
       return li;
     }), 'Noch keine Rennen.');
   }
@@ -3023,7 +3199,7 @@
     $('panel').classList.remove('collapsed'); $('collapseBtn').innerHTML = '&#9662;';
     if (t === 'Home') renderHome();
     if (t === 'Friends') loadFriends();
-    if (t === 'Profile') { fillProfile(); openOwnGarage(); }
+    if (t === 'Profile') { fillProfile(); openOwnGarage(); loadStats(); $('pfEdit').classList.add('hidden'); }
     if (t === 'Stats') loadStats();
     if (t === 'Race') loadMyRaces(true);
     if (t === 'Navi') refreshNaviSetup();
@@ -4974,24 +5150,32 @@
   function appendMessage(m) {
     if (msgIds[m.id]) return;
     msgIds[m.id] = true; if (m.id > lastMsgId) lastMsgId = m.id;
+    var dl = dayLabel(m.created_at), dk = new Date(m.created_at).toDateString();
+    if (dk !== thLastDay) { thLastDay = dk; $('thMsgs').appendChild(el('div', 'daysep', dl)); }
     var mine = m.sender_id === myId, box = el('div', 'msg ' + (mine ? 'mine' : 'other'));
     if (!mine && curConv && curConv.kind === 'group') {
-      var whoEl = el('div', 'who', pInfo(m.sender_id).name); whoEl.setAttribute('data-uid', m.sender_id); box.appendChild(whoEl);
+      var whoEl = el('div', 'who', pInfo(m.sender_id).name); whoEl.setAttribute('data-uid', m.sender_id);
+      var wc = pInfo(m.sender_id).color; if (wc) whoEl.style.color = wc;
+      box.appendChild(whoEl);
     }
     var bub = el('div', 'bub');
     if (m.kind === 'race') {
       var d = m.data || {};
-      bub.appendChild(el('div', '', '🏁 ' + (d.name || 'Rennen')));
+      box.classList.add('mcard');
+      bub.appendChild(el('div', 'mlabel', 'Rennen-Einladung'));
+      bub.appendChild(el('div', 'mtitle', d.name || 'Rennen'));
       if (d.code) {
-        var go = el('button', 'ghost', 'Ansehen / Beitreten'); go.type = 'button';
+        var go = el('button', 'mbtn', 'Ansehen / Beitreten'); go.type = 'button';
         go.addEventListener('click', function () { joinCode(d.code); });
         bub.appendChild(go);
       }
     } else {
       var sr = m.kind === 'text' ? routeFromText(m.body) : null;       // geteilte Navi-Route als Karte statt langem Link
       if (sr) {
-        bub.appendChild(el('div', '', '📍 Route nach ' + sr.label));
-        var rb = el('button', 'ghost', 'Route öffnen'); rb.type = 'button';
+        box.classList.add('mcard');
+        bub.appendChild(el('div', 'mlabel', 'Geteilte Route'));
+        bub.appendChild(el('div', 'mtitle', sr.label));
+        var rb = el('button', 'mbtn', 'Route öffnen'); rb.type = 'button';
         rb.addEventListener('click', function () { openSharedRoute(sr); });
         bub.appendChild(rb);
       } else bub.textContent = m.body;
@@ -5014,11 +5198,36 @@
     $('thMsgs').appendChild(box);
   }
 
+  var thLastDay = '';
+  function fillThreadHead(c) {
+    var direct = c.kind === 'direct', info = direct ? pInfo(c.other_user) : null;
+    var av = $('thAv'); av.textContent = '';
+    if (direct) {
+      av.className = 'thav'; av.appendChild(avatarNode(info.avatar, info.name, info.color, 44));
+      var o = others[c.other_user];
+      if (o && Date.now() - o.updated < STALE_AFTER_MS) { var dot = el('span', 'thon'); av.appendChild(dot); }
+    } else { av.className = 'thav grp'; av.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14a5 5 0 0 1 5 5"/></svg>'; }
+    $('thName').textContent = convTitle(c);
+    $('thSub').textContent = direct ? (others[c.other_user] && Date.now() - others[c.other_user].updated < STALE_AFTER_MS ? 'online' : '') : c.member_count + ' Mitglieder';
+    var isFriend = direct && relationWith(c.other_user).rel === 'friend';
+    $('thNav').classList.toggle('hidden', !(isFriend && others[c.other_user]));
+    $('thDuel').classList.toggle('hidden', !isFriend);
+    $('thInfo').classList.toggle('hidden', direct);
+  }
+  $('thBack').addEventListener('click', function () { $('backBtn').click(); });
+  $('thWho').addEventListener('click', function () { if (curConv && curConv.kind === 'group') openInfo(); });
+  $('thNav').addEventListener('click', function () { if (curConv && others[curConv.other_user]) { var d = friendDest(curConv.other_user); showScreen('Navi'); quickNav(d); } });
+  $('thDuel').addEventListener('click', function () { if (curConv) startDuel(curConv.other_user); });
+  function dayLabel(iso) {
+    var d = new Date(iso), now = new Date(), y = new Date(now.getTime() - 86400000);
+    if (d.toDateString() === now.toDateString()) return 'Heute';
+    if (d.toDateString() === y.toDateString()) return 'Gestern';
+    return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  }
   function openThread(c) {
-    curConv = c; msgIds = {}; lastMsgId = 0;
+    curConv = c; msgIds = {}; lastMsgId = 0; thLastDay = '';
     showChView('Thread');
-    $('thInfo').classList.toggle('hidden', c.kind !== 'group');
-    $('thSub').textContent = c.kind === 'group' ? c.member_count + ' Mitglieder' : '';
+    fillThreadHead(c);
     $('thShare').classList.add('hidden');
     $('thMsgs').textContent = '';
     db.from('messages').select('*').eq('conversation_id', c.id).order('created_at', { ascending: false }).limit(100).then(function (res) {
@@ -6262,7 +6471,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-21-7';
+  var APP_VERSION = '2026-11-21-9';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
