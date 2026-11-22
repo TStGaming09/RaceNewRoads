@@ -835,6 +835,68 @@
   #tabHistory .hsls { width: 18px; height: 0; flex: none; border-top: 4px solid; border-radius: 2px; }
   #tabHistory .hsls.dash { border-top-width: 3px; border-top-style: dashed; }
   #tabHistory .hsexp { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 12px; background: var(--h-card); color: var(--h-ink); box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  /* ===== Freunde (Designplan) und Freund-entfernen-Dialog ===== */
+  #screenHead .headact { margin: 0 0 0 auto; height: 44px; padding: 0 14px; border-radius: 14px; background: #ff8601; color: #111111; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; flex: none; box-shadow: none; }
+  #screenHead .headact.hidden { display: none; }
+  #screenHead .headact { width: auto; }
+  #tabFriends .list li .fric:not(.pri) { background: var(--h-bg); color: var(--h-ink); }
+  #tabFriends .list li .fric.pri { background: #ff8601; color: #111111; }
+  #tabFriends .list li .fric { width: 40px; padding: 0; }
+  #tabFriends .list li .frwd { background: var(--h-bg); color: var(--h-ink); width: auto; }
+  #tabFriends { color: var(--h-ink); }
+  #tabFriends .frcard { background: var(--h-card); border: 1px solid var(--h-line); border-radius: 20px; padding: 14px; margin: 4px 0 12px; }
+  #tabFriends .frcard.hidden { display: none; }
+  #tabFriends .frcard label { color: var(--h-mut); }
+  #tabFriends .frcard input { height: 48px; }
+  #tabFriends .frsearch { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; margin-top: 6px; color: var(--h-mut); }
+  #tabFriends .frsearch input { flex: 1; min-width: 0; border: 0; background: transparent; box-shadow: none; padding: 0; margin: 0; font-size: 15px; color: var(--h-ink); outline: none; height: auto; }
+  #tabFriends .frsec { margin-top: 20px; }
+  #tabFriends .frsec.hidden { display: none; }
+  #tabFriends .frsh { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; margin-bottom: 10px; }
+  #tabFriends .frsh h3 { margin: 0; }
+  #tabFriends .frsh a { font-size: 14px; font-weight: 600; text-decoration: none; color: #ff8601; }
+  #tabFriends .frseg { margin: 0 0 10px; }
+  #tabFriends .frseg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--h-daysep); }
+  #tabFriends .frseg button { flex: 1; height: 40px; padding: 0; margin: 0; border: 0; border-radius: 10px; background: transparent; color: var(--h-ink); font-size: 14px; font-weight: 500; box-shadow: none; }
+  #tabFriends .frseg button[aria-selected="true"] { background: var(--h-card); font-weight: 700; box-shadow: 0 1px 4px rgba(17, 24, 39, .14); }
+  #tabFriends .fractive { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 4px 16px; scrollbar-width: none; }
+  #tabFriends .fractive::-webkit-scrollbar { display: none; }
+  #tabFriends .fract { flex: none; width: 74px; margin: 0; padding: 0; background: transparent; color: var(--h-ink); box-shadow: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  #tabFriends .fran { font-size: 13px; font-weight: 600; max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabFriends .frao { font-size: 11px; font-weight: 600; color: var(--h-mut); }
+  #tabFriends .frav { position: relative; flex: none; display: inline-flex; }
+  #tabFriends .frdot { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; border-radius: 50%; background: #22c55e; border: 3px solid var(--h-card); box-sizing: border-box; }
+  #tabFriends .fractive .frdot { border-color: var(--h-bg); }
+  #tabFriends .list li.frrow { min-height: 64px; padding: 10px 14px; gap: 12px; align-items: center; }
+  #tabFriends .list li.frrow > .avatar, #tabFriends .frav .avatar { flex: none; }
+  #tabFriends .frx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  #tabFriends .frx .nm { font-size: 15px; font-weight: 700; }
+  #tabFriends .frst { font-size: 13px; color: var(--h-mut); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabFriends .frst.on { color: #22c55e; font-weight: 600; }
+  #tabFriends .frbtns { display: flex; gap: 6px; flex: none; }
+  #tabFriends .fric { width: 40px; height: 44px; margin: 0; padding: 0; border-radius: 12px; background: var(--h-bg); color: var(--h-ink); box-shadow: none; display: flex; align-items: center; justify-content: center; }
+  #tabFriends .fric.pri { background: #ff8601; color: #111111; }
+  #tabFriends #frInCount { min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px; background: #ff8601; color: #111111; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  #tabFriends .list li.frrow .frwd { width: auto; margin: 0; padding: 0 12px; height: 40px; border-radius: 12px; font-size: 13px; }
+  #tabFriends .frlegend { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 18px; font-size: 12px; color: var(--h-mut); }
+  #tabFriends .frlegend span { display: flex; align-items: center; gap: 6px; }
+  #tabFriends .frlegend .d { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-sizing: border-box; }
+  #tabFriends .frlegend .d.on { background: #22c55e; }
+  #tabFriends .frlegend .d.off { border: 2px solid var(--h-mut); }
+  /* Profil: Freund entfernen */
+  #userModal .pfdz { padding-top: 22px; }
+  #userModal .pfdanger { width: 100%; height: 52px; margin: 0; border-radius: 16px; background: transparent; color: #dc2626; border: 1px solid #dc2626; font-size: 16px; font-weight: 700; box-shadow: none; }
+  /* Sicherheitsabfrage */
+  .dlg-ov { position: fixed; inset: 0; z-index: 1700; background: rgba(0, 0, 0, .55); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .dlg { width: 100%; max-width: 360px; box-sizing: border-box; background: var(--h-card); color: var(--h-ink); border: 1px solid var(--h-line); border-radius: 28px; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 20px 50px rgba(0, 0, 0, .5); }
+  .dlg-av { position: relative; }
+  .dlg-badge { position: absolute; right: -6px; bottom: -4px; width: 32px; height: 32px; border-radius: 50%; background: #dc2626; color: #ffffff; border: 3px solid var(--h-card); box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+  .dlg-t { margin: 6px 0 0; font-size: 20px; font-weight: 700; text-align: center; }
+  .dlg-d { margin: 0; font-size: 14px; line-height: 1.5; color: var(--h-mut); text-align: center; }
+  .dlg-acts { align-self: stretch; display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+  .dlg-acts button { width: 100%; height: 52px; margin: 0; border-radius: 16px; font-size: 16px; font-weight: 700; box-shadow: none; }
+  .dlg-del { background: #dc2626; color: #ffffff; border: 0; }
+  .dlg-cancel { background: transparent; color: var(--h-ink); border: 1px solid var(--h-line); }
 </style>
 </head>
 <body>
@@ -973,6 +1035,7 @@
     <div id="screenHead" class="screenhead hidden">
       <button id="backBtn" class="ghost" type="button">&lsaquo; Zurück</button>
       <strong id="screenTitle"></strong>
+      <button id="headAdd" class="headact hidden" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Hinzufügen</span></button>
     </div>
 
     <!-- Startseite -->
@@ -1182,14 +1245,32 @@
 
     <!-- Freunde -->
     <div id="tabFriends" class="hidden">
-      <label for="friendName">Freund per Spielername hinzufügen</label>
-      <div class="row">
-        <input id="friendName" type="text" maxlength="20" autocomplete="off">
-        <button id="friendAdd" type="button">Anfrage</button>
+      <div id="frAddCard" class="frcard hidden">
+        <label for="friendName">Freund per Spielername hinzufügen</label>
+        <div class="row">
+          <input id="friendName" type="text" maxlength="20" autocomplete="off" placeholder="Benutzername, z. B. lena">
+          <button id="friendAdd" type="button">Anfrage</button>
+        </div>
       </div>
-      <h3>Anfragen an dich</h3><ul id="listIncoming" class="list"></ul>
-      <h3>Deine Freunde</h3><ul id="listFriends" class="list"></ul>
-      <h3>Gesendete Anfragen</h3><ul id="listOutgoing" class="list"></ul>
+      <div class="cvsearch frsearch"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="frSearch" type="search" placeholder="Freunde durchsuchen" autocomplete="off" aria-label="Freunde durchsuchen"></div>
+      <section id="frActiveSec" class="frsec hidden">
+        <div class="frsh"><h3 id="frActiveH">Jetzt aktiv</h3><a href="#" id="frToMap" role="button">Auf Karte</a></div>
+        <div id="frActive" class="fractive"></div>
+      </section>
+      <section id="frInSec" class="frsec hidden">
+        <div class="frsh"><h3>Anfragen</h3><span id="frInCount" class="cvbadge"></span></div>
+        <ul id="listIncoming" class="list"></ul>
+      </section>
+      <section class="frsec">
+        <div class="frsh"><h3 id="frAllH">Alle Freunde</h3></div>
+        <div id="frFilter" class="seg frseg" role="tablist" aria-label="Filter"><button type="button" role="tab" data-f="all" aria-selected="true">Alle</button><button type="button" role="tab" data-f="online" aria-selected="false">Online</button></div>
+        <ul id="listFriends" class="list"></ul>
+      </section>
+      <section id="frOutSec" class="frsec hidden">
+        <div class="frsh"><h3>Gesendete Anfragen</h3></div>
+        <ul id="listOutgoing" class="list"></ul>
+      </section>
+      <div class="frlegend"><span><i class="d on"></i>Online</span><span><i class="d off"></i>Offline</span><span>Ring = persönliche Farbe</span></div>
     </div>
 
     <!-- Profil -->
@@ -2026,37 +2107,107 @@
     if (!items.length) { var li = el('li'); li.appendChild(el('span', 'empty', emptyText)); ul.appendChild(li); return; }
     items.forEach(function (it) { ul.appendChild(it); });
   }
-  function friendRow(f, buttons) {
-    var li = el('li'), info = pInfo(otherId(f)); li.setAttribute('data-uid', otherId(f));
-    li.appendChild(avatarNode(info.avatar, info.name, info.color, 32));
-    li.appendChild(el('span', 'nm', info.name));
-    if (info.label) li.appendChild(el('span', 'ago', info.label));
-    buttons.forEach(function (b) {
-      var btn = el('button', b.ghost ? 'ghost' : '', b.label);
-      btn.type = 'button'; btn.addEventListener('click', b.run); li.appendChild(btn);
-    });
+var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/></svg>', chat: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', navi: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8z"/></svg>', check: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>', x: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>' };
+  var frFilter = 'all', frQuery = '';
+  function frStatus(uid) {
+    var o = others[uid];
+    if (o && Date.now() - o.updated < STALE_AFTER_MS) {
+      var txt = 'Online';
+      if (myPos) { try { var ll = o.marker.getLatLng(); txt += ' · ' + fmtDist(dist(myPos.lat, myPos.lng, ll.lat, ll.lng)) + ' entfernt'; } catch (e) {} }
+      return { on: true, txt: txt };
+    }
+    return { on: false, txt: 'Offline' };
+  }
+  function ringAvatar(info, size, on, gap) {
+    var wrap = el('span', 'frav'), av = avatarNode(info.avatar, info.name, info.color, size);
+    av.style.boxShadow = '0 0 0 ' + (gap || 3) + 'px ' + (info.color || '#2563eb'); av.style.margin = (gap || 3) + 'px';
+    wrap.appendChild(av);
+    if (on === true) wrap.appendChild(el('span', 'frdot on'));
+    return wrap;
+  }
+  function iconBtn(label, icon, cls, fn) {
+    var b = el('button', 'fric ' + (cls || '')); b.type = 'button'; b.setAttribute('aria-label', label); b.innerHTML = icon;
+    b.addEventListener('click', function (e) { e.stopPropagation(); fn(); }); return b;
+  }
+  function friendRow(f) {
+    var uid = otherId(f), info = pInfo(uid), st = frStatus(uid), li = el('li', 'frrow'); li.setAttribute('data-uid', uid);
+    li.appendChild(ringAvatar(info, 46, st.on, 3));
+    var x = el('span', 'frx'); x.appendChild(el('span', 'nm', info.name));
+    x.appendChild(el('span', 'frst' + (st.on ? ' on' : ''), st.txt)); li.appendChild(x);
+    var bs = el('span', 'frbtns');
+    bs.appendChild(iconBtn(info.name + ' zum Rennen herausfordern', FR_ICON.flag, st.on ? 'pri' : '', function () { startDuel(uid); }));
+    bs.appendChild(iconBtn('Chat mit ' + info.name, FR_ICON.chat, '', function () { startDirectChat(uid); }));
+    if (others[uid]) bs.appendChild(iconBtn('Zu ' + info.name + ' navigieren', FR_ICON.navi, '', function () { showScreen('Navi'); quickNav(friendDest(uid)); }));
+    li.appendChild(bs);
     return li;
   }
-  function renderFriends() {
+  function requestRow(f, sub, buttons) {
+    var uid = otherId(f), info = pInfo(uid), li = el('li', 'frrow'); li.setAttribute('data-uid', uid);
+    li.appendChild(ringAvatar(info, 40, false, 2));
+    var x = el('span', 'frx'); x.appendChild(el('span', 'nm', info.name)); x.appendChild(el('span', 'frst', sub)); li.appendChild(x);
+    var bs = el('span', 'frbtns'); buttons.forEach(function (b) { bs.appendChild(b); }); li.appendChild(bs);
+    return li;
+  }
+  function renderFriendLists() {
     var incoming = friendships.filter(function (f) { return f.status === 'pending' && f.addressee_id === myId; });
     var outgoing = friendships.filter(function (f) { return f.status === 'pending' && f.requester_id === myId; });
     var accepted = friendships.filter(function (f) { return f.status === 'accepted'; });
-    incomingCount = incoming.length; updateBadges();
+    $('frInSec').classList.toggle('hidden', !incoming.length); $('frInCount').textContent = incoming.length;
     fillList($('listIncoming'), incoming.map(function (f) {
-      return friendRow(f, [
-        { label: 'Annehmen', run: function () { answerRequest(f.id); } },
-        { label: 'Ablehnen', ghost: true, run: function () { removeFriendship(f.id); } }
+      return requestRow(f, 'möchte dein Freund sein', [
+        iconBtn('Anfrage von ' + pInfo(otherId(f)).name + ' ablehnen', FR_ICON.x, '', function () { removeFriendship(f.id); }),
+        iconBtn('Anfrage von ' + pInfo(otherId(f)).name + ' annehmen', FR_ICON.check, 'pri', function () { answerRequest(f.id); })
       ]);
     }), 'Keine offenen Anfragen.');
-    fillList($('listFriends'), accepted.map(function (f) {
-      return friendRow(f, [{ label: 'Chat', ghost: true, run: function () { startDirectChat(otherId(f)); } }, { label: 'Garage', ghost: true, run: function () { openFriendGarage(otherId(f)); } }, { label: 'Entfernen', ghost: true, run: function () { if (confirm('Freund wirklich entfernen?')) removeFriendship(f.id); } }]);
-    }), 'Noch keine Freunde. Such oben nach dem Spielernamen.');
+    var online = accepted.filter(function (f) { return frStatus(otherId(f)).on; });
+    $('frActiveSec').classList.toggle('hidden', !online.length);
+    $('frActiveH').textContent = 'Jetzt aktiv · ' + online.length;
+    var act = $('frActive'); act.textContent = '';
+    online.forEach(function (f) {
+      var uid = otherId(f), info = pInfo(uid), b = el('button', 'fract'); b.type = 'button'; b.setAttribute('data-uid', uid);
+      b.appendChild(ringAvatar(info, 58, true, 3)); b.appendChild(el('span', 'fran', info.name)); b.appendChild(el('span', 'frao', 'online'));
+      b.addEventListener('click', function () { openProfile(uid); });
+      act.appendChild(b);
+    });
+    $('frAllH').textContent = 'Alle Freunde · ' + accepted.length;
+    var q = frQuery.trim().toLowerCase();
+    var shown = accepted.filter(function (f) {
+      if (frFilter === 'online' && !frStatus(otherId(f)).on) return false;
+      if (q && pInfo(otherId(f)).name.toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    }).sort(function (a, b) {
+      var sa = frStatus(otherId(a)).on ? 0 : 1, sb = frStatus(otherId(b)).on ? 0 : 1;
+      return sa - sb || pInfo(otherId(a)).name.localeCompare(pInfo(otherId(b)).name);
+    });
+    fillList($('listFriends'), shown.map(friendRow), accepted.length ? 'Keine passenden Freunde.' : 'Noch keine Freunde. Tippe oben auf „Hinzufügen“.');
+    $('frOutSec').classList.toggle('hidden', !outgoing.length);
     fillList($('listOutgoing'), outgoing.map(function (f) {
-      return friendRow(f, [{ label: 'Zurückziehen', ghost: true, run: function () { removeFriendship(f.id); } }]);
+      return requestRow(f, 'Anfrage gesendet', [el('button', 'ghost frwd', 'Zurückziehen')]);
     }), 'Keine gesendeten Anfragen.');
+    Array.prototype.forEach.call($('listOutgoing').querySelectorAll('.frwd'), function (btn, i) {
+      btn.type = 'button'; btn.addEventListener('click', function () { removeFriendship(outgoing[i].id); });
+    });
+  }
+  function renderFriends() {
+    var incoming = friendships.filter(function (f) { return f.status === 'pending' && f.addressee_id === myId; });
+    incomingCount = incoming.length; updateBadges();
+    renderFriendLists();
     if (raceCur) renderInviteList(true);
     if (currentScreen === 'Notifications') renderNotifs();
   }
+  setInterval(function () { if (currentScreen === 'Friends' && !document.hidden) renderFriendLists(); }, 5000);
+  $('frSearch').addEventListener('input', function () { frQuery = $('frSearch').value; renderFriendLists(); });
+  $('frFilter').addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('button[data-f]'); if (!b) return;
+    frFilter = b.getAttribute('data-f');
+    Array.prototype.forEach.call($('frFilter').querySelectorAll('button'), function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+    renderFriendLists();
+  });
+  $('frToMap').addEventListener('click', function (e) { e.preventDefault(); showScreen('Home'); });
+  $('headAdd').addEventListener('click', function () {
+    var c = $('frAddCard'); c.classList.toggle('hidden');
+    if (!c.classList.contains('hidden')) $('friendName').focus();
+  });
   function answerRequest(id) {
     db.from('friendships').update({ status: 'accepted' }).eq('id', id).then(function (res) {
       if (res.error) { setStatus('Fehler: ' + res.error.message, 'err'); return; }
@@ -3289,6 +3440,7 @@
     SCREENS.forEach(function (n) { $('tab' + n).classList.toggle('hidden', n !== t); });
     $('screenHead').classList.toggle('hidden', t === 'Home');
     $('screenTitle').textContent = TITLES[t] || '';
+    $('headAdd').classList.toggle('hidden', t !== 'Friends'); if (t !== 'Friends') $('frAddCard').classList.add('hidden');
     syncStatsModal(t);
     $('panel').classList.remove('collapsed'); $('collapseBtn').innerHTML = '&#9662;';
     if (t === 'Home') renderHome();
@@ -5709,6 +5861,34 @@
     });
   }
 
+  function confirmRemoveFriend(uid, f) {
+    var info = pInfo(uid), prev = document.activeElement;
+    var ov = el('div', 'dlg-ov'), dlg = el('div', 'dlg');
+    dlg.setAttribute('role', 'alertdialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-labelledby', 'dlgT'); dlg.setAttribute('aria-describedby', 'dlgD');
+    var av = el('div', 'dlg-av'); av.appendChild(avatarNode(info.avatar, info.name, info.color, 72));
+    var badge = el('span', 'dlg-badge'); badge.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg>';
+    av.appendChild(badge); dlg.appendChild(av);
+    var t = el('h2', 'dlg-t', info.name + ' als Freund entfernen?'); t.id = 'dlgT'; dlg.appendChild(t);
+    var d = el('p', 'dlg-d', 'Ihr seht euch nicht mehr auf der Karte und könnt euch nicht direkt herausfordern. Eure Chats und Rennergebnisse bleiben erhalten.'); d.id = 'dlgD'; dlg.appendChild(d);
+    var acts = el('div', 'dlg-acts'), ok = el('button', 'dlg-del', 'Entfernen'), no = el('button', 'dlg-cancel', 'Abbrechen');
+    ok.type = 'button'; no.type = 'button'; acts.appendChild(ok); acts.appendChild(no); dlg.appendChild(acts);
+    ov.appendChild(dlg); document.body.appendChild(ov); no.focus();
+    function close() { document.removeEventListener('keydown', onKey, true); if (ov.parentNode) ov.parentNode.removeChild(ov); try { if (prev && prev.focus) prev.focus(); } catch (e) {} }
+    function onKey(e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+      else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === no ? ok : no).focus(); }
+    }
+    document.addEventListener('keydown', onKey, true);
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    no.addEventListener('click', close);
+    ok.addEventListener('click', function () {
+      ok.disabled = true; no.disabled = true;
+      db.from('friendships').delete().eq('id', f.id).then(function (res) {
+        if (res.error) { ok.disabled = false; no.disabled = false; setStatus('Entfernen fehlgeschlagen: ' + res.error.message, 'err'); return; }
+        close(); closeProfile(); setStatus(info.name + ' ist nicht mehr in deiner Freundesliste.', 'ok'); loadFriends();
+      });
+    });
+  }
   function renderProfileView(uid, relInfo, statsRes, vehRes) {
     var rel = relInfo.rel, f = relInfo.f, info = pInfo(uid), body = $('umBody');
     body.textContent = '';
@@ -5776,6 +5956,9 @@
       var sc = el('div', 'garscroll'), ul = el('ul', 'list garcards'); sc.appendChild(ul); gar.appendChild(sc);
       wrap.appendChild(gar);
       renderGarage((vehRes && vehRes.data) || [], false, ul);
+      var dz = el('div', 'pfbody pfdz'), rm = el('button', 'pfdanger', 'Freund entfernen'); rm.type = 'button';
+      rm.addEventListener('click', function () { confirmRemoveFriend(uid, f); });
+      dz.appendChild(rm); wrap.appendChild(dz);
     }
     body.appendChild(wrap);
   }
@@ -6671,7 +6854,7 @@
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-21-12';
+  var APP_VERSION = '2026-11-22-1';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
