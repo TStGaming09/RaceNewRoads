@@ -330,7 +330,7 @@
   .modetabs b { font-size: .95rem; font-variant-numeric: tabular-nums; }
   .modetabs small { font-size: .7rem; opacity: .8; }
   .rcsum { margin-top: 10px; font-weight: 700; font-size: 1.05rem; }
-  #navSetup.hasdest #nvDiscover, #navSetup.hasdest #nvDest { display: none; }
+  #navSetup.hasdest #nvDiscover, #navSetup.hasdest #nvDest, #navSetup.hasdest #nvModeSel { display: none; }
   details.more { margin-top: 12px; }
   details.more summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
   #hudEnd { margin: 0 0 0 auto; padding: 4px 12px; font-size: 12px; border-radius: 8px; background: rgba(255, 255, 255, .14); color: #fff; }
@@ -872,6 +872,8 @@
   #tabFriends .frx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   #tabFriends .frx .nm { font-size: 15px; font-weight: 700; }
   #tabFriends .frst { font-size: 13px; color: var(--h-mut); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tabFriends .frst.race, #tabFriends .frao.race { color: #ff8601; font-weight: 600; }
+  #tabFriends .frdot.race { right: -4px; bottom: -2px; width: 22px; height: 22px; background: #ff8601; color: #111111; display: flex; align-items: center; justify-content: center; }
   #tabFriends .frst.on { color: #22c55e; font-weight: 600; }
   #tabFriends .frbtns { display: flex; gap: 6px; flex: none; }
   #tabFriends .fric { width: 40px; height: 44px; margin: 0; padding: 0; border-radius: 12px; background: var(--h-bg); color: var(--h-ink); box-shadow: none; display: flex; align-items: center; justify-content: center; }
@@ -1944,7 +1946,7 @@
     unfollowRace(); stopNavigation(true);
     unsubscribeNotifs(); notifs = []; unreadCount = 0; notifsLoaded = false; updateNotifBadge();
     unsubscribeMessages(); convs = []; unreadMsgs = 0; updateMsgBadges(); curConv = null; stopThreadPoll();
-    myAdmin = null; updateAdminUI(); mapPoints = []; myPlaces = []; placeEdit = false; resumeTried = {}; appSettings = { hide_players_in_race: false }; racingServer = {}; applyRacing();
+    myAdmin = null; updateAdminUI(); mapPoints = []; myPlaces = []; placeEdit = false; resumeTried = {}; appSettings = { hide_players_in_race: false }; racingServer = {}; racingInfo = {}; applyRacing();
     db.auth.signOut().then(function () { myId = null; myName = ''; showAuth(); });
   });
 
@@ -2111,6 +2113,11 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
   var frFilter = 'all', frQuery = '';
   function frStatus(uid) {
     var o = others[uid];
+    if (racingIds[uid]) {
+      var ri = racingInfo[uid], txt = 'Im Rennen';
+      if (ri) txt = (ri.status === 'lobby' ? 'In der Lobby' : 'Im Rennen') + (ri.name ? ' · ' + ri.name : '');
+      return { on: true, race: true, txt: txt };
+    }
     if (o && Date.now() - o.updated < STALE_AFTER_MS) {
       var txt = 'Online';
       if (myPos) { try { var ll = o.marker.getLatLng(); txt += ' · ' + fmtDist(dist(myPos.lat, myPos.lng, ll.lat, ll.lng)) + ' entfernt'; } catch (e) {} }
@@ -2122,7 +2129,8 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
     var wrap = el('span', 'frav'), av = avatarNode(info.avatar, info.name, info.color, size);
     av.style.boxShadow = '0 0 0 ' + (gap || 3) + 'px ' + (info.color || '#2563eb'); av.style.margin = (gap || 3) + 'px';
     wrap.appendChild(av);
-    if (on === true) wrap.appendChild(el('span', 'frdot on'));
+    if (on === 'race') { var fb = el('span', 'frdot race'); fb.innerHTML = FR_ICON.flag.replace(/width="20" height="20"/, 'width="12" height="12"'); wrap.appendChild(fb); }
+    else if (on === true) wrap.appendChild(el('span', 'frdot on'));
     return wrap;
   }
   function iconBtn(label, icon, cls, fn) {
@@ -2131,9 +2139,9 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
   }
   function friendRow(f) {
     var uid = otherId(f), info = pInfo(uid), st = frStatus(uid), li = el('li', 'frrow'); li.setAttribute('data-uid', uid);
-    li.appendChild(ringAvatar(info, 46, st.on, 3));
+    li.appendChild(ringAvatar(info, 46, st.race ? 'race' : st.on, 3));
     var x = el('span', 'frx'); x.appendChild(el('span', 'nm', info.name));
-    x.appendChild(el('span', 'frst' + (st.on ? ' on' : ''), st.txt)); li.appendChild(x);
+    x.appendChild(el('span', 'frst' + (st.race ? ' race' : st.on ? ' on' : ''), st.txt)); li.appendChild(x);
     var bs = el('span', 'frbtns');
     bs.appendChild(iconBtn(info.name + ' zum Rennen herausfordern', FR_ICON.flag, st.on ? 'pri' : '', function () { startDuel(uid); }));
     bs.appendChild(iconBtn('Chat mit ' + info.name, FR_ICON.chat, '', function () { startDirectChat(uid); }));
@@ -2159,13 +2167,14 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
         iconBtn('Anfrage von ' + pInfo(otherId(f)).name + ' annehmen', FR_ICON.check, 'pri', function () { answerRequest(f.id); })
       ]);
     }), 'Keine offenen Anfragen.');
-    var online = accepted.filter(function (f) { return frStatus(otherId(f)).on; });
+    var online = accepted.filter(function (f) { return frStatus(otherId(f)).on; }).sort(function (a, b) { return (frStatus(otherId(b)).race ? 1 : 0) - (frStatus(otherId(a)).race ? 1 : 0); });
     $('frActiveSec').classList.toggle('hidden', !online.length);
     $('frActiveH').textContent = 'Jetzt aktiv · ' + online.length;
     var act = $('frActive'); act.textContent = '';
     online.forEach(function (f) {
       var uid = otherId(f), info = pInfo(uid), b = el('button', 'fract'); b.type = 'button'; b.setAttribute('data-uid', uid);
-      b.appendChild(ringAvatar(info, 58, true, 3)); b.appendChild(el('span', 'fran', info.name)); b.appendChild(el('span', 'frao', 'online'));
+      var sx = frStatus(uid);
+      b.appendChild(ringAvatar(info, 58, sx.race ? 'race' : true, 3)); b.appendChild(el('span', 'fran', info.name)); b.appendChild(el('span', 'frao' + (sx.race ? ' race' : ''), sx.race ? 'im Rennen' : 'online'));
       b.addEventListener('click', function () { openProfile(uid); });
       act.appendChild(b);
     });
@@ -2176,7 +2185,7 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
       if (q && pInfo(otherId(f)).name.toLowerCase().indexOf(q) < 0) return false;
       return true;
     }).sort(function (a, b) {
-      var sa = frStatus(otherId(a)).on ? 0 : 1, sb = frStatus(otherId(b)).on ? 0 : 1;
+      var xa = frStatus(otherId(a)), xb = frStatus(otherId(b)), sa = xa.race ? 0 : xa.on ? 1 : 2, sb = xb.race ? 0 : xb.on ? 1 : 2;
       return sa - sb || pInfo(otherId(a)).name.localeCompare(pInfo(otherId(b)).name);
     });
     fillList($('listFriends'), shown.map(friendRow), accepted.length ? 'Keine passenden Freunde.' : 'Noch keine Freunde. Tippe oben auf „Hinzufügen“.');
@@ -2910,7 +2919,7 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
   // =====================================================
   //  NAVIGATION
   // =====================================================
-  var navDest = null, nav = null, navLayer = L.layerGroup().addTo(map), searchBusy = false;
+  var navDest = null, nav = null, navLayer = L.layerGroup().addTo(map), searchBusy = false, searchToken = 0;
   var MOD = {
     'left': 'links', 'slight left': 'leicht links', 'sharp left': 'scharf links',
     'right': 'rechts', 'slight right': 'leicht rechts', 'sharp right': 'scharf rechts',
@@ -3059,27 +3068,32 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
       }).sort(function (x, y) { return x.d - y.d; }).slice(0, 5);
     }).catch(function () { return []; }) : Promise.resolve([]);
     var addr = nomiSearch(q, c, true).then(function (l) { return l.length ? l : nomiSearch(q, c, false); }).catch(function () { return null; });
-    Promise.all([near, addr]).then(function (res) {
-      var items = res[0].map(function (it) { return { lat: it.lat, lng: it.lng, label: it.name + (it.extra ? ', ' + it.extra : ''), d: it.d, poi: true }; });
-      if (res[1]) res[1].forEach(function (x) { items.push({ lat: +x.lat, lng: +x.lon, label: x.display_name, d: dist(c.lat, c.lng, +x.lat, +x.lon) }); });
-      if (!items.length && res[1] === null) { setStatus('Suche fehlgeschlagen. Später nochmal versuchen.', 'err'); return; }
-      // Treffer aus der Umgebung vorn (nach Entfernung), Adressen danach ebenfalls nach Entfernung
-      var pois = items.filter(function (x) { return x.poi; }), rest = items.filter(function (x) { return !x.poi; }).sort(function (x, y) { return x.d - y.d; });
-      items = pois.concat(rest);
-      var ul = $('nvResults');
+    // Adressen sofort zeigen; Orte aus Overpass kommen nach, falls der Server rechtzeitig antwortet (max. 12 s)
+    var ul = $('nvResults'), pois = [], addrs = null, picked = false, myToken = ++searchToken;
+    function show() {
+      if (picked || myToken !== searchToken) return;
+      var c2 = c, items = pois.map(function (it) { return { lat: it.lat, lng: it.lng, label: it.name + (it.extra ? ', ' + it.extra : ''), d: it.d, poi: true }; });
+      var rest = (addrs || []).map(function (x) { return { lat: +x.lat, lng: +x.lon, label: x.display_name, d: dist(c2.lat, c2.lng, +x.lat, +x.lon) }; }).sort(function (x, y) { return x.d - y.d; });
+      items = items.concat(rest);
       ul.classList.remove('hidden');
       fillList(ul, items.map(function (x) {
         var li = el('li', 'click');
         li.appendChild(el('span', 'nm', x.label + ' · ' + fmtDist(x.d)));
         li.addEventListener('click', function () {
-          ul.classList.add('hidden');
+          picked = true; ul.classList.add('hidden');
           var found = { lat: x.lat, lng: x.lng, label: x.label };
           setDest(found); addRecent(found); renderRecent();
         });
         return li;
       }), 'Nichts gefunden.');
       setStatus(items.length ? 'Wähle ein Ergebnis (nächste zuerst).' : 'Nichts gefunden.', items.length ? '' : 'warn');
-    }).then(function () { setTimeout(function () { searchBusy = false; }, 1200); });
+    }
+    addr.then(function (r) {
+      if (r === null) { setStatus('Suche fehlgeschlagen. Später nochmal versuchen.', 'err'); return; }
+      addrs = r; show();
+    }).catch(function () { setStatus('Suche fehlgeschlagen.', 'err'); }).then(function () { setTimeout(function () { searchBusy = false; }, 800); });
+    var cap = new Promise(function (res) { setTimeout(function () { res([]); }, 12000); });
+    Promise.race([near, cap]).then(function (l) { if (l && l.length) { pois = l; show(); } }).catch(function () {});
   });
   $('nvQuery').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('nvSearch').click(); });
 
@@ -6704,7 +6718,7 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
   // =====================================================
   //  RENNAUTO 🏎️ am Profilbild: wer gerade in einem Rennen ist (Lobby oder laufend)
   // =====================================================
-  var racingServer = {}, racingIds = {}, UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  var racingServer = {}, racingInfo = {}, racingIds = {}, UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   var racingStyleEl = document.createElement('style');
   document.head.appendChild(racingStyleEl);
 
@@ -6730,6 +6744,7 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
     });
     if (myId && racingIds[myId]) css += '#whoAvatar .avatar::after,#pAvatar .avatar::after{content:"🏎️";}';
     racingStyleEl.textContent = css;
+    if (typeof currentScreen !== 'undefined' && currentScreen === 'Friends' && changed.length) renderFriendLists();
     // Karte: nur die Symbole der Spieler neu zeichnen, bei denen sich etwas geändert hat
     changed.forEach(function (id) {
       if (id === myId) { if (me) me.setIcon(iconFor(myColor, myAvatar, !!racingIds[id])); }
@@ -6743,6 +6758,11 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
       var m = {};
       (res.data || []).forEach(function (r) { var id = typeof r === 'string' ? r : (r && r.racing_users); if (id) m[id] = true; });
       racingServer = m; applyRacing();
+      db.rpc('racing_info').then(function (r2) {           // optional (SQL-Schritt): Rennname und Lobby/läuft
+        if (r2.error) return;
+        var inf = {}; (r2.data || []).forEach(function (r) { if (r && r.user_id) inf[r.user_id] = { name: r.race_name, status: r.race_status }; });
+        racingInfo = inf; if (currentScreen === 'Friends') renderFriendLists();
+      });
     });
   }
 
@@ -6854,7 +6874,7 @@ var FR_ICON = { flag: '<svg width="20" height="20" viewBox="0 0 24 24" fill="non
   // =====================================================
   //  VERSION und „Neueste Version laden“
   // =====================================================
-  var APP_VERSION = '2026-11-22-1';
+  var APP_VERSION = '2026-11-22-3';
   $('appVersion').textContent = APP_VERSION;
   $('loginVersion').textContent = 'Version ' + APP_VERSION;
   function reloadLatest() {
